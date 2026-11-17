@@ -186,7 +186,7 @@ _SIO_UDP_CONNRESET = 0x9800000C
 
 
 def _no_connreset(sock: socket.socket) -> None:
-    """Turn off Windows' habit of failing the next receive after a send to a closed port."""
+    """Turn off Windows' habit of failing the next receive after a send to a closed port. Windows only."""
     off = ctypes.c_ulong(0)
     returned = ctypes.c_ulong(0)
     result = ctypes.windll.Ws2_32.WSAIoctl(
@@ -251,8 +251,9 @@ class Receiver:
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1 << 20)
             # Windows reports an earlier send to a closed port as an error on the next receive and would end the
-            # endpoint; this turns that off.
-            _no_connreset(sock)
+            # endpoint; this turns that off. Other systems have no such habit and no such call.
+            if sys.platform == "win32":
+                _no_connreset(sock)
             sock.bind((LOOPBACK, self.port))
             sock.setblocking(False)
             transport, _ = await asyncio.get_running_loop().create_datagram_endpoint(

@@ -209,12 +209,14 @@ const garbling = (name) => fakeClaude(name, `console.log("not what a finished se
 let finishingBin;
 const finishing = () => (finishingBin ??= fakeClaude("claude-finishing", `console.log(JSON.stringify({ num_turns: 1, is_error: false, result: "done" })); process.exit(0);`).bin);
 
-// The folders a runner is given. In the image its working folder is the test's own; a runner on Windows must be given a working
+// The folders a runner is given. Its working folder is one of its own, made empty; a runner on Windows must be given a working
 // folder that is empty and a Claude folder of its own, and refuses to start without them (the owner's own Claude folder is never
 // a lane's).
 function folders(own) {
-  if (!WINDOWS) return { SCOUT_WORKDIR: dir };
+  // A working folder of the runner's own on every system: a runner with a Claude folder moves whatever its working folder
+  // holds out of it, and the tests' shared folder holds the fakes, the secrets and the instructions.
   mkdirSync(join(own, "work"));
+  if (!WINDOWS) return { SCOUT_WORKDIR: join(own, "work") };
   return { SCOUT_WORKDIR: join(own, "work"), SCOUT_CLAUDE_CONFIG_DIR: join(own, "claude") };
 }
 

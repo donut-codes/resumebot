@@ -900,6 +900,7 @@ def test_the_checks_before_a_start_open_no_window_on_windows(stack, monkeypatch,
     assert all(call[2]["creationflags"] & NO_WINDOW for call in calls), calls
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="the hidden console is Windows' own (STARTUPINFO)")
 def test_a_start_hides_the_supervisor_with_its_own_console_and_runs_nothing_else_visibly(
         stack, monkeypatch, tmp_path):
     cfg = _ready(stack, tmp_path)

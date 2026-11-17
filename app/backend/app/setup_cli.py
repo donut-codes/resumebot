@@ -771,7 +771,7 @@ class _ThreadedPty:
 def _spawn_pty(argv: Sequence[str], env: dict[str, str]):
     """Start a program on a pseudo-terminal wide enough that Ink never wraps a line (tests replace this)."""
     if sys.platform == "win32":
-        import winpty  # pywinpty
+        import winpty  # pyright: ignore[reportMissingImports]  # pywinpty: installed on Windows only
 
         process = winpty.PtyProcess.spawn(list(argv), env=env, dimensions=(50, 1000))
         return _ThreadedPty(lambda: process.read(65536), process.write, lambda: process.terminate(force=True))
@@ -1592,6 +1592,7 @@ def open_command(data: Path) -> tuple[str, str]:
 
 STARTUP_FILE = "resumebot.cmd"
 SHORTCUT_FILE = "resumebot.lnk"
+MAC_SHORTCUT_FILE = "resumebot.command"  #: macOS: a shell script Finder runs on a double-click
 NEW_SHORTCUT_FILE = "resumebot-new.lnk"  #: the shortcut while it is being written; it must end in .lnk to be saved
 OPEN_LOG = "open.log"
 
@@ -1710,18 +1711,69 @@ def _start_task(name: str) -> str | None:
     return None
 
 
+def mac_desktop() -> Path:
+    """The user's Desktop folder on macOS, resolved when called (tests point it at a temporary folder)."""
+    return Path.home() / "Desktop"
+
+
+def mac_shortcut_text(data: Path) -> str:
+    """What the macOS desktop file holds: a shell script that runs `resumebot open` with this install's Python on this
+    data folder, from the backend folder (the same command the Windows shortcut runs)."""
+    return ("#!/bin/sh\n"
+            "# Starts resumebot and opens its page. Made by `resumebot shortcut`: run it again to replace this.\n"
+            f"cd {shlex.quote(str(_backend_folder()))} || exit 1\n"
+            f"exec {shlex.quote(_python(False))} -m app.main_cli open --data {shlex.quote(str(data))}\n")
+
+
+def _mac_shortcut_words(path: Path) -> list[str] | None:
+    """The words of the `exec` line of the macOS desktop file; None when there is no file or no such line."""
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for text in lines:
+        if text.startswith("exec "):
+            try:
+                return shlex.split(text)[1:]
+            except ValueError:
+                return None
+    return None
+
+
+def _mac_shortcut(install: Install) -> int:
+    """Write the macOS desktop file. The new file is written beside the old one and only then replaces it, so a failed
+    write leaves the old one as it was."""
+    target = mac_desktop() / MAC_SHORTCUT_FILE
+    new = target.with_name(MAC_SHORTCUT_FILE + ".new")
+    try:
+        new.write_text(mac_shortcut_text(install.data), encoding="utf-8")
+        new.chmod(0o755)
+        os.replace(new, target)
+    except OSError as error:
+        with contextlib.suppress(OSError):
+            new.unlink()
+        print(f"could not make the shortcut: {_describe(error)}", file=sys.stderr)
+        return 1
+    print(f"shortcut {MAC_SHORTCUT_FILE} is on your desktop ({target}): double-click it to start the app and open "
+          "its page")
+    return 0
+
+
 def shortcut(argv: list[str]) -> int:
-    """put a resumebot shortcut on your desktop: double-click it to start the app and open its page; Windows only"""
+    """put a resumebot shortcut on your desktop: double-click it to start the app and open its page (Windows, macOS)"""
     parser = argparse.ArgumentParser(prog="resumebot shortcut", description=shortcut.__doc__)
     parser.add_argument("--data", help=f"the data folder (default {DATA_VARIABLE}, else the user's own folder)")
     args = parser.parse_args(argv)
-    if sys.platform != "win32":
-        print(f"the desktop shortcut is not built for {sys.platform}: only Windows has it (nothing was changed)")
+    if sys.platform not in ("win32", "darwin"):
+        print(f"the desktop shortcut is not built for {sys.platform}: only Windows and macOS have it (nothing was "
+              "changed)")
         return 0
     install = Install(data_folder(args.data))
     if not install.is_set_up:
         print(f"no settings at {install.env_file}: run `resumebot init` first", file=sys.stderr)
         return 1
+    if sys.platform == "darwin":
+        return _mac_shortcut(install)
     program, arguments = open_command(install.data)
     # The Desktop is asked for as the known folder, so a OneDrive-redirected one is found; saving over the path
     # replaces this shortcut's earlier file.
@@ -1939,8 +1991,9 @@ def doctor(argv: list[str]) -> int:
             print(f"ok       {door.name} answers (registration not checked: Claude Code was not found)")
             continue
         line(problem, f"{door.name} answers and is registered", door.name)
-    if sys.platform == "win32":
-        line(PLATFORM.shortcut_problem(install), f"the desktop shortcut {SHORTCUT_FILE} starts this install",
+    if sys.platform in ("win32", "darwin"):
+        file = SHORTCUT_FILE if sys.platform == "win32" else MAC_SHORTCUT_FILE
+        line(PLATFORM.shortcut_problem(install), f"the desktop shortcut {file} starts this install",
              "desktop shortcut")
     print(logs_line(install.data / "logs"))
     return 1 if missing else 0
@@ -1948,7 +2001,18 @@ def doctor(argv: list[str]) -> int:
 
 def _shortcut_problem(install: Install) -> str | None:
     """None when the desktop shortcut exists, its program exists and its arguments name this data folder; else one
-    sentence. Asked of PowerShell, which finds a OneDrive-redirected Desktop."""
+    sentence. On Windows it is asked of PowerShell, which finds a OneDrive-redirected Desktop; on macOS the desktop
+    file's own `exec` line is read."""
+    if sys.platform == "darwin":
+        words = _mac_shortcut_words(mac_desktop() / MAC_SHORTCUT_FILE)
+        if words is None:
+            return f"there is none on the desktop: run `resumebot shortcut --data \"{install.data}\"`"
+        if not words or not Path(words[0]).is_file():
+            return f"it starts {words[0] if words else 'nothing'}, which is not there: run `resumebot shortcut` again"
+        named = words[words.index("--data") + 1] if "--data" in words[:-1] else ""
+        if not named or os.path.realpath(named) != os.path.realpath(install.data):
+            return f"it opens another data folder: run `resumebot shortcut --data \"{install.data}\"`"
+        return None
     script = ("$p = Join-Path ([Environment]::GetFolderPath('Desktop')) " + _quoted(SHORTCUT_FILE) + "; "
               "if (Test-Path -LiteralPath $p) { $l = (New-Object -ComObject WScript.Shell).CreateShortcut($p); "
               "'LINK ' + $l.TargetPath + [char]9 + $l.Arguments } else { 'NOLINK' }")

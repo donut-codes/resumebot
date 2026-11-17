@@ -90,7 +90,14 @@ NO_CHROME = "Chrome wasn't found, so the pages opened in your default browser."
 
 
 def find_chrome() -> str | None:
-    """Chrome's executable on Windows: the standard folders, else the registry's App Paths entry; None elsewhere."""
+    """Chrome's executable. On Windows: the standard folders, else the registry's App Paths entry. On macOS: the
+    Applications folder, the machine's then the user's own. None elsewhere, and when it is not found."""
+    if sys.platform == "darwin":
+        inside = Path("Google Chrome.app") / "Contents" / "MacOS" / "Google Chrome"
+        for root in (Path("/Applications"), Path.home() / "Applications"):
+            if (root / inside).is_file():
+                return str(root / inside)
+        return None
     if sys.platform != "win32":
         return None
     for var in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA"):

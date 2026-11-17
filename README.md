@@ -10,7 +10,7 @@ Every target, gate, weight, place and pay figure is yours, set in the app. It is
 
 ## Quick start
 
-You need a Windows PC and [Claude Code](https://claude.com/claude-code) on a paid Claude subscription. Your Claude does
+You need a Windows PC or a Mac, and [Claude Code](https://claude.com/claude-code) on a paid Claude subscription. Your Claude does
 the install. Pick one route.
 
 **Route 1: the plugin.** In Claude Code:
@@ -70,19 +70,19 @@ at 2.5.1, so an old copy cannot simply pull:
 
 ## What you need
 
-- Windows 10 or 11 on an ordinary user account. No administrator rights are needed.
+- Windows 10 or 11, or macOS, on an ordinary user account. No administrator rights are needed.
 - Claude Code, installed and signed in, on a paid Claude subscription. The agents run on that
   subscription and never on an API key.
-- `git`, `uv`, Node 22 or newer and Chrome. Claude installs the first three with `winget` when they are missing. Chrome
-  is only for the optional browser jobs.
+- `git`, `uv`, Node 22 or newer and Chrome. Claude installs the first three when they are missing: with `winget` on
+  Windows, with Homebrew on a Mac (Homebrew itself you install first). Chrome is only for the optional browser jobs.
 
 ## Where things live
 
-| What | Where |
-|---|---|
-| The app's code | `%LOCALAPPDATA%\Programs\resumebot` |
-| Your data: settings, secrets, the database, logs | `%LOCALAPPDATA%\resumebot` |
-| Resumes and cover letters it builds | `Documents\resumebot`, one folder per role |
+| What | Windows | macOS |
+|---|---|---|
+| The app's code | `%LOCALAPPDATA%\Programs\resumebot` | `~/.local/share/resumebot-app` |
+| Your data: settings, secrets, the database, logs | `%LOCALAPPDATA%\resumebot` | `~/.local/share/resumebot` |
+| Resumes and cover letters it builds | `Documents\resumebot`, one folder per role | `~/Documents/resumebot` |
 
 The code is replaced when you update; your data never is. Nothing leaves your PC except what the agents send to Claude,
 the public pages they read, and what you turn on yourself (a mailbox the app reads, read-only; a backup folder you
@@ -106,11 +106,13 @@ name). See [`docs/privacy-and-terms.md`](docs/privacy-and-terms.md).
 
 ## Starting it later
 
-The install puts **resumebot** on your desktop. Double-click it: it starts the app if it is not running and opens its page. Pin it wherever you like from there. More in [`docs/install.md`](docs/install.md).
+The install puts **resumebot** on your desktop (on a Mac the file is `resumebot.command`, and a Terminal window opens while it runs). Double-click it: it starts the app if it is not running and opens its page. Pin it wherever you like from there. More in [`docs/install.md`](docs/install.md).
 
 ## Honest limits
 
-- **Windows only.** The desktop shortcut, the install and the setup are built for Windows. There is no macOS or Linux install.
+- **Windows first, macOS on this branch.** The app is built and released on Windows. This branch (`mac-compat`) also
+  runs on macOS: the checks pass there and the app was started and smoke-tested on one Mac (Apple silicon). A real
+  search with signed-in agents has not been run on a Mac yet. There is no Linux install.
 - **United States searches.** Pay is dollars a year; numbers and dates are written the United States way.
 - **Alpha.** Expect rough edges. There is no installer, no first-run wizard in the page, and no `update` command:
   updating is the same ask as installing, `set up resumebot`: Claude backs up your data folder, replaces the app's code

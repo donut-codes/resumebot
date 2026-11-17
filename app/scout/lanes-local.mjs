@@ -53,7 +53,7 @@
 // (logs/runs*.log); this launcher's own log is logs/lanes.log.
 //
 // The data folder is the one RESUMEBOT_DATA_DIR names (the app and stack.py read the same variable); with none named, Windows
-// %LOCALAPPDATA%\resumebot, macOS ~/Library/Application Support/resumebot, Linux ~/.local/share/resumebot (XDG_DATA_HOME).
+// %LOCALAPPDATA%\resumebot, macOS and Linux ~/.local/share/resumebot (XDG_DATA_HOME): the same folder `resumebot init` makes.
 //
 // Learned with Claude Code on Windows, for any other runner to carry over: a session with an open stdin pipe
 // waits three seconds before it starts, so give it none; one started from a Claude Code session inherits that session's
@@ -96,7 +96,6 @@ export function dataFolder(env = process.env, platform = process.platform, home 
   const p = pathFor(platform);
   if (env.RESUMEBOT_DATA_DIR?.trim()) return env.RESUMEBOT_DATA_DIR.trim();
   if (platform === "win32") return p.join(env.LOCALAPPDATA || p.join(home, "AppData", "Local"), "resumebot");
-  if (platform === "darwin") return p.join(home, "Library", "Application Support", "resumebot");
   return p.join(env.XDG_DATA_HOME || p.join(home, ".local", "share"), "resumebot");
 }
 

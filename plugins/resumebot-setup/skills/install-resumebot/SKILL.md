@@ -68,6 +68,16 @@ VPY="$CODE/app/backend/.venv/Scripts/python.exe"
 RB="$CODE/app/backend/.venv/Scripts/resumebot.exe"
 ```
 
+sh on macOS (and Linux):
+
+```sh
+CODE="$HOME/.local/share/resumebot-app"
+DATA="${RESUMEBOT_DATA_DIR:-$HOME/.local/share/resumebot}"
+PY=$(uv python find --managed-python 3.12)
+VPY="$CODE/app/backend/.venv/bin/python"
+RB="$CODE/app/backend/.venv/bin/resumebot"
+```
+
 ## 1. Prerequisites
 
 Check each; install only what is missing, and say what you install. Do not pipe a downloaded script into a shell.
@@ -223,7 +233,7 @@ needed. Each verb is safe to run twice.
 | Check the lanes | `smoke --lanes --data "$DATA"` | read-only checks of the app and the five lanes |
 | Sign the agents in | `signin --data "$DATA"` | see below; says "already signed in" and changes nothing when a token is stored |
 | Connect to this Claude Code | `connect --data "$DATA"` | removes, then adds, both doors `resumebot-owner` and `resumebot-browser` (tokens masked in its output), so a stale registration is replaced, and checks each answers |
-| Put resumebot on the desktop | `shortcut --data "$DATA"` | writes `resumebot.lnk` on the user's desktop (found as Windows' own Desktop folder, so a OneDrive one works), replacing an earlier one; double-clicking it starts the app if needed and opens its page, with no console window. On macOS and Linux it says it is not built and exits 0 |
+| Put resumebot on the desktop | `shortcut --data "$DATA"` | on macOS writes `resumebot.command` (a shell script Finder runs in a Terminal window) on `~/Desktop`; on Windows writes `resumebot.lnk` on the user's desktop (found as Windows' own Desktop folder, so a OneDrive one works), replacing an earlier one; double-clicking it starts the app if needed and opens its page, with no console window. On macOS and Linux it says it is not built and exits 0 |
 | Check everything | `doctor --data "$DATA"` | one line per piece, `ok` or `MISSING` with what to do |
 | Final check | `status --for-claude --data "$DATA"` | prints the plain status lines; changes nothing |
 

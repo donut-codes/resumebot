@@ -33,6 +33,21 @@ async def test_without_chrome_the_default_browser_gets_a_new_window_then_tabs_an
     assert note == apply_go.NO_CHROME
 
 
+def test_chrome_is_found_in_the_applications_folder_on_macos(tmp_path, monkeypatch):
+    monkeypatch.setattr(apply_go.sys, "platform", "darwin")
+    monkeypatch.setattr(apply_go.Path, "home", lambda: tmp_path)
+    own = tmp_path / "Applications" / "Google Chrome.app" / "Contents" / "MacOS" / "Google Chrome"
+    machine = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    real_is_file = apply_go.Path.is_file
+    monkeypatch.setattr(apply_go.Path, "is_file", lambda self: str(self) != machine and real_is_file(self))
+    assert apply_go.find_chrome() is None
+    own.parent.mkdir(parents=True)
+    own.write_bytes(b"")
+    assert apply_go.find_chrome() == str(own)
+    monkeypatch.setattr(apply_go.Path, "is_file", lambda self: str(self) == machine or real_is_file(self))
+    assert apply_go.find_chrome() == machine
+
+
 async def test_an_empty_batch_opens_nothing(monkeypatch):
     def refuse():
         raise AssertionError("nothing should be looked for")

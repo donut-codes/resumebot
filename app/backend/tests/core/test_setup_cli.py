@@ -5,6 +5,7 @@ is a recorded fake. Every name, zone and token is made up."""
 
 import os
 import re
+import shlex
 import shutil
 import struct
 import subprocess
@@ -73,6 +74,12 @@ def _a_good_shortcut(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_real_desktop(monkeypatch, tmp_path):
+    """The machine running the tests has a Desktop of its own; no test writes there."""
+    monkeypatch.setattr(setup_cli, "mac_desktop", lambda: tmp_path / "Desktop")
+
+
+@pytest.fixture(autouse=True)
 def _no_ambient_claude_config(monkeypatch):
     monkeypatch.delenv("CLAUDE_CONFIG_DIR", raising=False)
 
@@ -84,6 +91,9 @@ def _no_windows_zone(monkeypatch):
 
 
 REAL_CREATE_DATABASE = setup_cli.create_database
+
+#: Elsewhere the machine tells its own zone first (/etc/localtime), so the name Windows reports is never asked for.
+windows_zone_only = pytest.mark.skipif(sys.platform != "win32", reason="the machine tells its own zone first")
 
 
 @pytest.fixture(scope="module")
@@ -289,12 +299,14 @@ def test_init_takes_this_machines_zone_when_none_is_given_or_refuses_when_it_can
     assert "could not be told" in capsys.readouterr().err
 
 
+@windows_zone_only
 def test_init_records_the_standard_name_of_the_zone_windows_reports(tmp_path, monkeypatch):
     monkeypatch.setattr(setup_cli, "windows_zone_name", lambda: "Tokyo Standard Time")
     assert setup_cli.init(["--owner", OWNER, "--data", str(tmp_path / "data")]) == 0
     assert setup_cli.read_env(tmp_path / "data" / ".env")["JOBSEARCH_TIMEZONE"] == "Asia/Tokyo"
 
 
+@windows_zone_only
 def test_init_refuses_a_windows_zone_the_table_does_not_know_and_says_what_to_pass(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(setup_cli, "windows_zone_name", lambda: "Olympus Standard Time")
     assert setup_cli.init(["--owner", OWNER, "--data", str(tmp_path / "data")]) == 2
@@ -1143,6 +1155,67 @@ def test_shortcut_stops_when_there_are_no_settings_yet(tmp_path, monkeypatch, ca
     assert shell.calls == [] and "resumebot init" in capsys.readouterr().err
 
 
+def on_macos(tmp_path, monkeypatch):
+    """macOS, with a Desktop folder and this install's Python as real files in the test's own folder."""
+    monkeypatch.setattr(setup_cli.sys, "platform", "darwin")
+    (tmp_path / "Desktop").mkdir()
+    python = tmp_path / "venv" / "bin" / "python"
+    python.parent.mkdir(parents=True)
+    python.write_bytes(b"")
+    monkeypatch.setattr(setup_cli.sys, "executable", str(python))
+    return tmp_path / "Desktop" / "resumebot.command", python
+
+
+def test_shortcut_on_macos_writes_a_file_finder_can_run_that_opens_this_install(tmp_path, monkeypatch, capsys):
+    folder = make_install(tmp_path)
+    file, python = on_macos(tmp_path, monkeypatch)
+    shell = FakePowerShell()
+    monkeypatch.setattr(setup_cli, "_run", shell)
+    assert setup_cli.shortcut(["--data", str(folder)]) == 0
+    assert shell.calls == []  # no PowerShell on a Mac
+    assert os.access(file, os.X_OK)
+    lines = file.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "#!/bin/sh"
+    assert shlex.split(lines[-2]) == ["cd", str(setup_cli._backend_folder()), "||", "exit", "1"]
+    assert shlex.split(lines[-1]) == ["exec", str(python), "-m", "app.main_cli", "open", "--data", str(folder)]
+    assert "shortcut resumebot.command is on your desktop" in capsys.readouterr().out
+
+
+def test_shortcut_on_macos_replaces_its_own_earlier_file_and_leaves_no_other(tmp_path, monkeypatch):
+    folder = make_install(tmp_path)
+    file, _ = on_macos(tmp_path, monkeypatch)
+    file.write_text("an earlier one", encoding="utf-8")
+    assert setup_cli.shortcut(["--data", str(folder)]) == 0
+    assert "an earlier one" not in file.read_text(encoding="utf-8")
+    assert [entry.name for entry in file.parent.iterdir()] == ["resumebot.command"]
+
+
+def test_shortcut_on_macos_keeps_a_folder_with_a_space_or_a_quote_as_one_word(tmp_path, monkeypatch):
+    file, _ = on_macos(tmp_path, monkeypatch)
+    text = setup_cli.mac_shortcut_text(tmp_path / "my data's folder")
+    assert shlex.split(text.splitlines()[-1])[-1] == str(tmp_path / "my data's folder")
+
+
+def test_shortcut_on_macos_says_why_when_the_desktop_cannot_be_written(tmp_path, monkeypatch, capsys):
+    folder = make_install(tmp_path)
+    file, _ = on_macos(tmp_path, monkeypatch)
+    file.parent.rmdir()
+    assert setup_cli.shortcut(["--data", str(folder)]) == 1
+    assert "could not make the shortcut" in capsys.readouterr().err
+
+
+def test_the_doctor_on_macos_reads_the_desktop_file_for_what_it_starts(tmp_path, monkeypatch):
+    folder = make_install(tmp_path)
+    file, python = on_macos(tmp_path, monkeypatch)
+    install = setup_cli.Install(folder)
+    assert "there is none on the desktop" in REAL_SHORTCUT_PROBLEM(install)
+    assert setup_cli.shortcut(["--data", str(folder)]) == 0
+    assert REAL_SHORTCUT_PROBLEM(install) is None
+    assert "another data folder" in REAL_SHORTCUT_PROBLEM(setup_cli.Install(tmp_path / "elsewhere"))
+    python.unlink()
+    assert "which is not there" in REAL_SHORTCUT_PROBLEM(install)
+
+
 def test_shortcut_on_other_systems_says_it_is_not_built_runs_nothing_and_exits_0(tmp_path, monkeypatch, capsys):
     shell = FakePowerShell()
     monkeypatch.setattr(setup_cli.sys, "platform", "linux")
@@ -1403,6 +1476,7 @@ def test_a_helper_command_opens_no_console_window_of_its_own(monkeypatch):
         seen.update(kwargs)
         return subprocess.CompletedProcess(command, 0, "", "")
 
+    monkeypatch.setattr(setup_cli.sys, "platform", "win32")
     monkeypatch.setattr(setup_cli.subprocess, "run", fake_run)
     monkeypatch.setattr(setup_cli.subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
     setup_cli._run(["powershell", "-Command", "1"])
@@ -1985,6 +2059,7 @@ def shortcut_answer(monkeypatch, stdout, returncode=0):
 def test_doctor_checks_the_desktop_shortcut_exists_its_program_exists_and_names_this_data_folder(
         tmp_path, monkeypatch):
     monkeypatch.setattr(setup_cli, "_shortcut_problem", REAL_SHORTCUT_PROBLEM)
+    monkeypatch.setattr(setup_cli.sys, "platform", "win32")  # the .lnk, read through PowerShell
     folder = make_install(tmp_path)
     install = setup_cli.Install(folder)
     program = tmp_path / "pythonw.exe"

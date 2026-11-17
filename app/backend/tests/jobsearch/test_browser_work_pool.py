@@ -217,9 +217,10 @@ async def test_the_owners_mail_comes_before_a_browser_backlog_at_every_check_in(
 # --- a restart drains the workers ---------------------------------------------------------------------------------
 
 
-async def test_a_drain_hands_out_nothing_and_each_worker_finishes_the_item_it_holds(js, client):
+async def test_a_drain_hands_out_nothing_and_each_worker_finishes_the_item_it_holds(js, client, tmp_path, monkeypatch):
     from app.settings import settings
 
+    monkeypatch.setattr(settings, "agent_token_file", str(tmp_path / "secrets" / "agent-token"))
     await browser_world(extra_sites=False)
     await _role(1)
     await _role(2, link="https://careers.northwind2.test/jobs/2")

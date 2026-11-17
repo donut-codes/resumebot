@@ -1,15 +1,16 @@
 # Install
 
-resumebot installs on Windows 10 and 11, for one user, with no administrator rights. Your own Claude Code does the
+resumebot installs on Windows 10 and 11, and on this branch on macOS, for one user, with no administrator rights. Your own Claude Code does the
 install by following a skill; this page says what it does, where everything goes, and how to check it.
 
 ## What you need
 
 - Claude Code, installed and signed in, on a paid Claude subscription.
-- A Windows account of your own. The install touches only your user's folders and settings.
+- A Windows or macOS account of your own. The install touches only your user's folders and settings.
 - `git`, `uv` (with its own Python 3.12), Node 22 or newer, and Chrome. The install checks each and installs the missing
   ones with `winget` (git, uv and Node). If `winget` is missing, Claude tells you to install "App Installer" from the
-  Microsoft Store and carries on when you have. Chrome is needed only for the optional browser jobs
+  Microsoft Store and carries on when you have. On a Mac it uses Homebrew (`brew install uv node git`); install
+  Homebrew yourself first if it is missing. Chrome is needed only for the optional browser jobs
   ([`browser-reader.md`](browser-reader.md)).
 
 The app uses uv's own Python and no other. A Python from python.org, the Store or the system can carry an older SQLite
@@ -56,7 +57,7 @@ sign in), approve the sign-in in the browser tab that opens (if a page shows a c
 | 7 | `resumebot smoke --lanes` and `resumebot doctor`: check the app and the five lanes | seconds |
 | 8 | `resumebot signin`: a browser tab asks you to approve; that is all you do ([`connect-claude.md`](connect-claude.md)) | a minute |
 | 9 | `resumebot connect`: register the app's two doors with your Claude Code | seconds |
-| 9b | `resumebot shortcut`: put **resumebot** on your desktop (Windows) | instant |
+| 9b | `resumebot shortcut`: put **resumebot** on your desktop (`resumebot.lnk` on Windows, `resumebot.command` on macOS) | instant |
 | 10 | `resumebot project`: write three helper agents (career coach, master resume help, network-profile draft) into your project folder | instant |
 | 11 | Restart Claude Code, in the same folder: it loads the doors and the helper agents; onboarding takes over ([`onboarding.md`](onboarding.md)) | |
 
@@ -77,6 +78,10 @@ or closes. It never reads or asks for your token: the sign-in window reads it of
 | The app's code (replaced at an update) | `%LOCALAPPDATA%\Programs\resumebot` |
 | Your data (never replaced) | `%LOCALAPPDATA%\resumebot` |
 | Resumes and cover letters it builds | `Documents\resumebot`, one folder per role (made on the first save) |
+
+On macOS the code is in `~/.local/share/resumebot-app`, the data in `~/.local/share/resumebot`, the documents in
+`~/Documents/resumebot`, and the `resumebot` command at `~/.local/share/resumebot-app/app/backend/.venv/bin/resumebot`.
+Wherever this page writes a Windows path, read the macOS one.
 
 The data folder holds `.env` (your name, time zone, the database address and a few settings), `resumebot.db` (the
 database, one SQLite file), `secrets\` (the doors' tokens and the agents' sign-in), `logs\`, and `browser-profile\` if you
@@ -150,9 +155,10 @@ checks of the app and the five agent lanes.
 
 ## Starting and stopping
 
-Double-click **resumebot** on the desktop (`resumebot shortcut` makes it; Windows only). It starts the app if it is not
-running, waits until it answers, and opens the page in your default browser; if the app already runs it only opens the
-page. It opens no console window. Pin it to the taskbar or the Start menu if you like. If it fails, the reason is written
+Double-click **resumebot** on the desktop (`resumebot shortcut` makes it; Windows and macOS). It starts the app if it
+is not running, waits until it answers, and opens the page in your default browser; if the app already runs it only
+opens the page. On Windows it opens no console window; on macOS the file is a shell script, `resumebot.command`, and
+Finder runs it in a Terminal window you can close afterwards. Pin it to the taskbar or the Start menu if you like. If it fails, the reason is written
 to `logs\open.log` in the data folder.
 
 Nothing starts the app at sign-in. `resumebot start` starts the app and the five lanes now, outside the Claude session,

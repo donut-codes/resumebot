@@ -88,6 +88,16 @@ class Launches:
         self.calls.append((list(command), kwargs))
 
 
+class Stopped:
+    """Stands in for a launcher that ended by itself, with this exit code."""
+
+    def __init__(self, code):
+        self.returncode = code
+
+    def poll(self):
+        return self.returncode
+
+
 def answers_after(monkeypatch, polls):
     """`app_health` says "not running" for the first `polls` asks, then healthy."""
     asked = []
@@ -112,6 +122,31 @@ def test_start_when_the_app_already_answers_says_so_and_starts_nothing(folder, m
     assert setup_cli.start(["--data", str(folder)]) == 0
     assert capsys.readouterr().out == f"already running at {setup_cli.DEFAULT_APP_URL}\n"
     assert shell.calls == [] and launches.calls == [] and clock.slept == []
+
+
+def test_start_says_why_at_once_when_the_launcher_refuses_and_does_not_wait_out_the_clock(
+        folder, monkeypatch, capsys, clock):
+    (folder / "logs").mkdir()
+    (folder / "logs" / "start.log").write_text(
+        "2026-01-01T10:00:00 start: an earlier one\n"
+        "2026-01-02T10:00:00 start: not starting:\n  port 8430 (the page's) is taken by another program\n",
+        encoding="utf-8")
+    monkeypatch.setattr(setup_cli.sys, "platform", "linux")
+    monkeypatch.setattr(setup_cli, "_launch", lambda command, **kwargs: Stopped(2))
+    asked = answers_after(monkeypatch, 10_000)
+    assert setup_cli.start(["--data", str(folder)]) == 1
+    said = capsys.readouterr().err
+    assert "port 8430 (the page's) is taken" in said and "an earlier one" not in said
+    assert str(folder / "logs" / "start.log") in said
+    assert len(asked) == 2 and len(clock.slept) == 1  # the first ask, one wait, one more ask: not the whole wait
+
+
+def test_start_goes_on_waiting_while_the_launcher_runs_or_ended_well(folder, monkeypatch, capsys, clock):
+    monkeypatch.setattr(setup_cli.sys, "platform", "linux")
+    monkeypatch.setattr(setup_cli, "_launch", lambda command, **kwargs: Stopped(0))
+    answers_after(monkeypatch, 3)
+    assert setup_cli.start(["--data", str(folder)]) == 0
+    assert capsys.readouterr().out.splitlines()[-1] == f"running at {setup_cli.DEFAULT_APP_URL}"
 
 
 def test_start_before_init_refuses_and_starts_nothing(tmp_path, monkeypatch, capsys):

@@ -30,6 +30,8 @@ def stack():
 
 @pytest.fixture(autouse=True)
 def _nothing_listens(stack, monkeypatch, tmp_path_factory):
+    # The check itself is kept beside its stand-in, for the test of the check.
+    monkeypatch.setattr(stack, "real_port_is_free", stack.port_is_free, raising=False)
     monkeypatch.setattr(stack, "port_is_free", lambda port, udp: True)
     monkeypatch.setattr(stack, "holder", lambda port, udp: None)
     # What `problems` reads from this machine and its checkout, made up: a Python environment that runs (when its file
@@ -411,6 +413,27 @@ def test_a_start_needs_the_engines_port_free(stack, monkeypatch, tmp_path):
     assert "8530" in said and "is taken" in said
     monkeypatch.setattr(stack, "port_is_free", lambda port, udp: True)
     assert stack.problems(cfg, hold=True) == []
+
+
+def test_a_port_whose_listener_has_just_closed_is_free_and_one_still_listened_on_is_not(stack):
+    # A start right after a stop: the page's port still has its last connections winding down. Off Windows a plain
+    # test bind of it fails for a while though nothing holds it, and the start was refused.
+    import socket
+
+    listener = socket.socket()
+    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listener.bind(("127.0.0.1", 0))
+    listener.listen(1)
+    port = listener.getsockname()[1]
+    caller = socket.create_connection(("127.0.0.1", port))
+    served, _ = listener.accept()
+    try:
+        assert stack.real_port_is_free(port, False) is False  # something listens on it
+    finally:
+        served.close()  # the server's side closes first: that is the side whose port is left waiting
+        listener.close()
+        caller.close()
+    assert stack.real_port_is_free(port, False) is True
 
 
 def test_a_running_instance_is_not_told_its_own_engine_port_is_taken(stack, monkeypatch, tmp_path):

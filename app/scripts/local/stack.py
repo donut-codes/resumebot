@@ -653,6 +653,13 @@ def port_is_free(port: int, udp: bool) -> bool:
             if probe.connect_ex(("127.0.0.1", port)) == 0:
                 return False
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM if udp else socket.SOCK_STREAM) as probe:
+        if not udp and not WINDOWS:
+            # Off Windows a port whose listener has just closed stays reserved for a while (its last connections are
+            # still winding down), and a plain bind of it fails though nothing holds it: a start right after a stop
+            # was refused. With this the bind is judged as the server's own will be (it sets the same), and a port
+            # something still listens on is still refused. Windows needs none of it, and there it would let the bind
+            # through beside a live listener.
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             probe.bind(("127.0.0.1", port))
         except OSError:

@@ -41,6 +41,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Protocol
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -1101,10 +1102,32 @@ def _hand_over_code(install: Install, code: str) -> int:
         _sleep(SIGNIN_POLL_SECONDS)
 
 
-def _launch(command: Sequence[str], **kwargs) -> None:
-    """Start a program that outlives this one (tests replace this: nothing real starts)."""
-    _quiet_popen(list(command), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                 **kwargs)
+class Launched(Protocol):
+    """What `_bring_up` asks of a program it started: whether it has ended, and how."""
+
+    returncode: int | None
+
+    def poll(self) -> int | None: ...
+
+
+def _launch(command: Sequence[str], **kwargs) -> Launched | None:
+    """Start a program that outlives this one, and hand it back so a start that stopped at once can be told (tests
+    replace this: nothing real starts, and they hand back nothing)."""
+    return _quiet_popen(list(command), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL, **kwargs)
+
+
+_LOG_ENTRY = re.compile(r"^\d{4}-\d{2}-\d{2}T")
+
+
+def _last_start_note(install: Install) -> str:
+    """The launcher's last entry in logs/start.log (why a start of its stopped), or "" when there is none."""
+    try:
+        lines = (install.data / "logs" / "start.log").read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return ""
+    starts = [at for at, text in enumerate(lines) if _LOG_ENTRY.match(text)]
+    return "\n".join(lines[starts[-1]:]).strip() if starts else ""
 
 
 class Platform:
@@ -1822,6 +1845,7 @@ def _bring_up(install: Install) -> int:
     if app_health(install) is None:
         print(f"already running at {install.app_url}")
         return 0
+    launcher: Launched | None = None
     if sys.platform == "win32":
         program, arguments = start_command(install.data)
         refused = _register_task(program, arguments)
@@ -1837,7 +1861,7 @@ def _bring_up(install: Install) -> int:
                 return 1
     else:
         try:
-            _launch(_stack_words(install.data, "start"), start_new_session=True)
+            launcher = _launch(_stack_words(install.data, "start"), start_new_session=True)
         except OSError as error:
             print(f"could not start the app: {error}", file=sys.stderr)
             return 1
@@ -1847,6 +1871,13 @@ def _bring_up(install: Install) -> int:
         if app_health(install) is None:
             print(f"running at {install.app_url}")
             return 0
+        # The launcher ends with an error when it will not start the app (a taken port, a missing piece): say why now,
+        # not after the whole wait.
+        if launcher is not None and launcher.poll() not in (None, 0):
+            why = _last_start_note(install) or f"the launcher stopped with exit code {launcher.returncode}"
+            print(f"the app was not started: {why}\n(the launcher's own log: {install.data / 'logs' / 'start.log'})",
+                  file=sys.stderr)
+            return 1
     print(f"the app did not answer at {install.app_url} within {START_WAIT_SECONDS} seconds: see "
           f"{install.data / 'logs' / 'supervisor.log'}", file=sys.stderr)
     return 1

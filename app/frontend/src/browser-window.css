@@ -1,0 +1,9 @@
+/* The stylesheet of the browser jobs' window's first tab (../browser-window.html), the app's own look without the app: the
+ * face, the Focus Inbox's tokens (daylight, and night from prefers-color-scheme), its base, and this page's few rules. It is
+ * not part of index.css: the app's screens are not loaded here, and this page is not loaded by the app. An @import has to
+ * come before any rule. */
+@import "@fontsource-variable/archivo/wdth.css";
+
+@import "./styles/focus/tokens.css";
+@import "./styles/focus/base.css";
+@import "./styles/focus/browser-window.css";

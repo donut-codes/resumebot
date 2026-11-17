@@ -1,0 +1,286 @@
+/* The shared parts every Focus screen is built from (components/focus/parts.tsx), beside the Pipeline's own in
+ * focus.css: a list row, the kind chip, the pane's body, the actions row, sheets, and the controls. Every value comes
+ * from focus/tokens.css. */
+
+/* --- a rail entry that is a link (a part with an address of its own) -------------------------------------------------- */
+
+.fi a.fi-stage { color: var(--fi-soft); text-decoration: none; }
+.fi a.fi-stage:hover { color: var(--fi-ink); }
+.fi-stage[aria-current="page"] { background: var(--fi-surface); color: var(--fi-ink); box-shadow: var(--fi-raise); }
+.fi a.fi-stage[aria-current="page"] { color: var(--fi-ink); }
+
+/* --- a row: its chip, its words, its end ------------------------------------------------------------------------- */
+
+.fi-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: var(--fi-s6);
+  align-items: center;
+  padding: var(--fi-s5);
+  border-radius: var(--fi-r-l);
+  transition: background-color var(--fi-fade) ease, opacity var(--fi-mid) ease;
+}
+.fi-item:hover { background: var(--fi-hover); }
+.fi-item[aria-current="true"] { background: var(--fi-selected); }
+.fi-item.is-quiet .fi-row-title { color: var(--fi-soft); font-weight: var(--fi-weight-semi); }
+.fi-item.is-leaving { pointer-events: none; animation: fi-fold var(--fi-roll) var(--fi-ease-fold) forwards; overflow: hidden; }
+.fi-item .fi-row-meta > * + *::before { content: "·"; margin-inline-end: var(--fi-s5); color: var(--fi-faint); }
+.fi-item-end { position: relative; z-index: 1; display: flex; align-items: center; gap: var(--fi-s5); }
+.fi-item-age { display: inline-flex; align-items: center; gap: var(--fi-s5); font-size: var(--fi-size-m); color: var(--fi-soft); white-space: nowrap; }
+
+.fi-kind {
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--fi-r-l);
+  display: grid;
+  place-items: center;
+  background: var(--fi-chip);
+  color: var(--fi-soft);
+}
+.fi-kind.is-yours { background: var(--fi-sun-wash); color: var(--fi-sun-text); }
+.fi-kind-icon { inline-size: 20px; block-size: 20px; }
+
+.fi-unread { inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--fi-blue); flex: none; }
+.fi-unread.is-off { background: transparent; }
+
+/* --- the pane ---------------------------------------------------------------------------------------------------- */
+
+.fi-head-aside { display: flex; gap: var(--fi-s4); align-items: center; }
+.fi-actions { display: flex; flex-wrap: wrap; gap: var(--fi-s4); align-items: center; margin-block-start: var(--fi-s8); }
+.fi-actions-gap { flex: 1; }
+.fi-btn-quiet { border-color: transparent; background: transparent; color: var(--fi-soft); }
+.fi-btn-quiet:hover:not(:disabled) { color: var(--fi-ink); }
+.fi-body { margin: var(--fi-s8) 0 0; max-inline-size: 70ch; color: var(--fi-text); white-space: pre-line; }
+.fi-body a { font-weight: var(--fi-weight-semi); }
+.fi-sheet { background: var(--fi-surface); border-radius: var(--fi-r-xl); box-shadow: var(--fi-ring); padding: var(--fi-s7) var(--fi-s8); }
+
+/* --- controls ---------------------------------------------------------------------------------------------------- */
+
+.fi-switch {
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--fi-target);
+  block-size: var(--fi-target);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  flex: none;
+}
+.fi-switch:disabled { cursor: progress; }
+.fi-switch-track {
+  position: relative;
+  inline-size: 44px;
+  block-size: 26px;
+  border-radius: var(--fi-r-pill);
+  background: var(--fi-seg);
+  border: 1px solid var(--fi-line);
+  transition: background-color var(--fi-mid) var(--fi-ease), border-color var(--fi-mid) var(--fi-ease);
+}
+.fi-switch-track::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 50%;
+  background: var(--fi-surface);
+  box-shadow: var(--fi-raise);
+  transition: transform var(--fi-mid) var(--fi-ease);
+}
+.fi-switch.is-labelled {
+  display: inline-flex;
+  inline-size: auto;
+  gap: var(--fi-s5);
+  padding: 0 var(--fi-s6) 0 var(--fi-s4);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  box-shadow: var(--fi-ring);
+  font-weight: var(--fi-weight-bold);
+  color: var(--fi-ink);
+}
+.fi-switch.is-labelled:hover:not(:disabled) { background: var(--fi-hover); }
+.fi-switch[aria-checked="true"] .fi-switch-track { background: var(--fi-teal); border-color: var(--fi-teal); }
+.fi-switch[aria-checked="true"] .fi-switch-track::after { transform: translateX(18px); }
+
+.fi-field { display: grid; gap: var(--fi-s3); }
+.fi-field label { font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); color: var(--fi-soft); }
+.fi-input {
+  inline-size: 100%;
+  min-block-size: var(--fi-target);
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font: var(--fi-weight-mid) var(--fi-size-base) var(--fi-font);
+  padding: var(--fi-s5) var(--fi-s6);
+  caret-color: var(--fi-blue);
+  resize: none;
+}
+.fi-input:hover { border-color: var(--fi-field); }
+.fi-input:focus { outline: none; border-color: var(--fi-blue); box-shadow: 0 0 0 3px var(--fi-focus-halo); }
+.fi-input::placeholder { color: var(--fi-faint); opacity: 1; }
+select.fi-input { cursor: pointer; }
+.fi-input[aria-invalid="true"] { border-color: var(--fi-red); }
+/* A text box that grows with its text (components/primitives/GrowingText.tsx): no scrollbar, no hand-drag corner. */
+.growing-text { overflow: hidden; resize: none; }
+.fi-field-hint { margin: 0; color: var(--fi-soft); font-size: var(--fi-size-s); }
+.fi-badge-quiet { background: var(--fi-chip); color: var(--fi-soft); }
+/* A quiet line of words, and a small label over a field. */
+.fi-note { color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-label { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+
+.fi-saved { margin: 0; display: inline-flex; gap: var(--fi-s5); align-items: center; font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); color: var(--fi-faint); }
+.fi-saved.is-failed { color: var(--fi-red-text); }
+
+.fi-slider { display: grid; gap: var(--fi-s3); }
+.fi-slider-ends { display: flex; justify-content: space-between; gap: var(--fi-s6); font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); color: var(--fi-ink); }
+.fi-slider input { inline-size: 100%; accent-color: var(--fi-sun); min-block-size: var(--fi-target); }
+
+/* --- a dialog over the page: a white sheet lifted by Pop on the scrim, its form, its progress ------------------------ *
+ * Import your resume, Paste a job posting and Check my roles all use it. */
+
+.fi-dialog {
+  margin: auto;
+  padding: var(--fi-s9) var(--fi-s9) var(--fi-s8);
+  inline-size: min(720px, calc(100vw - 2 * var(--fi-s7)));
+  max-block-size: calc(100dvh - 2 * var(--fi-s9));
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: var(--fi-r-xl);
+  background: var(--fi-surface);
+  color: var(--fi-text);
+  box-shadow: var(--fi-pop);
+  font-family: var(--fi-font);
+  font-size: var(--fi-size-base);
+  line-height: var(--fi-leading);
+  font-variant-numeric: tabular-nums;
+}
+.fi-dialog[open] { display: grid; gap: var(--fi-s6); }
+.fi-dialog::backdrop { background: var(--fi-scrim); }
+.fi-dialog :focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 2px; border-radius: var(--fi-r-s); }
+.fi-dialog-title { margin: 0; color: var(--fi-ink); font-size: var(--fi-size-xl); font-weight: var(--fi-weight-heavy); letter-spacing: var(--fi-tracking-tight); line-height: var(--fi-leading-tight); }
+.fi-dialog-hint { margin: 0; max-inline-size: 70ch; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-dialog-form { display: grid; gap: var(--fi-s5); }
+.fi-dialog-form[hidden] { display: none; }
+.fi-dialog-label { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-dialog-file { max-inline-size: 100%; color: var(--fi-text); font: inherit; }
+.fi-dialog-file::file-selector-button {
+  min-block-size: var(--fi-target);
+  margin-inline-end: var(--fi-s5);
+  padding: 0 var(--fi-s7);
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font: var(--fi-weight-bold) var(--fi-size-base) var(--fi-font);
+  cursor: pointer;
+}
+.fi-dialog-file:hover::file-selector-button { background: var(--fi-hover); }
+.fi-dialog-actions { display: flex; flex-wrap: wrap; gap: var(--fi-s4); }
+.fi-dialog-choices { display: grid; gap: var(--fi-s1); border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+.fi-dialog-choices legend { padding: 0; margin-block-end: var(--fi-s3); color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-dialog-choice { display: flex; align-items: center; gap: var(--fi-s5); min-block-size: var(--fi-target); color: var(--fi-ink); font-weight: var(--fi-weight-semi); cursor: pointer; }
+.fi-dialog-choice input { inline-size: 20px; block-size: 20px; margin: 0; accent-color: var(--fi-blue); flex: none; }
+.fi-dialog-answer { margin: 0; color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.fi-dialog-result { display: grid; gap: var(--fi-s6); }
+.fi-dialog-result ul { display: grid; gap: var(--fi-s3); margin: 0; padding-inline-start: var(--fi-s9); color: var(--fi-text); overflow-wrap: anywhere; }
+.fi-dialog-bucket { padding-block-start: var(--fi-s4); border-block-start: 1px solid var(--fi-line); }
+.fi-dialog-bucket summary { display: flex; align-items: center; min-block-size: var(--fi-target); color: var(--fi-ink); font-weight: var(--fi-weight-bold); cursor: pointer; }
+.fi-dialog-bucket ul { margin-block: var(--fi-s2) var(--fi-s5); }
+.fi-dialog-bucket strong { color: var(--fi-ink); }
+
+/* The reading's progress (components/primitives/JobProgress.tsx): its bar, its words, its steps. */
+.fi-progress { display: grid; gap: var(--fi-s5); }
+.fi-progress:focus { outline: none; }
+.fi-progress-track { block-size: 8px; border-radius: var(--fi-r-pill); background: var(--fi-sun-wash); overflow: hidden; }
+.fi-progress-fill { inline-size: 100%; block-size: 100%; background: var(--fi-sun); transform-origin: left center; transition: transform var(--fi-slow) var(--fi-ease); }
+.fi-progress-line { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--fi-s1) var(--fi-s5); margin: 0; color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.fi-progress-time { color: var(--fi-soft); font-size: var(--fi-size-m); font-weight: var(--fi-weight-body); }
+.fi-progress-steps { display: flex; flex-wrap: wrap; gap: var(--fi-s2) var(--fi-s6); margin: 0; padding: 0; list-style: none; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-progress-steps .is-now { color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fi-progress-fill { transition: none; }
+}
+
+/* --- a block: a named white sheet on a pane (Agent Settings' sections) ------------------------------------------------- */
+
+.fi-block { margin-block-start: var(--fi-s10); min-inline-size: 0; }
+.fi-block:first-child { margin-block-start: 0; }
+.fi-block-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fi-s4) var(--fi-s6); margin-block-end: var(--fi-s4); }
+.fi-block-title { display: flex; align-items: baseline; gap: var(--fi-s5); margin: 0; min-inline-size: 0; font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); line-height: var(--fi-leading-tight); color: var(--fi-ink); overflow-wrap: anywhere; }
+.fi-block-title:focus { outline: none; }
+.fi-block-title:focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 2px; }
+.fi-block-count { font-size: var(--fi-size-m); font-weight: var(--fi-weight-mid); color: var(--fi-soft); }
+.fi-block-aside { display: flex; flex-wrap: wrap; gap: var(--fi-s4); align-items: center; }
+.fi-block-hint { margin: 0 0 var(--fi-s5); max-inline-size: 70ch; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-block-body { background: var(--fi-surface); border-radius: var(--fi-r-xl); box-shadow: var(--fi-ring); padding: var(--fi-s7) var(--fi-s8); min-inline-size: 0; }
+.fi-block-body.is-flush { padding: 0; overflow: hidden; }
+.fi-block-body:empty { display: none; }
+/* The state a block is about: a dot before its name, in the ink of that state. */
+.fi-block[data-ink="green"] > .fi-block-head .fi-block-title::before,
+.fi-block[data-ink="oxblood"] > .fi-block-head .fi-block-title::before,
+.fi-block[data-ink="saffron"] > .fi-block-head .fi-block-title::before,
+.fi-block[data-ink="graphite"] > .fi-block-head .fi-block-title::before {
+  content: "";
+  flex: none;
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  align-self: center;
+  background: var(--fi-unknown);
+}
+.fi-block[data-ink="green"] > .fi-block-head .fi-block-title::before { background: var(--fi-teal); }
+.fi-block[data-ink="oxblood"] > .fi-block-head .fi-block-title::before { background: var(--fi-red); }
+.fi-block[data-ink="saffron"] > .fi-block-head .fi-block-title::before { background: var(--fi-sun); }
+
+/* --- a row of choices on a pane: pills on a track, and the lighter row under it ------------------------------------------ */
+
+.fi-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fi-s1);
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  padding: var(--fi-s2);
+  background: var(--fi-seg);
+  border-radius: var(--fi-r-l);
+}
+.fi-pills > a, .fi-pills > button {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 40px;
+  padding: 0 var(--fi-s7);
+  border: 0;
+  border-radius: var(--fi-r-m);
+  background: none;
+  color: var(--fi-soft);
+  font: var(--fi-weight-semi) var(--fi-size-m) var(--fi-font);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--fi-fast), color var(--fi-fast);
+}
+.fi .fi-pills > a { color: var(--fi-soft); }
+.fi-pills > a:hover, .fi-pills > button:hover { color: var(--fi-ink); background: var(--fi-rail-hover); }
+.fi-pills > a[aria-current="page"], .fi-pills > button[aria-pressed="true"] { background: var(--fi-surface); color: var(--fi-ink); box-shadow: var(--fi-raise); cursor: default; }
+.fi .fi-pills > a[aria-current="page"] { color: var(--fi-ink); }
+.fi-pills.is-sub { background: none; padding: 0; gap: var(--fi-s3); }
+.fi-pills.is-sub > a, .fi-pills.is-sub > button { min-block-size: 36px; padding: 0 var(--fi-s6); border: 1px solid var(--fi-line); border-radius: var(--fi-r-pill); background: var(--fi-surface); font-weight: var(--fi-weight-semi); }
+.fi-pills.is-sub > a:hover, .fi-pills.is-sub > button:hover { background: var(--fi-hover); }
+.fi-pills.is-sub > a[aria-current="page"], .fi-pills.is-sub > button[aria-pressed="true"] { background: var(--fi-ink); border-color: var(--fi-ink); color: var(--fi-surface); box-shadow: none; }
+.fi .fi-pills.is-sub > a[aria-current="page"] { color: var(--fi-surface); }
+
+/* --- the narrow pane over the list ----------------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .fi-item { grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--fi-s5); }
+  .fi-kind { inline-size: 40px; block-size: 40px; }
+  .fi-actions { gap: var(--fi-s3); }
+  /* No push to the end on a phone: the quiet answers follow the others, so none is left alone on a line. */
+  .fi-actions-gap { display: none; }
+  .fi-dialog { padding: var(--fi-s8) var(--fi-s7) var(--fi-s7); }
+}

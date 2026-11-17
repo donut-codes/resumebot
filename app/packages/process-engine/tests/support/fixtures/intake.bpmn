@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sample process for the engine tests. It uses every supported element: a message start and a timer start,
+     service, agent and user tasks, exclusive gateways (with a default and without), a call activity and a
+     multi-instance call activity, a timer and an error boundary event, message and timer waits, and several ends. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_intake" targetNamespace="http://porter.local/bpmn/test">
+  <bpmn:message id="Message_requested" name="intake.requested"/>
+  <bpmn:message id="Message_confirmed" name="intake.confirmed"/>
+  <bpmn:error id="Error_notify" name="Notify failed" errorCode="notify_failed"/>
+  <bpmn:process id="Process_intake" name="Intake" porter:key="intake" isExecutable="true">
+    <bpmn:documentation>Load a plan, ask the household when it is risky, look at each item, summarise, confirm, notify.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="note" type="string" description="A note the process was started with."/>
+        <porter:field path="plan" type="object" description="The plan that was loaded."/>
+        <porter:field path="plan.total" type="number" description="How many items."/>
+        <porter:field path="plan.items" type="list" description="The plan's items."/>
+        <porter:field path="plan.items[].name" type="string" description="What the item does."/>
+        <porter:field path="plan.items[].risk" type="string" enum="low,medium,high" description="How risky it is."/>
+        <porter:field path="plan.headline" type="object" description="The item that matters most."/>
+        <porter:field path="plan.headline.name" type="string"/>
+        <porter:field path="plan.headline.risk" type="string" enum="low,medium,high"/>
+        <porter:field path="approval" type="object" description="The household's answer."/>
+        <porter:field path="approval.approved" type="boolean" description="Whether the household said yes."/>
+        <porter:field path="verdicts" type="list" description="How each item looked."/>
+        <porter:field path="headline_verdict" type="string" description="How the headline item looked."/>
+        <porter:field path="summary" type="object" description="The agent's summary."/>
+        <porter:field path="summary.text" type="string"/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_app" name="The app">
+        <bpmn:flowNodeRef>Start_msg</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_timer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Load</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_need</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_approved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Look_all</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Look_head</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Confirm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Settle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Notify</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_chief" name="Chief of Staff">
+        <bpmn:flowNodeRef>Summary</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_household" name="Household owner">
+        <bpmn:flowNodeRef>Approve</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="Start_msg" name="Intake requested">
+      <bpmn:messageEventDefinition messageRef="Message_requested"/>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="Start_timer" name="Every day">
+      <bpmn:timerEventDefinition><bpmn:timeCycle>R/P1D</bpmn:timeCycle></bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Load" name="Load the plan" porter:action="plan.load" porter:output="plan"/>
+
+    <bpmn:exclusiveGateway id="Gw_need" name="Does this need the household?" default="F_go"/>
+    <bpmn:userTask id="Approve" name="Approve the plan" porter:card="plan.approval" porter:output="approval"/>
+    <bpmn:exclusiveGateway id="Gw_approved" name="Did the household say yes?"/>
+
+    <bpmn:callActivity id="Look_all" name="Look at each item" calledElement="check.one"
+                       porter:out="verdicts=look.verdict">
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false" porter:collection="plan.items"
+                                             porter:elementVariable="item"/>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="Look_head" name="Look at the headline item" calledElement="check.one"
+                       porter:in="item=plan.headline" porter:out="headline_verdict=look.verdict"/>
+
+    <bpmn:task id="Summary" name="Write the summary" porter:role="planner"
+               porter:instructions="summary.write" porter:template="summary.response" porter:output="summary"/>
+    <bpmn:boundaryEvent id="B_slow" name="Took too long" attachedToRef="Summary">
+      <bpmn:timerEventDefinition><bpmn:timeDuration>PT2H</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+
+    <bpmn:intermediateCatchEvent id="Confirm" name="Wait for the confirmation">
+      <bpmn:messageEventDefinition messageRef="Message_confirmed"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Settle" name="Let it settle">
+      <bpmn:timerEventDefinition><bpmn:timeDuration>PT1H</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+
+    <bpmn:serviceTask id="Notify" name="Tell the household" porter:action="intake.notify"/>
+    <bpmn:boundaryEvent id="B_notify" name="Could not tell them" attachedToRef="Notify">
+      <bpmn:errorEventDefinition errorRef="Error_notify"/>
+    </bpmn:boundaryEvent>
+
+    <bpmn:endEvent id="End_done" name="Done"/>
+    <bpmn:endEvent id="End_empty" name="Nothing to do"/>
+    <bpmn:endEvent id="End_declined" name="Household said no"/>
+    <bpmn:endEvent id="End_slow" name="Summary took too long"/>
+    <bpmn:endEvent id="End_notify_failed" name="Could not notify"/>
+
+    <bpmn:sequenceFlow id="S1" sourceRef="Start_msg" targetRef="Load"/>
+    <bpmn:sequenceFlow id="S2" sourceRef="Start_timer" targetRef="Load"/>
+    <bpmn:sequenceFlow id="S3" sourceRef="Load" targetRef="Gw_need"/>
+    <bpmn:sequenceFlow id="F_ask" name="Ask the household" sourceRef="Gw_need" targetRef="Approve">
+      <bpmn:documentation>Ask when any item is high risk or deletes something.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">some i in plan.items satisfies i.risk = "high" or contains(i.name, "delete")</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_empty" name="Nothing in it" sourceRef="Gw_need" targetRef="End_empty">
+      <bpmn:documentation>The plan has no items, so there is nothing to do.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">count(plan.items) = 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_go" name="Go ahead" sourceRef="Gw_need" targetRef="Look_all">
+      <bpmn:documentation>Otherwise start on its own.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S4" sourceRef="Approve" targetRef="Gw_approved"/>
+    <bpmn:sequenceFlow id="F_yes" name="Yes" sourceRef="Gw_approved" targetRef="Look_all">
+      <bpmn:documentation>The household approved it.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approval.approved = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_no" name="No" sourceRef="Gw_approved" targetRef="End_declined">
+      <bpmn:documentation>The household said no.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approval.approved != true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S5" sourceRef="Look_all" targetRef="Look_head"/>
+    <bpmn:sequenceFlow id="S6" sourceRef="Look_head" targetRef="Summary"/>
+    <bpmn:sequenceFlow id="S7" sourceRef="Summary" targetRef="Confirm"/>
+    <bpmn:sequenceFlow id="S8" sourceRef="B_slow" targetRef="End_slow"/>
+    <bpmn:sequenceFlow id="S9" sourceRef="Confirm" targetRef="Settle"/>
+    <bpmn:sequenceFlow id="S10" sourceRef="Settle" targetRef="Notify"/>
+    <bpmn:sequenceFlow id="S11" sourceRef="Notify" targetRef="End_done"/>
+    <bpmn:sequenceFlow id="S12" sourceRef="B_notify" targetRef="End_notify_failed"/>
+  </bpmn:process>
+</bpmn:definitions>

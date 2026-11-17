@@ -1,0 +1,53 @@
+/* The browser jobs' window's first tab (browser-window.html): one white sheet on the Focus Inbox's ground, saying in plain words
+ * what the window is, with a link back to the app. The page has no script, so nothing here moves or changes. Every value
+ * comes from focus/tokens.css. It is loaded by src/browser-window.css, not by index.css. */
+
+.bw-page {
+  min-block-size: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--fi-s9) var(--fi-s7);
+}
+
+.bw-card {
+  inline-size: min(100%, 34rem);
+  display: grid;
+  justify-items: start;
+  gap: var(--fi-s7);
+  padding: var(--fi-s10);
+  background: var(--fi-surface);
+  border-radius: var(--fi-r-xl);
+  box-shadow: var(--fi-raise);
+  color: var(--fi-text);
+  font-size: var(--fi-size-base);
+  line-height: var(--fi-leading);
+}
+
+/* The wordmark, as the bar of the app sets it. */
+.bw-brand {
+  color: var(--fi-ink);
+  font-size: var(--fi-size-l);
+  font-weight: var(--fi-weight-heavy);
+  letter-spacing: var(--fi-tracking-tight);
+  line-height: 1;
+}
+
+.bw-title {
+  color: var(--fi-ink);
+  font-size: var(--fi-size-xl);
+  font-weight: var(--fi-weight-bold);
+  letter-spacing: var(--fi-tracking-tight);
+  line-height: var(--fi-leading-tight);
+}
+
+/* The link is the base's: blue and underlined. It only gets a finger-sized place to stand. */
+.bw-back {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--fi-target);
+  font-weight: var(--fi-weight-semi);
+}
+
+@media (max-width: 30rem) {
+  .bw-card { padding: var(--fi-s9) var(--fi-s8); }
+}

@@ -1,0 +1,490 @@
+{
+  "app/agents/roster.py::note_runner": {
+    "exempt": [
+      "a runner not heard for a day is dropped: no loop reads the ones that are gone"
+    ],
+    "posts": [
+      "DISPATCH_IDLE",
+      "post"
+    ],
+    "statements": 2,
+    "targets": [
+      "AgentRunner"
+    ]
+  },
+  "app/jobsearch/actions.py::dedupe": {
+    "exempt": [],
+    "posts": [
+      "POOL_OWED",
+      "ROLE_DETAILS",
+      "post",
+      "post_roles"
+    ],
+    "statements": 1,
+    "targets": [
+      "JobPosting"
+    ]
+  },
+  "app/jobsearch/actions.py::store": {
+    "exempt": [],
+    "posts": [
+      "post_new_roles"
+    ],
+    "statements": 2,
+    "targets": [
+      "JobPosting",
+      "Opportunity"
+    ]
+  },
+  "app/jobsearch/browser/queue.py::_apply": {
+    "exempt": [],
+    "posts": [
+      "DECK_DIRTY",
+      "browser_ready",
+      "post",
+      "ready"
+    ],
+    "statements": 2,
+    "targets": [
+      "BrowserItem",
+      "Opportunity"
+    ]
+  },
+  "app/jobsearch/browser/tabs.py::close_for_roles": {
+    "exempt": [
+      "no loop reads the tab register: a row only says what is open"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "OpenTab"
+    ]
+  },
+  "app/jobsearch/browser/tabs.py::drop_missing": {
+    "exempt": [
+      "no loop reads the tab register: a row only says what is open"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "OpenTab"
+    ]
+  },
+  "app/jobsearch/browser/tabs.py::expired": {
+    "exempt": [
+      "no loop reads the tab register: a row only says what is open"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "OpenTab"
+    ]
+  },
+  "app/jobsearch/browser/tabs.py::keep_list": {
+    "exempt": [
+      "no loop reads the tab register: a row only says what is open"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "OpenTab"
+    ]
+  },
+  "app/jobsearch/browser/tabs.py::release_owner": {
+    "exempt": [
+      "no loop reads the tab register: a row only says what is open"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "OpenTab"
+    ]
+  },
+  "app/jobsearch/browser/tabs.py::remove": {
+    "exempt": [
+      "no loop reads the tab register: a row only says what is open"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "OpenTab"
+    ]
+  },
+  "app/jobsearch/employers/not_checked.py::settle": {
+    "exempt": [],
+    "posts": [
+      "ANY",
+      "BROWSER_RECONCILE",
+      "DECK_DIRTY",
+      "post_all"
+    ],
+    "statements": 1,
+    "targets": [
+      "JobPosting"
+    ]
+  },
+  "app/jobsearch/employers/records.py::_merge": {
+    "exempt": [],
+    "posts": [
+      "post_all"
+    ],
+    "statements": 1,
+    "targets": [
+      "Opportunity"
+    ]
+  },
+  "app/jobsearch/employers/records.py::_move_postings": {
+    "exempt": [],
+    "posts": [
+      "post_all"
+    ],
+    "statements": 1,
+    "targets": [
+      "JobPosting"
+    ]
+  },
+  "app/jobsearch/employers/records.py::_repoint": {
+    "exempt": [
+      "lines linked to an employer are read by no loop: the role_moved lines link roles"
+    ],
+    "posts": [],
+    "statements": 3,
+    "targets": [
+      "Notification",
+      "Task",
+      "TrailEvent"
+    ]
+  },
+  "app/jobsearch/gaps/coach.py::answer_card": {
+    "exempt": [
+      "an answered card is read by the screen: no loop reads the cards"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "GapCard"
+    ]
+  },
+  "app/jobsearch/gaps/coach.py::expire": {
+    "exempt": [
+      "jobs that ended long ago are only tidied: no loop reads them, the screen does"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "GapCoachJob"
+    ]
+  },
+  "app/jobsearch/gaps/drafts.py::expire": {
+    "exempt": [
+      "requests kept long enough are only tidied: no loop reads them, the screen does"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "GapDraft"
+    ]
+  },
+  "app/jobsearch/gaps/runs.py::_replace_job_run": {
+    "exempt": [
+      "a finished run replaces its job's earlier one: its cards move over, the old run is removed"
+    ],
+    "posts": [],
+    "statements": 2,
+    "targets": [
+      "GapCard",
+      "GapRun"
+    ]
+  },
+  "app/jobsearch/gaps/runs.py::action_settle": {
+    "exempt": [
+      "a finished run replaces an earlier one: the old run is removed, none is made ready"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "GapRun"
+    ]
+  },
+  "app/jobsearch/gaps/runs.py::expire": {
+    "exempt": [
+      "runs kept long enough are only tidied: no loop reads them, the screen does"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "GapRun"
+    ]
+  },
+  "app/jobsearch/gating/regate.py::_bulk": {
+    "answered_by": "app/jobsearch/gating/regate.py::_postings",
+    "exempt": [],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "JobPosting"
+    ]
+  },
+  "app/jobsearch/gating/regate.py::_postings": {
+    "exempt": [],
+    "posts": [
+      "DECK_DIRTY",
+      "POSTING_ROLES",
+      "post_all"
+    ],
+    "statements": 1,
+    "targets": [
+      "JobPosting"
+    ]
+  },
+  "app/jobsearch/imports/tracker.py::_import_rows": {
+    "exempt": [],
+    "posts": [
+      "post_new_roles"
+    ],
+    "statements": 1,
+    "targets": [
+      "Opportunity"
+    ]
+  },
+  "app/jobsearch/mail/haiku.py::drop_waiting": {
+    "exempt": [
+      "dropping the messages still waiting takes work away: it makes none"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "MailMessage"
+    ]
+  },
+  "app/jobsearch/mail/login.py::remove": {
+    "exempt": [
+      "forgetting the login creates no work, and no loop reads the saved login"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "MailLogin"
+    ]
+  },
+  "app/jobsearch/owner_actions/runner.py::_progress": {
+    "exempt": [
+      "the progress line of a job is read by the screen only"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "ActionRun"
+    ]
+  },
+  "app/jobsearch/pipeline/stored_order.py::_write": {
+    "exempt": [
+      "the stored order is read only by the lanes (stored_order.py): no loop looks at it"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "table"
+    ]
+  },
+  "app/jobsearch/pipeline/stored_order.py::settle": {
+    "exempt": [
+      "the lines are what settle has just handled: nothing else reads them (stored_order.py)"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "QueueDirty"
+    ]
+  },
+  "app/jobsearch/pool/core.py::resume": {
+    "exempt": [],
+    "posts": [
+      "POOL_OWED",
+      "post_all",
+      "ready"
+    ],
+    "statements": 1,
+    "targets": [
+      "AgentKindPause"
+    ]
+  },
+  "app/jobsearch/postings/raw_copies.py::_point": {
+    "exempt": [
+      "the pointer is written with the copy it names, whose writer posts (`_copy_made`)"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "table"
+    ]
+  },
+  "app/jobsearch/postings/raw_copies.py::repoint": {
+    "exempt": [
+      "the pointer is worked out from the rows that name the copy (`repoint`): no loop reads it"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "JobPosting"
+    ]
+  },
+  "app/jobsearch/profile/store.py::release_tabs": {
+    "exempt": [],
+    "posts": [
+      "DECK_DIRTY",
+      "POSTING_ROLES",
+      "ROLE_SETTLE",
+      "post_all",
+      "ready"
+    ],
+    "statements": 4,
+    "targets": [
+      "JobPosting",
+      "Opportunity"
+    ]
+  },
+  "app/jobsearch/research/analysis.py::name_added": {
+    "exempt": [
+      "the same transaction's ORM write to the role (company, title) posts for it"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "JobPosting"
+    ]
+  },
+  "app/jobsearch/research/analysis.py::renew_claims": {
+    "exempt": [
+      "a claim is renewed every minute per live session: a post would wake the dispatcher every minute for nothing, and silence is the Sweep mission's to notice"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "Opportunity"
+    ]
+  },
+  "app/jobsearch/research/rank.py::keep": {
+    "exempt": [],
+    "posts": [
+      "post_roles"
+    ],
+    "statements": 1,
+    "targets": [
+      "RoleRank"
+    ]
+  },
+  "app/jobsearch/work/claim.py::claim": {
+    "exempt": [],
+    "posts": [
+      "post_claimed"
+    ],
+    "statements": 1,
+    "targets": [
+      "entity"
+    ]
+  },
+  "app/jobsearch/work/hand_outs.py::expire": {
+    "exempt": [
+      "a lapsed claim already holds nothing back (`held` reads the lease): the rows are only tidied"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "HandOut"
+    ]
+  },
+  "app/jobsearch/work/hand_outs.py::release": {
+    "exempt": [],
+    "posts": [
+      "POOL_OWED",
+      "post",
+      "ready"
+    ],
+    "statements": 1,
+    "targets": [
+      "HandOut"
+    ]
+  },
+  "app/jobsearch/work/job_queue.py::expire": {
+    "exempt": [
+      "the rows of jobs kept past their day are only tidied: a job that ended is read by no loop"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "model"
+    ]
+  },
+  "app/jobsearch/work/role_match.py::code_pass": {
+    "exempt": [],
+    "posts": [
+      "DECK_DIRTY",
+      "POOL_OWED",
+      "post_all"
+    ],
+    "statements": 1,
+    "targets": [
+      "Opportunity"
+    ]
+  },
+  "app/planengine/handouts.py::_prune": {
+    "exempt": [
+      "the record of what was handed out is kept for the screen only: no loop reads it"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "TaskHandout"
+    ]
+  },
+  "app/setup_cli.py::seed_starter_settings": {
+    "exempt": [
+      "the first Settings row of a database `init` has just made: no app is running on it yet, so no turn is waiting to hear of it and the first start reads it"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "ProfileVersion"
+    ]
+  },
+  "app/sites/completion.py::_stop": {
+    "exempt": [],
+    "posts": [
+      "post",
+      "ready"
+    ],
+    "statements": 1,
+    "targets": [
+      "PlanTask"
+    ]
+  },
+  "app/sites/plans.py::revise_plan": {
+    "exempt": [
+      "tasks superseded by a new plan are work taken away: nothing is made ready"
+    ],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "PlanTask"
+    ]
+  },
+  "packages/process-engine/src/process_engine/engine.py::Engine._keep_file": {
+    "exempt": [],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "ProcFile"
+    ],
+    "unwatched": "proc_files keeps the text of each process file by its hash, read back only by the engine to finish an instance on the file it started on; nothing waits on a row of it and its table is not on the watch list"
+  },
+  "packages/process-engine/src/process_engine/engine.py::keep_files": {
+    "exempt": [],
+    "posts": [],
+    "statements": 1,
+    "targets": [
+      "ProcFile"
+    ],
+    "unwatched": "proc_files keeps the text of each process file by its hash, read back only by the engine to finish an instance on the file it started on; nothing waits on a row of it and its table is not on the watch list"
+  }
+}

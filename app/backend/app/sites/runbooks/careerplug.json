@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "key": "careerplug",
+  "name": "CareerPlug",
+  "kind": "host",
+  "hosts": [
+    "careerplug.com"
+  ],
+  "shared_host": true
+}

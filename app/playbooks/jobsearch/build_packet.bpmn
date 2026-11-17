@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Build a packet" (docs/PRD.md paths 10 and 43, the packet committee spec). One version of one
+     role's application packet, put together from the owner's story library: the writer composes it (choosing the
+     library's approved resume lines and letter blocks, and writing only the joins, the headline and the summary) and,
+     in the same turn, gives it a once-over as a hiring manager would read it; code checks the facts and a facts read traces every claim
+     by meaning; a failure gets one fix, and a check still failing goes to the arbitrator. Each agent step is a seat:
+     one model turn (backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/packet_writer.py). Code files it ready or holds it for the owner.
+     Nothing is ever sent or applied to. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_packet" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_packet" name="Build a packet" porter:key="jobsearch_packet" isExecutable="true">
+    <bpmn:documentation>One version of a role's application packet: a resume chosen from the story library's approved lines for this posting, a cover letter of two or three approved story blocks with joins written for it, and the pay ask. Every claim cites the master lines it comes from; code checks them and a facts read traces each by meaning before the packet is ready. Nothing is sent or applied to.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose packet this is."/>
+        <porter:field path="packet" type="string" description="The packet version being written (its id)."/>
+        <porter:field path="role" type="string" description="The role it is for (its id)."/>
+        <porter:field path="brief" type="object" description="What the gather found."/>
+        <porter:field path="brief.ready" type="boolean" description="Whether there is a master resume to write from."/>
+        <porter:field path="brief.library_started" type="boolean" description="Whether a story library build was started for it."/>
+        <porter:field path="composed" type="object" description="What the composer's packet came to."/>
+        <porter:field path="composed.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="composed.pages" type="number" description="How many pages the resume prints."/>
+        <porter:field path="composed.problems" type="number" description="How many choices did not fit the library."/>
+        <porter:field path="checked1" type="object" description="The first code fact checks."/>
+        <porter:field path="checked1.hard" type="number" description="How many of them failed."/>
+        <porter:field path="gate1" type="object" description="The first gate."/>
+        <porter:field path="gate1.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="gate1.fails" type="number" description="How many findings, code and facts."/>
+        <porter:field path="gate1.facts" type="number" description="How many of them were the facts read's."/>
+        <porter:field path="fixed" type="object" description="The fix."/>
+        <porter:field path="fixed.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="fixed.fixed" type="boolean" description="Whether the fix came back."/>
+        <porter:field path="checked2" type="object" description="The second code fact checks."/>
+        <porter:field path="checked2.hard" type="number" description="How many of them failed."/>
+        <porter:field path="gate2" type="object" description="The second gate."/>
+        <porter:field path="gate2.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="gate2.fails" type="number" description="How many findings, code and facts."/>
+        <porter:field path="gate2.facts" type="number" description="How many of them were the facts read's."/>
+        <porter:field path="ruling" type="object" description="The arbitrator's ruling."/>
+        <porter:field path="ruling.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="ruling.fixes" type="number" description="How many fixes it gave."/>
+        <porter:field path="final" type="object" description="The final pass."/>
+        <porter:field path="final.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="final.fixed" type="boolean" description="Whether the final pass came back."/>
+        <porter:field path="filed" type="object" description="What the app's checks found on the final packet."/>
+        <porter:field path="filed.ok" type="boolean" description="Whether every check passed."/>
+        <porter:field path="filed.problems" type="number" description="How many checks failed."/>
+        <porter:field path="done" type="object" description="How the packet ended."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_packet">
+      <bpmn:lane id="Lane_packet_app" name="Job search: gather, check, file">
+        <bpmn:flowNodeRef>Start_packet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gather</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Check_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_gate1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Check_2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_gate2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_fixes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>File</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_passed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Mark_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Hold_packet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_held</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Compose_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Facts_1_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Fix_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Facts_2_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Arbitrate_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Final_fix_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_failed</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_packet_writer" name="Writer (seats: composer, facts gate, arbitrator)">
+        <bpmn:flowNodeRef>Compose</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Facts_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fix</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Facts_2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Arbitrate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Final_fix</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_packet" name="A packet is asked for">
+      <!-- code: backend/app/jobsearch/writing/packets.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The owner presses "Build packet" on a role or asks for changes to a packet, Launch asks for one, or a favorite is read.
+Rules:
+1. Each request makes a new version; earlier versions are kept.
+Outputs: A run of this process and its packet version.
+What the owner sees: "Waiting for the writer" on the role.</bpmn:documentation>
+      <bpmn:outgoing>S_Start__Gather</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Gather" name="Gather what the writer needs" porter:action="jobs.packet_gather" porter:output="brief">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A packet was asked for.
+Rules:
+1. There must be a master resume to write from.
+2. A packet is put together from the story library. When the newest library was not built from the master and writing rules in force, a build starts now (build_library.bpmn), and the compose seat waits for it.
+Outputs: `brief.ready`, `brief.library_started`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Start__Gather</bpmn:incoming>
+      <bpmn:outgoing>S_Gather__Compose</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Compose" name="The writer composes the packet" porter:role="writer" porter:instructions="jobsearch.composer" porter:template="jobsearch.packet" porter:output="composed">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/packet_writer.py -->
+      <bpmn:documentation>Actor: Composer (Opus), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The brief is ready and the story library is usable.
+Rules:
+1. It is handed the posting, the role's research as a requirement match, the story library (resume lines by role with the owner's counts, scope lines, achievements, and the letter blocks by story) and the owner's rules and limits.
+2. It chooses the library's lines and their order, the scope lines, the competencies and two or three letter blocks, and writes only the headline, the summary, the letter's opening, the links between blocks and its close. It never rewords a library line.
+3. In the same turn it reads the whole packet end to end as a seasoned hiring manager and editor would, and cuts freely what is said twice, padded, overstated, or does nothing for this job.
+4. Code turns library ids into the master lines they rest on, keeps each role within the owner's count, puts its firm-side lines first where the owner's rules ask for it, prints only the competency terms a printed line carries, and cuts bullets until the resume fits the owner's page limit.
+Outputs: `composed.pages`, `composed.problems`.
+What the owner sees: "Waiting for the writer" on the role.</bpmn:documentation>
+      <bpmn:incoming>S_Gather__Compose</bpmn:incoming>
+      <bpmn:outgoing>S_Compose__Gw_Compose_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Check_1" name="Run the code fact checks" porter:action="jobs.packet_checks" porter:output="checked1">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The packet was composed.
+Rules:
+1. Every claim cites master lines that exist; nothing the owner bans appears; the style rules that are on hold; no name the owner's client rule keeps out; each role within the owner's count, with its scope line where the rules say it always prints; the letter's length.
+2. Flags for the facts read, never refusals on their own: scope inflation, letter paragraphs that cite nothing, universal words the cited lines do not hold, and the sentences written for this letter.
+Outputs: `checked1.hard`.
+What the owner sees: "Its facts being checked" on the role.</bpmn:documentation>
+      <bpmn:incoming>S_Compose__Check_1</bpmn:incoming>
+      <bpmn:outgoing>S_Check_1__Facts_1</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Facts_1" name="The facts gate reads the packet" porter:role="writer" porter:instructions="jobsearch.facts" porter:template="jobsearch.facts.report" porter:output="gate1">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/packet_writer.py -->
+      <bpmn:documentation>Actor: Facts gate (Sonnet), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The code checks ran.
+Rules:
+1. It lists every claim with the master line that holds it, or none, and judges each by meaning, not wording: a line that says the same thing in other words is backed; one that says more or something different fails. It is given the roles and education the resume prints, so a claim resting on them is backed.
+2. It decides each code flag. It never comments on style.
+Outputs: `gate1.fails` (code and facts), `gate1.facts`.
+What the owner sees: "Its facts being checked" on the role.</bpmn:documentation>
+      <bpmn:incoming>S_Check_1__Facts_1</bpmn:incoming>
+      <bpmn:outgoing>S_Facts_1__Gw_Facts_1_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gw_gate1" name="Did the gate pass?" default="F_gate1_pass">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The facts gate answered.
+Rules:
+1. Anything failed, code or facts, goes to one fix. Nothing about style is ever sent back.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Facts_1__Gw_gate1</bpmn:incoming>
+      <bpmn:outgoing>F_gate1_pass</bpmn:outgoing>
+      <bpmn:outgoing>F_gate1_fail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Fix" name="The writer fixes the named lines" porter:role="writer" porter:instructions="jobsearch.fixer" porter:template="jobsearch.fix" porter:output="fixed">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/packet_writer.py -->
+      <bpmn:documentation>Actor: Composer (Sonnet, low effort), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The gate failed.
+Rules:
+1. It changes only the lines named, as little as the fix needs, within what their master lines hold, and returns both documents whole.
+Outputs: `fixed.fixed`.
+What the owner sees: "Being fixed" on the role.</bpmn:documentation>
+      <bpmn:incoming>F_gate1_fail</bpmn:incoming>
+      <bpmn:outgoing>S_Fix__Gw_Fix_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Check_2" name="Run the code fact checks again" porter:action="jobs.packet_checks" porter:output="checked2">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The fix came back.
+Rules:
+1. The same checks as the first time, on the fixed packet.
+Outputs: `checked2.hard`.
+What the owner sees: "Its facts being checked" on the role.</bpmn:documentation>
+      <bpmn:incoming>S_Fix__Check_2</bpmn:incoming>
+      <bpmn:outgoing>S_Check_2__Facts_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Facts_2" name="The facts gate reads the fixed packet" porter:role="writer" porter:instructions="jobsearch.facts" porter:template="jobsearch.facts.report" porter:output="gate2">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/packet_writer.py -->
+      <bpmn:documentation>Actor: Facts gate (Sonnet), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The code checks ran again.
+Rules:
+1. The same read as the first time, on the fixed packet.
+Outputs: `gate2.fails`, `gate2.facts`.
+What the owner sees: "Its facts being checked" on the role.</bpmn:documentation>
+      <bpmn:incoming>S_Check_2__Facts_2</bpmn:incoming>
+      <bpmn:outgoing>S_Facts_2__Gw_Facts_2_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gw_gate2" name="Does a fact check still fail?" default="F_gate2_pass">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The second read answered.
+Rules:
+1. A check still failing after the fix goes to the arbitrator, never to another read: another read would flag new things, where a ruling closes the findings already made.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Facts_2__Gw_gate2</bpmn:incoming>
+      <bpmn:outgoing>F_gate2_pass</bpmn:outgoing>
+      <bpmn:outgoing>F_gate2_fail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Arbitrate" name="The arbitrator rules on the findings" porter:role="writer" porter:instructions="jobsearch.arbitrator" porter:template="jobsearch.arbitrator.report" porter:output="ruling">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/packet_writer.py -->
+      <bpmn:documentation>Actor: Arbitrator (Opus), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: A check still failed after the fix.
+Rules:
+1. It rules each finding of both rounds real or not real (the facts read can be wrong; a code finding is always real), and for each real one still present says concretely how to fix the line within what the master holds.
+Outputs: `ruling.fixes`.
+What the owner sees: "Being fixed" on the role.</bpmn:documentation>
+      <bpmn:incoming>F_gate2_fail</bpmn:incoming>
+      <bpmn:outgoing>S_Arbitrate__Gw_Arbitrate_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gw_fixes" name="Did the arbitrator give fixes?" default="F_no_fixes">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The arbitrator answered.
+Rules:
+1. Fixes go to one final pass; with none, the packet is filed as it is.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Arbitrate__Gw_fixes</bpmn:incoming>
+      <bpmn:outgoing>F_no_fixes</bpmn:outgoing>
+      <bpmn:outgoing>F_fixes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Final_fix" name="The writer makes the arbitrator's fixes" porter:role="writer" porter:instructions="jobsearch.fixer" porter:template="jobsearch.fix" porter:output="final">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/packet_writer.py -->
+      <bpmn:documentation>Actor: Composer (Sonnet, low effort), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The arbitrator gave fixes.
+Rules:
+1. It makes only the arbitrator's fixes. There is no further read; the app's checks run when the packet is filed.
+Outputs: `final.fixed`.
+What the owner sees: "Being fixed" on the role.</bpmn:documentation>
+      <bpmn:incoming>F_fixes</bpmn:incoming>
+      <bpmn:outgoing>S_Final_fix__Gw_Final_fix_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="File" name="File the packet" porter:action="jobs.packet_file" porter:output="filed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The gate passed, or the arbitrator's ruling was carried out.
+Rules:
+1. The app's checks run on the final packet: every claim cites the master, the text checks, a cover letter, the letter's length, the pay ask worked out from the role's research. What the gate did is kept as a note.
+2. The resume is printed with everything code owns: the owner's name and contact line, each role's employer, title, dates and descriptor, the education.
+Outputs: `filed.ok`, `filed.problems`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>F_gate1_pass</bpmn:incoming>
+      <bpmn:incoming>F_gate2_pass</bpmn:incoming>
+      <bpmn:incoming>F_no_fixes</bpmn:incoming>
+      <bpmn:incoming>S_Final_fix__File</bpmn:incoming>
+      <bpmn:outgoing>S_File__Gw_passed</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_passed" name="Did every check pass?" default="F_held">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The packet was filed.
+Rules:
+1. A packet with a failed check is held for the owner, never marked ready.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_File__Gw_passed</bpmn:incoming>
+      <bpmn:outgoing>F_passed</bpmn:outgoing>
+      <bpmn:outgoing>F_held</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Mark_ready" name="Mark it ready" porter:action="jobs.packet_ready" porter:output="done">
+      <bpmn:documentation>Actor: Job search.
+Trigger: Every check passed.
+Rules:
+1. The packet is ready for the owner to read; earlier versions are marked replaced; its files are saved to the owner's packet folder when one is set.
+Outputs: `done`.
+What the owner sees: the packet on the role.</bpmn:documentation>
+      <bpmn:incoming>F_passed</bpmn:incoming>
+      <bpmn:outgoing>S_Mark_ready__End_ready</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Hold_packet" name="Hold it for the owner" porter:action="jobs.packet_held" porter:output="done">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A check failed on the final packet.
+Rules:
+1. The packet is kept with the problems listed, and the owner decides: ask for changes, or use it anyway.
+Outputs: `done`.
+What the owner sees: "A packet needs you" in Notifications, with the problems.</bpmn:documentation>
+      <bpmn:incoming>F_held</bpmn:incoming>
+      <bpmn:outgoing>S_Hold_packet__End_held</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_ready" name="Packet ready">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The packet was marked ready.
+What the owner sees: the packet on the role's page.</bpmn:documentation>
+      <bpmn:incoming>S_Mark_ready__End_ready</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_held" name="Held for the owner">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The packet was held.
+What the owner sees: the packet and its problems on the role's page.</bpmn:documentation>
+      <bpmn:incoming>S_Hold_packet__End_held</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gw_Compose_answered" name="Did the composer answer?" default="S_Compose__Check_1">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The composer answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `composed.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Compose__Gw_Compose_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Compose__Check_1</bpmn:outgoing>
+      <bpmn:outgoing>F_Compose_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Facts_1_answered" name="Did the facts gate answer?" default="S_Facts_1__Gw_gate1">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The facts gate answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `gate1.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Facts_1__Gw_Facts_1_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Facts_1__Gw_gate1</bpmn:outgoing>
+      <bpmn:outgoing>F_Facts_1_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Fix_answered" name="Did the fix come back?" default="S_Fix__Check_2">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The fix answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `fixed.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Fix__Gw_Fix_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Fix__Check_2</bpmn:outgoing>
+      <bpmn:outgoing>F_Fix_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Facts_2_answered" name="Did the second read answer?" default="S_Facts_2__Gw_gate2">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The second read answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `gate2.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Facts_2__Gw_Facts_2_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Facts_2__Gw_gate2</bpmn:outgoing>
+      <bpmn:outgoing>F_Facts_2_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Arbitrate_answered" name="Did the arbitrator answer?" default="S_Arbitrate__Gw_fixes">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The arbitrator answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `ruling.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Arbitrate__Gw_Arbitrate_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Arbitrate__Gw_fixes</bpmn:outgoing>
+      <bpmn:outgoing>F_Arbitrate_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Final_fix_answered" name="Did the final pass come back?" default="S_Final_fix__File">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The final pass answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `final.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Final_fix__Gw_Final_fix_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Final_fix__File</bpmn:outgoing>
+      <bpmn:outgoing>F_Final_fix_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_failed" name="Closed as failed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A seat failed every try (three), and the packet is closed as failed (`packet_writer.fail`, through `stuck.cancel_instance`). No notification is raised.
+Rules:
+1. "Closed as failed" is how the app ends a run from outside the engine; the engine never takes this way, because nothing in the engine sets the step's answer to false. The run ends Stopped on the Agents page and the reason is kept in the run's history. Other stops (the time passed, removed, released back to the line, orphaned at start) are not failures and are not drawn.
+Outputs: Nothing; the run is cancelled from outside the engine.
+What the owner sees: the packet says it failed and offers Build again.</bpmn:documentation>
+      <bpmn:incoming>F_Compose_failed</bpmn:incoming>
+      <bpmn:incoming>F_Facts_1_failed</bpmn:incoming>
+      <bpmn:incoming>F_Fix_failed</bpmn:incoming>
+      <bpmn:incoming>F_Facts_2_failed</bpmn:incoming>
+      <bpmn:incoming>F_Arbitrate_failed</bpmn:incoming>
+      <bpmn:incoming>F_Final_fix_failed</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start__Gather" sourceRef="Start_packet" targetRef="Gather"/>
+    <bpmn:sequenceFlow id="S_Gather__Compose" sourceRef="Gather" targetRef="Compose"/>
+    <bpmn:sequenceFlow id="S_Compose__Gw_Compose_answered" sourceRef="Compose" targetRef="Gw_Compose_answered"/>
+    <bpmn:sequenceFlow id="S_Compose__Check_1" name="It answered" sourceRef="Gw_Compose_answered" targetRef="Check_1"/>
+    <bpmn:sequenceFlow id="F_Compose_failed" name="The app closed it as failed" sourceRef="Gw_Compose_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">composed.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Check_1__Facts_1" sourceRef="Check_1" targetRef="Facts_1"/>
+    <bpmn:sequenceFlow id="S_Facts_1__Gw_Facts_1_answered" sourceRef="Facts_1" targetRef="Gw_Facts_1_answered"/>
+    <bpmn:sequenceFlow id="S_Facts_1__Gw_gate1" name="It answered" sourceRef="Gw_Facts_1_answered" targetRef="Gw_gate1"/>
+    <bpmn:sequenceFlow id="F_Facts_1_failed" name="The app closed it as failed" sourceRef="Gw_Facts_1_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">gate1.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_gate1_pass" name="Passed" sourceRef="Gw_gate1" targetRef="File"/>
+    <bpmn:sequenceFlow id="F_gate1_fail" name="Something failed" sourceRef="Gw_gate1" targetRef="Fix">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">gate1.fails &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Fix__Gw_Fix_answered" sourceRef="Fix" targetRef="Gw_Fix_answered"/>
+    <bpmn:sequenceFlow id="S_Fix__Check_2" name="It answered" sourceRef="Gw_Fix_answered" targetRef="Check_2"/>
+    <bpmn:sequenceFlow id="F_Fix_failed" name="The app closed it as failed" sourceRef="Gw_Fix_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">fixed.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Check_2__Facts_2" sourceRef="Check_2" targetRef="Facts_2"/>
+    <bpmn:sequenceFlow id="S_Facts_2__Gw_Facts_2_answered" sourceRef="Facts_2" targetRef="Gw_Facts_2_answered"/>
+    <bpmn:sequenceFlow id="S_Facts_2__Gw_gate2" name="It answered" sourceRef="Gw_Facts_2_answered" targetRef="Gw_gate2"/>
+    <bpmn:sequenceFlow id="F_Facts_2_failed" name="The app closed it as failed" sourceRef="Gw_Facts_2_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">gate2.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_gate2_pass" name="Passed" sourceRef="Gw_gate2" targetRef="File"/>
+    <bpmn:sequenceFlow id="F_gate2_fail" name="Still failing" sourceRef="Gw_gate2" targetRef="Arbitrate">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">gate2.fails &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Arbitrate__Gw_Arbitrate_answered" sourceRef="Arbitrate" targetRef="Gw_Arbitrate_answered"/>
+    <bpmn:sequenceFlow id="S_Arbitrate__Gw_fixes" name="It answered" sourceRef="Gw_Arbitrate_answered" targetRef="Gw_fixes"/>
+    <bpmn:sequenceFlow id="F_Arbitrate_failed" name="The app closed it as failed" sourceRef="Gw_Arbitrate_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">ruling.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_no_fixes" name="No fixes" sourceRef="Gw_fixes" targetRef="File"/>
+    <bpmn:sequenceFlow id="F_fixes" name="Fixes to make" sourceRef="Gw_fixes" targetRef="Final_fix">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">ruling.fixes &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Final_fix__Gw_Final_fix_answered" sourceRef="Final_fix" targetRef="Gw_Final_fix_answered"/>
+    <bpmn:sequenceFlow id="S_Final_fix__File" name="It answered" sourceRef="Gw_Final_fix_answered" targetRef="File"/>
+    <bpmn:sequenceFlow id="F_Final_fix_failed" name="The app closed it as failed" sourceRef="Gw_Final_fix_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">final.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_File__Gw_passed" sourceRef="File" targetRef="Gw_passed"/>
+    <bpmn:sequenceFlow id="F_passed" name="Every check passed" sourceRef="Gw_passed" targetRef="Mark_ready">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">filed.ok = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_held" name="A check failed" sourceRef="Gw_passed" targetRef="Hold_packet"/>
+    <bpmn:sequenceFlow id="S_Mark_ready__End_ready" sourceRef="Mark_ready" targetRef="End_ready"/>
+    <bpmn:sequenceFlow id="S_Hold_packet__End_held" sourceRef="Hold_packet" targetRef="End_held"/>
+  </bpmn:process>
+</bpmn:definitions>

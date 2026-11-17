@@ -1,0 +1,21 @@
+# Line endings. Everything is stored with LF and checked out with LF, on Windows too: shell scripts (bump-version.sh, run
+# under Git Bash) break on CRLF. Windows-only launchers keep CRLF.
+* text=auto eol=lf
+
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary files are never touched.
+*.xlsx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.docx binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+*.plugin binary

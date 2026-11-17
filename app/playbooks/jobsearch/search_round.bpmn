@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: one search round (backend/app/jobsearch). New, so the process engine drives it from the start, with no
+     shadow: the engine decides and the registered job-search actions act (backend/app/jobsearch/actions.py). It runs
+     only in the job-search app (its loader reads only the top of playbooks/, and the job-search actions live in their own
+     registry). The night's code has already filtered the postings (read_boards:
+     gates, then the classifier's ranking), and a posting that passed the gates is already a role: no session judges
+     its title or reads it in this round. The round is the scout, who finds employers' job boards; every other step
+     is deterministic. Each reported role goes through the "Screen one role" sub-process
+     (playbooks/jobsearch/screen_one_role.bpmn), which holds the hard gates as FEEL conditions over the owner's gate
+     config. When the round has stored and summarized its finds, "Analyse the finds", if it is switched on, sends the
+     finds to the analyst (each by "Research a role", playbooks/jobsearch/analyse_role.bpmn)
+     and the round waits for them before it ends, so the next search starts after them. A round that is cut short (the
+     finish time, Claude's usage limit) ends through the same steps with what it has (backend/app/jobsearch/missions/search_run.py,
+     wind_down); only the analyst's step is skipped. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_round" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_round" name="Search for roles" porter:key="jobsearch_round" isExecutable="true">
+    <bpmn:documentation>One search for new roles. The scout looks for employers' boards, so the app reads them itself from then on. Roles already in the tracker are set aside, the rest go through the owner's hard gates, and every one is stored: kept (Landing Zone, then the stages move it on), or gated out with the reason. When Analyse the finds is switched on, the finds then go to the analyst, and the search ends when they are researched. Nothing is applied to.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose roles these are."/>
+        <porter:field path="run" type="string" description="The search run (its id)."/>
+        <porter:field path="focus" type="string" description="What this search looks at, in words (the scout looks by it)."/>
+        <porter:field path="gates" type="object" description="The owner's hard gates, read from the profile."/>
+        <porter:field path="gates.stale_days" type="number" description="A posting older than this many days is stale."/>
+        <porter:field path="gates.comp_floor" type="number" description="The amount a year the pay must reach to be kept; 0 when the pay gate is off."/>
+        <porter:field path="gates.says" type="object" description="The sentence of each gate that is on (location, compensation, age): the reason a dropped role is given."/>
+        <porter:field path="reported" type="object" description="What the scout handed back."/>
+        <porter:field path="reported.count" type="number" description="How many roles were reported in all."/>
+        <porter:field path="taken" type="object" description="The reported roles, read for what the gates compare."/>
+        <porter:field path="taken.count" type="number" description="How many roles were taken."/>
+        <porter:field path="taken.roles" type="list" description="Each reported role's facts."/>
+        <porter:field path="fresh" type="object" description="The roles that are new to the owner."/>
+        <porter:field path="fresh.roles" type="list" description="The new roles, one entry each."/>
+        <porter:field path="fresh.duplicates" type="number" description="Roles set aside as already known, or repeated in this report."/>
+        <porter:field path="verdicts" type="list" description="What the gates said about each new role."/>
+        <porter:field path="stored" type="object" description="What was stored."/>
+        <porter:field path="stored.kept" type="number" description="Roles kept for the page."/>
+        <porter:field path="stored.screened_out" type="number" description="Roles a gate dropped, stored with the reason."/>
+        <porter:field path="followed" type="object" description="Roles found on a job board, looked for among their employer's own listings."/>
+        <porter:field path="followed.looked" type="number" description="Roles with only a job board link that were looked at."/>
+        <porter:field path="followed.followed" type="number" description="Roles that now have their employer's own posting as their link."/>
+        <porter:field path="summary" type="object" description="The round's summary."/>
+        <porter:field path="summary.text" type="string" description="The summary, in plain words."/>
+        <porter:field path="analysing" type="object" description="The round's own research: its finds sent to the analyst."/>
+        <porter:field path="analysing.on" type="boolean" description="Whether Analyse the finds was on, outside Claude's peak hours, and the search not cut short."/>
+        <porter:field path="analysing.waiting" type="number" description="How many of the round's finds were sent to the analyst (up to the mission's roles to research; -1: all)."/>
+        <porter:field path="researched" type="object" description="What the analyst handed back for the round's finds."/>
+        <porter:field path="researched.count" type="number" description="How many of the round's finds were researched."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_round">
+      <bpmn:lane id="Lane_app" name="Job search: de-duplicate, gates, store">
+        <bpmn:flowNodeRef>Start_round</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Open_run</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Take_reported</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_any</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Dedupe</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Screen_each</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Store</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Follow_postings</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Summarize</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Plan_analysis</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_analysis</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_round</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_scout" name="Scout (session agent)">
+        <bpmn:flowNodeRef>Scout_searches</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_analyst" name="Analyst (the scout agent)">
+        <bpmn:flowNodeRef>Analyst_researches_finds</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_round" name="A search starts">
+      <!-- code: backend/app/jobsearch/missions/search_run.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The owner presses "Search now", or the schedule says a day has passed since the last search.
+Rules:
+1. One search at a time: a start while one is open is refused.
+Outputs: A run of this process and its search run.
+What the owner sees: the run at the top of the page, "searching".</bpmn:documentation>
+      <bpmn:outgoing>S_Start_round__Open_run</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Open_run" name="Read the gates" porter:action="jobs.open_run" porter:output="gates">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A search started.
+Rules:
+1. The gates are the owner's stored gate config (the profile the owner edits), read now, so a correction applies to the next search.
+Outputs: `gates`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Open_run__Scout_searches</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Scout_searches" name="The scout finds job boards" porter:role="scout" porter:instructions="jobsearch.scout" porter:template="jobsearch.scout.report" porter:output="reported">
+      <bpmn:documentation>Actor: Scout (session agent), through the job-search MCP tools jobs.profile, jobs.boards, jobs.board_found and jobs.report.
+Trigger: The gates are read.
+Rules:
+1. The scout reads its task with jobs.profile and finds the job boards of employers the app doesn't read yet (jobs.boards, jobs.board_found), so the app reads them itself from then on.
+2. It judges no posting: a posting that passes the gates becomes a role at once, and the analyst reads it. It ends the round with jobs.report, done.
+3. It never applies, fills a form or solves a CAPTCHA.
+Outputs: `reported.count`: how many roles were reported in all.
+What the owner sees: "searching" on the run.</bpmn:documentation>
+      <bpmn:outgoing>S_Scout_searches__Gw_any</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gw_any" name="Was anything reported?" default="F_some">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The scout is done.
+Rules:
+1. Nothing reported goes straight to the summary.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_none</bpmn:outgoing>
+      <bpmn:outgoing>F_some</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Take_reported" name="Take the reported roles" porter:action="jobs.take_reported" porter:output="taken">
+      <bpmn:documentation>Actor: Job search.
+Trigger: Roles were reported.
+Rules:
+1. Each role is read for what the gates compare: its match key (lowercased company|title), its age, its place and its pay (as the scout reported them, else the board's); and for the fit its answers add up to, which no gate reads.
+2. A report that answers the owner's asks is staged without a fit. Each report's fit is added up here, so of two reports of one role the one that scores higher is the one kept.
+Outputs: `taken`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Take_reported__Dedupe</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Dedupe" name="Set aside roles already known" porter:action="jobs.dedupe" porter:output="fresh">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The roles are taken.
+Rules:
+1. A role the owner already has (the tracker's, or an earlier search's, kept or gated out) is set aside. It is the same role when its match key (lowercased company|title) is one they have; when its company and title read the same once folded (case, spacing, commas and dashes, "&amp;" and "and", "Sr." and "Senior", a "(Remote)" tag; every other word of the title stays, so "Director, X" and "Senior Director, X" are two roles); or when its link carries the same id on the same host as one of theirs and the company is the same employer (a link across two employers is not a match). The same role on two boards is one role.
+2. A role repeated within the report, in any of those writings, keeps its best-fit copy.
+3. A posting for a role that is set aside becomes that role's.
+4. Any other report of a role the owner has is set aside.
+Outputs: `fresh`: the new roles and how many were set aside.
+What the owner sees: "N already known" in the summary.</bpmn:documentation>
+      <bpmn:outgoing>S_Dedupe__Screen_each</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="Screen_each" name="Screen each new role" calledElement="jobsearch_screen_role" porter:in="gates=gates" porter:out="verdicts=verdict">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The new roles are known.
+Rules:
+1. Each new role is run through the hard gates by its own run of "Screen one role": excluded employer, work location, pay, staleness.
+Outputs: `verdicts`: one for each role.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Screen_each__Store</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false" porter:collection="fresh.roles" porter:elementVariable="role"/>
+    </bpmn:callActivity>
+    <bpmn:serviceTask id="Store" name="Store every role" porter:action="jobs.store" porter:output="stored">
+      <bpmn:documentation>Actor: Job search.
+Trigger: Every new role has a verdict.
+Rules:
+1. A kept role is stored in Landing Zone, with the answers the report carried to the owner's asks (each kept under the ask's id and wording) and evidence, and no score: its score is worked out last, by code, after the analyst has researched it (and a note when the place was unclear).
+2. A role a gate dropped is stored as gated out with the reason, so a gate that misfires shows on the page. The full gate check (jobsearch/gating/check.py: the employer's own gate, the employer rules, the owner's sentence rules and the dial lines) also runs on each role about to be stored, and a role it stops is stored as gated out with that line as the reason.
+3. A role whose link is on a job board (any job site in Where to look) keeps that link as the one it was found at, for good.
+4. Every role has a posting in the log. A posting a board's read made becomes the role's. A role no posting became (the scout reported it directly) enters the log as a posting of its own, which says the scout reported it, unless the log already holds it (the same company and title in any writing, or the same link): then that posting is the role's and no second one is added.
+Outputs: `stored`.
+What the owner sees: the roles on the page.</bpmn:documentation>
+      <bpmn:outgoing>S_Store__Follow_postings</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Follow_postings" name="Follow job-board roles to the employer's own posting" porter:action="jobs.follow_postings" porter:output="followed">
+      <!-- code: backend/app/jobsearch/employers/follow.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The roles are stored.
+Rules:
+1. A role found on a job board, before the owner applies, is followed to its employer's own posting. This step reads no page while it holds its transaction. The sweep (`sourcing.sweep`, run inside this step) sources the stored roles in code, and the board reads it needs are handed to a background pass the step starts after it commits (`sweep_boards`).
+2. First by the Apply link its posting already carries, taken when it is a public address on the employer's own domain or on its job system, never a job board's and never another employer's board.
+3. Then by the employer's own listings in the posting index (its own job system's or its own site's, as the night's read left them). A listing is the same role when it is the same employer's, its title is the same once abbreviations and a where-tag are folded, and its place agrees (both remote, or the same city). Exactly one confident listing is taken; an unsure one stores nothing, and the analyst looks when it researches the role.
+4. On a match the employer's posting becomes the role's link, and the job board link it was found at is kept beside it. The employer's careers site is kept from its job system's board when it has none and the owner set none.
+Outputs: `followed.looked`, `followed.followed`.
+What the owner sees: the employer's link first on the role's Job description tab, with the job board link beside it.</bpmn:documentation>
+      <bpmn:outgoing>S_Follow_postings__Summarize</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Summarize" name="Write the summary" porter:action="jobs.summarize" porter:output="summary">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The roles are stored and followed, or none were reported.
+Rules:
+1. Counts only: how many were reported, new, kept, gated out and already known, and the best few finds.
+Outputs: `summary`.
+What the owner sees: the run's summary on the page.</bpmn:documentation>
+      <bpmn:outgoing>S_Summarize__Plan_analysis</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Plan_analysis" name="Send the round's finds to the analyst" porter:action="jobs.plan_analysis" porter:output="analysing">
+      <!-- code: backend/app/jobsearch/research/analysis.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The summary is written and the search run is closed.
+Rules:
+1. Only when the "Analyse the finds" mission is switched on. Paused, nothing is sent here and the mission's own run, which follows the search, takes the finds later.
+2. Not inside Claude's peak hours when the owner asked to avoid them (it would start Claude work then), and not for a search that was cut short by the finish time or Claude's usage limit.
+3. The search's own finds that are on deck, Sourced (their original posting is known) and never researched: the roles the owner moved by hand first, then the deck's order (the highest rank first, a stale posting below the fresher ones, the younger posting on a tie), up to the mission's roles to research (-1: all of them). Each is researched by its own run of "Research a role" (playbooks/jobsearch/analyse_role.bpmn), exactly as the mission's own run would send it.
+4. Sending the finds never costs the search its roles: if it fails, the failure is logged and the search ends without it.
+Outputs: `analysing.on`, `analysing.waiting`.
+What the owner sees: Nothing on those roles' rows.</bpmn:documentation>
+      <bpmn:outgoing>S_Plan_analysis__Gw_analysis</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_analysis" name="Any finds for the analyst?" default="F_no_research">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The finds are sent.
+Rules:
+1. None sent (Analyse the finds is paused, nothing was found, or it is peak hours) ends the search at once.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_research</bpmn:outgoing>
+      <bpmn:outgoing>F_no_research</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Analyst_researches_finds" name="The analyst researches the round's finds" porter:role="analyst" porter:instructions="jobsearch.analyst" porter:template="jobsearch.analysis" porter:output="researched">
+      <bpmn:documentation>Actor: Analyst (the scout agent), through the job-search MCP tools jobs.analysis and jobs.analysis_submit, one role at a time, each in its own run of "Research a role".
+Trigger: Finds were sent to the analyst.
+Rules:
+1. The search waits here until none of its finds is with the analyst: each was researched, failed (the analyst never sent it) or was sent back to the research queue (the night was stopped). The schedule's next look at the clock ends the step. The next search of the night starts after it.
+2. A find the analyst researches is gated again on the facts and can reach Ready to Launch, where it counts toward the Scout the boards mission's number of matches.
+3. It never applies, fills a form or sends anything.
+Outputs: `researched.count`: how many of the search's finds were researched.
+What the owner sees: The mission running until they are researched; nothing on the finds' rows.</bpmn:documentation>
+      <bpmn:outgoing>S_Analyst_researches_finds__End_round</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_round" name="The search is done">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The summary is written and the finds, if any were sent, are researched.
+Rules:
+1. The search run was closed as done when its summary was written.
+Outputs: A finished run.
+What the owner sees: the run, done, with its summary.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_round__Open_run" sourceRef="Start_round" targetRef="Open_run"/>
+    <bpmn:sequenceFlow id="S_Open_run__Scout_searches" sourceRef="Open_run" targetRef="Scout_searches"/>
+    <bpmn:sequenceFlow id="S_Scout_searches__Gw_any" sourceRef="Scout_searches" targetRef="Gw_any"/>
+    <bpmn:sequenceFlow id="F_none" name="Nothing reported" sourceRef="Gw_any" targetRef="Summarize">
+      <bpmn:documentation>The scout reported no role.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">reported.count = 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_some" name="Roles reported" sourceRef="Gw_any" targetRef="Take_reported">
+      <bpmn:documentation>The scout reported roles.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Take_reported__Dedupe" sourceRef="Take_reported" targetRef="Dedupe"/>
+    <bpmn:sequenceFlow id="S_Dedupe__Screen_each" sourceRef="Dedupe" targetRef="Screen_each"/>
+    <bpmn:sequenceFlow id="S_Screen_each__Store" sourceRef="Screen_each" targetRef="Store"/>
+    <bpmn:sequenceFlow id="S_Store__Follow_postings" sourceRef="Store" targetRef="Follow_postings"/>
+    <bpmn:sequenceFlow id="S_Follow_postings__Summarize" sourceRef="Follow_postings" targetRef="Summarize"/>
+    <bpmn:sequenceFlow id="S_Summarize__Plan_analysis" sourceRef="Summarize" targetRef="Plan_analysis"/>
+    <bpmn:sequenceFlow id="S_Plan_analysis__Gw_analysis" sourceRef="Plan_analysis" targetRef="Gw_analysis"/>
+    <bpmn:sequenceFlow id="F_research" name="Finds for the analyst" sourceRef="Gw_analysis" targetRef="Analyst_researches_finds">
+      <bpmn:documentation>Finds were sent to the analyst.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">analysing.waiting &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_no_research" name="Nothing for the analyst" sourceRef="Gw_analysis" targetRef="End_round">
+      <bpmn:documentation>Analyse the finds is paused, or the search found nothing.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Analyst_researches_finds__End_round" sourceRef="Analyst_researches_finds" targetRef="End_round"/>
+  </bpmn:process>
+</bpmn:definitions>

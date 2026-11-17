@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Prepare for an interview" (docs/PRD.md 15.2). Adding an interview to a role in Active Discussion puts one
+     of these in front of the Coach: a session of the coach kind researches the company and the interviewers and writes a
+     report in the owner's voice from the master resume and the story library. Code checks it (every claim about the owner
+     cites the master or a story, no banned phrase, every time-sensitive fact has a dated source), a second session reads
+     it as the interviewer would, and code files it with the red-team read and tells the owner. Nothing is applied to or
+     sent (backend/app/jobsearch/interviews/coach.py, backend/app/jobsearch/interviews/coach_checks.py). -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_prepare_interview" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_prepare_interview" name="Prepare for an interview" porter:key="jobsearch_prepare_interview" isExecutable="true">
+    <bpmn:documentation>One interview prepared: the core need of the role, what good looks like, a card for each interviewer, the staples in the owner's voice (opener, why here, why leaving, the pay answer), the likely questions each with a story from the master resume or the story library, the questions for the owner to ask, and the open gaps the owner can still close. Code checks every claim; a second pass reads the report as the interviewer. Nothing is applied to or sent.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose interview this is."/>
+        <porter:field path="prep" type="string" description="The prep being made (its id)."/>
+        <porter:field path="brief" type="object" description="Whether the prep is still waiting."/>
+        <porter:field path="brief.ready" type="boolean" description="Whether the prep is still open for the Coach."/>
+        <porter:field path="found" type="object" description="What the Coach handed back."/>
+        <porter:field path="found.submitted" type="boolean" description="Whether the report was taken."/>
+        <porter:field path="checked" type="object" description="What the code checks made of the report."/>
+        <porter:field path="checked.passed" type="boolean" description="Whether the report passed every code check."/>
+        <porter:field path="read" type="object" description="What the second pass handed back."/>
+        <porter:field path="read.submitted" type="boolean" description="Whether the red-team read was taken."/>
+        <porter:field path="filed" type="object" description="What came of filing the report."/>
+        <porter:field path="filed.state" type="string" description="The prep's state once filed."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_prepare_interview">
+      <bpmn:lane id="Lane_prepare_app" name="Job search: check the prep is open, check the report, file it">
+        <bpmn:flowNodeRef>Start_prepare_interview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gather_interview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Check_report</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>File_report</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_prepare_interview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Coach_writes_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_read</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_failed</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_prepare_coach" name="Coach (a session of the coach kind)">
+        <bpmn:flowNodeRef>Coach_writes</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_prepare_reviewer" name="Reviewer (a second session of the coach kind)">
+        <bpmn:flowNodeRef>Reviewer_reads</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_prepare_interview" name="An interview is added, or Prepare again is pressed">
+      <!-- code: backend/app/jobsearch/interviews/core.py, backend/app/jobsearch/interviews/coach.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The owner adds an interview whose time is ahead to a role in Active Discussion, or presses Prepare again on one.
+Rules:
+1. An interview whose time has passed starts none. One version is open at a time.
+Outputs: A run of this process for the prep.
+What the owner sees: "Waiting for the Coach" on the interview's card.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_prepare_interview__Gather_interview</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Gather_interview" name="Check the prep is waiting" porter:action="jobs.interview_gather" porter:output="brief">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A prep was started.
+Rules:
+1. The Coach's task is read when it calls jobs.coach: the interview as asked for, the role and its employer, the posting and its graded requirement lines, the packet that was sent, the master resume with each line's id, the story library, the starting expectation (never the owner's lowest pay), the earlier reports for the same employer, and the owner's rules for their voice and for interviews.
+Outputs: `brief.ready`: whether the prep is still open.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Gather_interview__Coach_writes</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Coach_writes" name="The Coach researches and writes the report" porter:role="coach" porter:instructions="jobsearch.coach" porter:template="jobsearch.coach.report" porter:output="found">
+      <bpmn:documentation>Actor: Coach (the scout agent, in a coach session), through the job-search MCP tools jobs.coach and jobs.coach_submit.
+Trigger: The prep is waiting.
+Rules:
+1. The Coach researches the company and each named interviewer on public pages (WebSearch and WebFetch) and says so when it finds nothing; it never guesses. Every fact about the employer carries its source and the day it was checked.
+2. It writes the core need, what good looks like, a card for each interviewer, the staples in the owner's voice, the likely questions each with one story from the master resume or the story library, the problem to solve, the questions for the owner to ask and the open gaps. Every claim about the owner cites the master lines or stories behind it; where there is no real story it says what is missing and never invents one.
+3. Code checks the report when it is sent and sends it back with every problem named until it passes (three refusals fail the prep).
+4. It never applies, fills a form, solves a CAPTCHA, gets around a block or sends anything.
+Outputs: `found.submitted`.
+What the owner sees: "Researching" on the interview's card.</bpmn:documentation>
+      <bpmn:outgoing>S_Coach_writes__Gw_Coach_writes_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Check_report" name="The report passed the code checks" porter:action="jobs.interview_check" porter:output="checked">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The report was sent and passed the checks that ran when it was taken.
+Rules:
+1. The code checks ran when the Coach sent the report, inside the submit; this step records the report as taken as passed (`checked.passed`). The checks: every section is there; every claim about the owner cites master lines or library stories that exist; no phrase the owner banned is spoken; no certification the master does not hold is claimed; every time-sensitive fact and the pay range carry an https source, a title and the day it was checked; no job carries more than two answers when the master has three or more; every question to ask carries what it diagnoses, a good and a bad answer and a follow-up; every interviewer has a card with a don't; every open gap names its action.
+Outputs: `checked.passed`.
+What the owner sees: "Checking" on the interview's card.</bpmn:documentation>
+      <bpmn:outgoing>S_Check_report__Reviewer_reads</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Reviewer_reads" name="A second session reads it as the interviewer" porter:role="reviewer" porter:instructions="jobsearch.coach.review" porter:template="jobsearch.coach.review" porter:output="read">
+      <bpmn:documentation>Actor: Reviewer (a second, fresh session of the coach kind), through jobs.coach and jobs.coach_submit.
+Trigger: The report passed the code checks.
+Rules:
+1. It reads the whole report as the interviewer: does each story answer its question or an easier one, does any answer collapse under one follow-up, is any claim about the employer outdated, is one job carrying too many answers. It uses no web tools and changes nothing; it reports findings.
+2. Each finding names where it is, the problem and the fix; one the owner can still act on carries an action, and the app adds it to Open gaps.
+3. It never applies, fills a form, solves a CAPTCHA, gets around a block or sends anything.
+Outputs: `read.submitted`.
+What the owner sees: "Checking" on the interview's card.</bpmn:documentation>
+      <bpmn:outgoing>S_Reviewer_reads__File_report</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="File_report" name="File the report and tell the owner" porter:action="jobs.interview_file" porter:output="filed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The red-team read was sent, or it never ran.
+Rules:
+1. The prep is marked ready with the red-team read beside the report; what the owner can still do about its findings is added to Open gaps. A read that never ran is said so.
+2. One line is written to the role's History and one notification tells the owner the prep is ready.
+Outputs: `filed.state`.
+What the owner sees: "Ready", the report under the interview's card, and a notification.</bpmn:documentation>
+      <bpmn:outgoing>S_File_report__End_prepare_interview</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_prepare_interview" name="Interview prepared">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The report was filed.
+What the owner sees: the report under the interview's card.</bpmn:documentation>
+      <bpmn:incoming>S_File_report__End_prepare_interview</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gw_Coach_writes_answered" name="Did the Coach answer?" default="S_Coach_writes__Check_report">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The Coach answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `found.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Coach_writes__Gw_Coach_writes_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Coach_writes__Check_report</bpmn:outgoing>
+      <bpmn:outgoing>F_Coach_writes_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_read" name="Did the red-team read come in?" default="F_read_in">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The second session was asked to read the report.
+Rules:
+1. A read that came in is filed beside the report. A read that never ran (the app files the report without it, `backend/app/jobsearch/interviews/coach.py:file_without`) is filed without it and the report says so. Either way the prep is filed.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Reviewer_reads__File_report</bpmn:incoming>
+      <bpmn:outgoing>F_read_in</bpmn:outgoing>
+      <bpmn:outgoing>F_read_skipped</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_failed" name="Closed as failed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: No session finished the prep, so the app closes it as failed (`backend/app/jobsearch/interviews/coach.py:_fail`, reached when a stuck prep is settled or expires). The owner is told with the notification `interview_prep_failed`, the only one of these five files. A prep whose interview time passed is lapsed, which is not a failure.
+Rules:
+1. "Closed as failed" is how the app ends a run from outside the engine; the engine never takes this way, because nothing in the engine sets the step's answer to false. The run ends Stopped on the Agents page and the reason is kept in the run's history. Other stops (the time passed, removed, released back to the line, orphaned at start) are not failures and are not drawn.
+Outputs: Nothing; the run is cancelled from outside the engine.
+What the owner sees: the prep says it was not made, with a notification.</bpmn:documentation>
+      <bpmn:incoming>F_Coach_writes_failed</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_prepare_interview__Gather_interview" sourceRef="Start_prepare_interview" targetRef="Gather_interview"/>
+    <bpmn:sequenceFlow id="S_Gather_interview__Coach_writes" sourceRef="Gather_interview" targetRef="Coach_writes"/>
+    <bpmn:sequenceFlow id="S_Coach_writes__Gw_Coach_writes_answered" sourceRef="Coach_writes" targetRef="Gw_Coach_writes_answered"/>
+    <bpmn:sequenceFlow id="S_Coach_writes__Check_report" name="It answered" sourceRef="Gw_Coach_writes_answered" targetRef="Check_report"/>
+    <bpmn:sequenceFlow id="F_Coach_writes_failed" name="The app closed it as failed" sourceRef="Gw_Coach_writes_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">found.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Check_report__Reviewer_reads" sourceRef="Check_report" targetRef="Reviewer_reads"/>
+    <bpmn:sequenceFlow id="S_Reviewer_reads__File_report" sourceRef="Reviewer_reads" targetRef="Gw_read"/>
+    <bpmn:sequenceFlow id="F_read_in" name="It was sent" sourceRef="Gw_read" targetRef="File_report"/>
+    <bpmn:sequenceFlow id="F_read_skipped" name="It never ran" sourceRef="Gw_read" targetRef="File_report">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">read.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_File_report__End_prepare_interview" sourceRef="File_report" targetRef="End_prepare_interview"/>
+  </bpmn:process>
+</bpmn:definitions>

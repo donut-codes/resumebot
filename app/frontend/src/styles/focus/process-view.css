@@ -1,0 +1,520 @@
+/* resumebot's look for the process-view package (app/packages/process-view): the Focus Inbox -------------------------------------
+ * The package is vendored and fixed; its own stylesheet is bundled where the package is imported, so every rule here doubles
+ * `.process-view` to win over it whatever the order. Only these rules are this app's. Every value comes from focus/tokens.css.
+ *
+ * The package reads colours, sizes and corners by the names it was written with (--ink, --surface, --line-2, --porter, --space-3
+ * and so on, each with a fallback of its own). The first rule below answers every one of them in Focus tokens, so nothing falls
+ * back to the package's dark defaults, by day or by night.
+ *
+ * The diagram: each step is a soft square, filled by its job (a start is teal, a decision blue, an end slate, a task the white
+ * sheet), the lines in the field edge. The package lays its graph out as circles and runs each line to the circle's edge, so
+ * the square is drawn inscribed in that circle (12% in from each side) and the lines still meet it. A step shows its number in
+ * its square and its name in a caption when it is the selected step, the run's place, or pointed at (the Steps list names every
+ * one). A run marks its place with a frame: the step it is at in blue (the current place), the steps it passed in teal.
+ * ---------------------------------------------------------------------------------------------------------------- */
+
+.process-view.process-view {
+  --ink: var(--fi-ink);
+  --text: var(--fi-text);
+  --soft: var(--fi-soft);
+  --muted: var(--fi-faint);
+  --faint: var(--fi-faint);
+  --surface: var(--fi-surface);
+  --card: var(--fi-surface);
+  --ground: var(--fi-ground);
+  --hover: var(--fi-hover);
+  --line: var(--fi-line);
+  --line-2: var(--fi-field);
+  --border: var(--fi-line);
+  --border-width: 1px;
+  --focus: var(--fi-focus);
+  --state-ring: 0 0 0 0 transparent;
+  --porter: var(--fi-blue-text);
+  --porter-2: var(--fi-blue);
+  --porter-wash: var(--fi-blue-wash);
+  --on-porter: var(--fi-on-dot);
+  --on-primary: var(--fi-on-dot);
+  --done: var(--fi-teal-text);
+  --done-wash: var(--fi-teal-wash);
+  --radius: var(--fi-r-m);
+  --radius-sm: var(--fi-r-s);
+  --radius-lg: var(--fi-r-l);
+  --radius-full: var(--fi-r-pill);
+  --font-sm: var(--fi-size-s);
+  --font-base: var(--fi-size-base);
+  --font-md: var(--fi-size-row);
+  --font-weight-semibold: var(--fi-weight-semi);
+  --space-1: var(--fi-s2);
+  --space-2: var(--fi-s4);
+  --space-3: var(--fi-s6);
+  --space-4: var(--fi-s7);
+  --space-5: var(--fi-s8);
+  --space-6: var(--fi-s9);
+
+  --pv-start: var(--fi-teal);
+  --pv-start-ink: var(--fi-on-dot);
+  --pv-decision: var(--fi-blue);
+  --pv-decision-soft: var(--fi-blue-wash);
+  --pv-decision-ink: var(--fi-on-dot);
+  --pv-end: var(--fi-soft);
+  --pv-edge: var(--fi-field);
+  gap: var(--fi-s9);
+}
+
+/* --- the two sections' heads: a name in Section weight, with the section's controls at its right ------------------------------- */
+
+.process-view.process-view h2 {
+  margin: 0;
+  color: var(--fi-ink);
+  font-size: var(--fi-size-l);
+  font-weight: var(--fi-weight-heavy);
+  line-height: var(--fi-leading-tight);
+}
+
+.process-view.process-view .section-header {
+  align-items: center;
+  gap: var(--fi-s3) var(--fi-s6);
+  margin: 0 0 var(--fi-s4);
+}
+
+.process-view.process-view .show-details-toggle {
+  gap: var(--fi-s4);
+  color: var(--fi-soft);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-semi);
+}
+
+.process-view.process-view .steps-keyhint { margin: 0; font-size: var(--fi-size-s); color: var(--fi-soft); }
+
+.process-view.process-view .steps-keyhint kbd {
+  padding: 0 var(--fi-s2);
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-s);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font-family: var(--fi-mono);
+  font-size: var(--fi-size-s);
+}
+
+/* The package's own buttons ("Edit", and the editor's): the app's button, white with a hairline, 44px. */
+.process-view.process-view .mode-toggle,
+.process-view.process-view .pv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fi-s4);
+  min-block-size: var(--fi-target);
+  padding: 0 var(--fi-s7);
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font: var(--fi-weight-bold) var(--fi-size-base) var(--fi-font);
+  transition: background-color var(--fi-fast);
+}
+
+.process-view.process-view .pv-btn-sm { min-block-size: 40px; padding: 0 var(--fi-s6); font-size: var(--fi-size-m); }
+
+.process-view.process-view .mode-toggle:hover:not(:disabled),
+.process-view.process-view .pv-btn:hover:not(:disabled) { background: var(--fi-hover); }
+
+.process-view.process-view .pv-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* --- the Process flow board: a white sheet ----------------------------------------------------------------------------------------- */
+
+.process-view.process-view .read-flow-board {
+  border: 0;
+  border-radius: var(--fi-r-xl);
+  background: var(--fi-surface);
+  box-shadow: var(--fi-ring);
+  overflow: hidden;
+}
+
+/* The board is taller than the package's 600px: a fitted graph is zoomed to its height, and the text in it with it. */
+.process-view.process-view .read-flow-board:not(.read-flow-board-expanded) { block-size: 680px; }
+
+.process-view.process-view .read-flow-board .react-flow__viewport { transition: opacity var(--fi-fast); }
+.process-view.process-view .react-flow__background { background: var(--fi-surface); }
+
+.process-view.process-view .react-flow__controls {
+  border: 0;
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  box-shadow: var(--fi-pop);
+  overflow: hidden;
+}
+
+.process-view.process-view .react-flow__controls-button {
+  border-block-end: 1px solid var(--fi-line);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  fill: var(--fi-ink);
+}
+
+.process-view.process-view .react-flow__controls-button:hover { background: var(--fi-hover); }
+.process-view.process-view .react-flow__handle { background: var(--fi-field); }
+
+/* The lines: the field edge, a clear 2px, and an arrowhead in the same ink. */
+.process-view.process-view .pw-living-edge {
+  stroke: var(--pv-edge);
+  stroke-width: 2px;
+  transition: opacity var(--fi-fast);
+}
+
+.process-view.process-view .react-flow__arrowhead * { stroke: var(--pv-edge); fill: var(--pv-edge); }
+
+.process-view.process-view .pw-edge-label {
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-s);
+  background: var(--fi-surface);
+  color: var(--fi-text);
+  font-size: var(--fi-size-s);
+}
+
+/* --- the steps in the diagram: soft squares ------------------------------------------------------------------------------------------ */
+
+/* The step's box stays the circle's bounding box (the package sizes it by how connected the step is); the visible square is
+   its ::before, set 12% in so the lines, which end at the circle, still meet it. */
+.process-view.process-view .pw-block.pw-living-node {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--fi-ink);
+  transition: opacity var(--fi-fast);
+}
+
+.process-view.process-view .pw-living-node::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border: 2px solid var(--fi-field);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  box-shadow: var(--fi-raise);
+}
+
+.process-view.process-view .pw-block.pw-block-event { color: var(--pv-start-ink); }
+.process-view.process-view .pw-block-event::before { border-color: var(--pv-start); background: var(--pv-start); }
+.process-view.process-view .pw-block.pw-block-decision { color: var(--pv-decision-ink); }
+.process-view.process-view .pw-block-decision::before { border-color: var(--pv-decision); background: var(--pv-decision); }
+.process-view.process-view .pw-block.pw-block-terminal { color: var(--fi-on-dot); }
+.process-view.process-view .pw-block-terminal::before { border-color: var(--pv-end); background: var(--pv-end); }
+
+/* A step that is a process of its own: a double edge. */
+.process-view.process-view .pw-block-subprocess::before { border: 5px double var(--fi-field); box-shadow: var(--fi-raise); }
+
+/* The selected step (the one open in the list): the focus ring round the whole box. */
+.process-view.process-view .pw-block.selected {
+  outline: 3px solid var(--fi-focus);
+  outline-offset: 0;
+  border-radius: var(--fi-r-xl);
+}
+
+/* The step's number, in its square. */
+.process-view.process-view .pw-living-node-num {
+  position: relative;
+  z-index: 1;
+  color: inherit;
+  /* A deep step's number ("4b.2a.2b.4c.1") breaks after its dots and shrinks to fit its square: the node sets --pw-num-fit
+     and --pw-num-w (the package's numberFontPx). The 16px size stays for the short ones. */
+  inline-size: max-content;
+  max-inline-size: var(--pw-num-w, 100%);
+  font-size: min(var(--fi-size-row), var(--pw-num-fit, var(--fi-size-row)));
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fi-weight-heavy);
+  line-height: 1.1;
+  text-align: center;
+  opacity: 1;
+}
+
+/* Its name, in a caption under the square: shown for the selected step, the run's place, or the one pointed at; always there for a
+   screen reader. */
+.process-view.process-view .pw-living-node-label {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 100%;
+  inset-inline-start: 50%;
+  inline-size: max-content;
+  max-inline-size: 18ch;
+  padding: var(--fi-s2) var(--fi-s4);
+  border-radius: var(--fi-r-s);
+  background: var(--fi-ink);
+  color: var(--fi-surface);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-bold);
+  line-height: 1.25;
+  opacity: 0;
+  transform: translateX(-50%);
+  box-shadow: var(--fi-raise);
+}
+
+.process-view.process-view .pw-block.selected .pw-living-node-label,
+.process-view.process-view .pw-block.pw-run-current .pw-living-node-label,
+.process-view.process-view .pw-block:hover .pw-living-node-label { opacity: 1; }
+
+.process-view.process-view .react-flow__node:hover { z-index: 5 !important; }
+
+/* A step's "?" or "★": a small tab on its corner. */
+.process-view.process-view .pw-block-badge {
+  z-index: 3;
+  padding: 0 var(--fi-s2);
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-s);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font-size: var(--fi-size-s);
+  line-height: 1.2;
+}
+
+/* A running instance: a frame inside the box, round the square. The step it is at, blue (the current place); the steps it passed,
+   teal. */
+.process-view.process-view .pw-block.pw-run-current::after,
+.process-view.process-view .pw-block.pw-run-passed::after {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  border: 3px solid var(--fi-teal);
+  border-radius: var(--fi-r-xl);
+  pointer-events: none;
+}
+
+.process-view.process-view .pw-block.pw-run-current::after { border: 4px solid var(--fi-blue); }
+
+/* --- the Steps list: one sheet, one step to a row ----------------------------------------------------------------------------------------- */
+
+.process-view.process-view .step-list {
+  border-radius: var(--fi-r-xl);
+  background: var(--fi-surface);
+  box-shadow: var(--fi-ring);
+  overflow: hidden;
+}
+
+.process-view.process-view .step-row {
+  gap: var(--fi-s6);
+  padding: var(--fi-s6) var(--fi-s7);
+  border-block-start: 1px solid var(--fi-line);
+  border-block-end: 0;
+}
+
+.process-view.process-view .step-row:first-child { border-block-start: 0; }
+
+/* The step open in the diagram: the open row's fill, as an open role is in the Pipeline. */
+.process-view.process-view .step-row.step-row-highlighted {
+  margin: 0;
+  padding-inline: var(--fi-s7);
+  border-block-start: 1px solid var(--fi-line);
+  border-radius: 0;
+  background: var(--fi-selected);
+}
+
+.process-view.process-view .step-row-highlighted:first-child { border-block-start: 0; }
+
+/* The number: a soft square. A path's end carries none: it is the slate (and red where it stops everything). */
+.process-view.process-view .step-number {
+  min-inline-size: 32px;
+  block-size: 32px;
+  padding: 0 var(--fi-s2);
+  border: 0;
+  border-radius: var(--fi-r-m);
+  background: var(--fi-chip);
+  color: var(--fi-ink);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-heavy);
+}
+
+.process-view.process-view .step-number-end { background: var(--pv-end); }
+.process-view.process-view .step-number-terminate { background: var(--fi-red); }
+.process-view.process-view .step-number-terminate::after { inline-size: var(--fi-s3); block-size: var(--fi-s3); border-radius: var(--fi-r-s); background: var(--fi-on-dot); }
+.process-view.process-view .step-row-highlighted .step-number:not(.step-number-end) { background: var(--fi-blue); color: var(--fi-on-dot); }
+.process-view.process-view .step-row-run-passed .step-number:not(.step-number-end) { background: var(--fi-teal); color: var(--fi-on-dot); }
+.process-view.process-view .step-row-run-current .step-number { box-shadow: none; outline: 3px solid var(--fi-blue); outline-offset: 2px; }
+
+.process-view.process-view .step-title { color: var(--fi-ink); font-size: var(--fi-size-row); font-weight: var(--fi-weight-bold); line-height: 1.3; }
+.process-view.process-view .step-title-editable { border-radius: var(--fi-r-s); }
+.process-view.process-view .step-actor-line { margin: var(--fi-s1) 0 0; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.process-view.process-view .step-title-tags { gap: var(--fi-s3); }
+
+/* The kinds and a run's marks are badges: a word on a wash. The ink says what the step is, as the diagram does. */
+.process-view.process-view .step-bpmn-badge,
+.process-view.process-view .step-run-mark {
+  padding: 0 var(--fi-s4);
+  border: 0;
+  border-radius: var(--fi-r-m);
+  background: var(--fi-chip);
+  color: var(--fi-soft);
+  font-size: var(--fi-size-xs);
+  font-weight: var(--fi-weight-heavy);
+  line-height: 1.6;
+}
+
+.process-view.process-view .step-bpmn-badge-task { background: var(--fi-chip); color: var(--fi-ink); }
+.process-view.process-view .step-bpmn-badge-decision { background: var(--fi-blue-wash); color: var(--fi-blue-text); }
+.process-view.process-view .step-bpmn-badge-event { background: var(--fi-teal-wash); color: var(--fi-teal-text); }
+.process-view.process-view .step-bpmn-badge-terminal { background: var(--fi-soft); color: var(--fi-on-dot); }
+.process-view.process-view .step-bpmn-badge-subprocess { background: var(--fi-surface); box-shadow: inset 0 0 0 1px var(--fi-field); color: var(--fi-ink); }
+.process-view.process-view .step-bpmn-badge-path,
+.process-view.process-view .step-bpmn-badge-unmapped { border: 1px dashed var(--fi-field); background: none; color: var(--fi-soft); font-style: normal; }
+.process-view.process-view .step-run-mark-current { background: var(--fi-blue-wash); color: var(--fi-blue-text); box-shadow: none; }
+.process-view.process-view .step-run-mark-passed { background: var(--fi-teal-wash); color: var(--fi-teal-text); }
+
+/* The steps just before and after the selected one: a soft arrow, blue up, teal down. */
+.process-view.process-view .step-trace-arrow { inline-size: 28px; block-size: 28px; border-radius: var(--fi-r-m); font-size: var(--fi-size-row); }
+.process-view.process-view .step-trace-arrow-up { background: var(--fi-blue); color: var(--fi-on-dot); }
+.process-view.process-view .step-trace-arrow-down { background: var(--fi-teal); color: var(--fi-on-dot); }
+
+.process-view.process-view .step-detail-toggle {
+  inline-size: var(--fi-target);
+  block-size: var(--fi-target);
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font-size: var(--fi-size-row);
+  font-weight: var(--fi-weight-bold);
+  transition: background-color var(--fi-fast);
+}
+
+.process-view.process-view .step-detail-toggle:hover { border-color: var(--fi-line); background: var(--fi-hover); color: var(--fi-ink); }
+
+/* --- a step's opened detail ------------------------------------------------------------------------------------------------------------ */
+
+.process-view.process-view .step-detail-body { margin-block-start: var(--fi-s6); }
+.process-view.process-view .step-derived-line { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-body); }
+.process-view.process-view .flow-target-jump { color: var(--fi-blue-text); text-decoration-color: currentColor; }
+.process-view.process-view .step-description { max-inline-size: 70ch; color: var(--fi-text); font-size: var(--fi-size-base); line-height: 1.5; }
+.process-view.process-view .step-instructions code,
+.process-view.process-view .source-ref { padding: 0 var(--fi-s2); border-radius: var(--fi-r-s); background: var(--fi-chip); color: var(--fi-ink); font-family: var(--fi-mono); font-size: var(--fi-size-s); }
+
+/* A decision's criteria: on a blue wash with ink words (never a coloured side edge). */
+.process-view.process-view .step-decision-criteria {
+  margin: var(--fi-s4) 0 0;
+  padding: var(--fi-s5) var(--fi-s7);
+  border: 0;
+  border-radius: var(--fi-r-l);
+  background: var(--fi-blue-wash);
+  color: var(--fi-ink);
+  font-size: var(--fi-size-base);
+  line-height: 1.5;
+}
+
+.process-view.process-view .chip-group-label { color: var(--fi-soft); font-size: var(--fi-size-s); }
+.process-view.process-view .step-chip { padding: 0 var(--fi-s4); border: 0; border-radius: var(--fi-r-m); background: var(--fi-chip); color: var(--fi-ink); font-size: var(--fi-size-s); }
+
+.process-view.process-view .step-design-body,
+.process-view.process-view .escape-detail {
+  gap: var(--fi-s2) var(--fi-s7);
+  padding: var(--fi-s5) var(--fi-s7);
+  border: 0;
+  border-radius: var(--fi-r-l);
+  background: var(--fi-ground);
+}
+
+.process-view.process-view .escape-detail { margin: var(--fi-s4) 0 var(--fi-s5) var(--fi-s9); }
+.process-view.process-view .step-field-row dt { color: var(--fi-soft); font-size: var(--fi-size-s); }
+.process-view.process-view .step-field-row dd { color: var(--fi-text); font-size: var(--fi-size-base); }
+.process-view.process-view .step-design-toggle { color: var(--fi-blue-text); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.process-view.process-view .step-design-toggle:hover { color: var(--fi-blue-text); }
+.process-view.process-view .step-bpmn-attrs-label,
+.process-view.process-view .step-bpmn-attrs-note { color: var(--fi-soft); font-size: var(--fi-size-s); }
+.process-view.process-view .step-bpmn-attrs-raw { border: 1px solid var(--fi-line); border-radius: var(--fi-r-l); background: var(--fi-ground); color: var(--fi-text); font-family: var(--fi-mono); font-size: var(--fi-size-s); }
+
+/* --- branch sections: a strip over each path ----------------------------------------------------------------------------------------------- */
+
+.process-view.process-view .outline-section-header {
+  gap: var(--fi-s5);
+  margin: 0;
+  padding: var(--fi-s3) var(--fi-s7);
+  border: 0;
+  border-block: 1px solid var(--fi-line);
+  border-radius: 0;
+  background: var(--fi-hover);
+  color: var(--fi-ink);
+  transition: background-color var(--fi-fast);
+}
+
+.process-view.process-view .outline-section-header:hover { border-color: var(--fi-line); background: var(--fi-rail-hover); }
+
+.process-view.process-view .outline-section-fold {
+  inline-size: 28px;
+  block-size: 28px;
+  border: 0;
+  border-radius: var(--fi-r-m);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font-size: var(--fi-size-base);
+}
+
+.process-view.process-view .outline-section-header:hover .outline-section-fold { border-color: transparent; background: var(--fi-surface); color: var(--fi-ink); }
+
+.process-view.process-view .outline-section-number {
+  padding: 0 var(--fi-s3);
+  border: 0;
+  border-radius: var(--fi-r-s);
+  background: var(--fi-chip);
+  color: var(--fi-ink);
+  font-family: inherit;
+  font-size: var(--fi-size-s);
+  font-weight: var(--fi-weight-heavy);
+}
+
+.process-view.process-view .outline-section-heading { color: var(--fi-soft); font-size: var(--fi-size-m); }
+.process-view.process-view .outline-section-heading strong { color: var(--fi-ink); }
+.process-view.process-view .outline-section-empty { padding: var(--fi-s5) var(--fi-s7); color: var(--fi-soft); font-size: var(--fi-size-m); font-style: normal; }
+
+/* --- changing how a process works: the package's editor, in the app's fields -------------------------------------------------------------- */
+
+.process-view.process-view .pv-edit-status { border: 0; border-radius: var(--fi-r-xl); background: var(--fi-surface); box-shadow: var(--fi-ring); }
+.process-view.process-view .pv-problem { padding: var(--fi-s4) var(--fi-s6); border: 0; border-radius: var(--fi-r-l); background: var(--fi-red-wash); color: var(--fi-red-text); }
+.process-view.process-view .pv-ok { color: var(--fi-teal-text); }
+.process-view.process-view .pv-edit-group { border-block-start: 1px solid var(--fi-line); color: var(--fi-soft); }
+.process-view.process-view .pv-edit-way { border: 1px solid var(--fi-line); border-radius: var(--fi-r-l); }
+
+.process-view.process-view .pv-edit-field textarea,
+.process-view.process-view .pv-edit-field input,
+.process-view.process-view .pv-edit-addway input,
+.process-view.process-view .pv-edit-addway select {
+  min-block-size: var(--fi-target);
+  padding: var(--fi-s5) var(--fi-s6);
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  font: var(--fi-weight-mid) var(--fi-size-base) var(--fi-font);
+  caret-color: var(--fi-blue);
+}
+
+.process-view.process-view .pv-edit-field textarea:hover,
+.process-view.process-view .pv-edit-field input:hover,
+.process-view.process-view .pv-edit-addway input:hover,
+.process-view.process-view .pv-edit-addway select:hover { border-color: var(--fi-field); }
+
+.process-view.process-view .pv-edit-field textarea:focus,
+.process-view.process-view .pv-edit-field input:focus,
+.process-view.process-view .pv-edit-addway input:focus,
+.process-view.process-view .pv-edit-addway select:focus { outline: none; border-color: var(--fi-blue); box-shadow: 0 0 0 3px var(--fi-focus-halo); }
+
+.process-view.process-view .pv-edit-field label,
+.process-view.process-view .pv-edit-field legend,
+.process-view.process-view .pv-edit-addway label { color: var(--fi-soft); font-size: var(--fi-size-s); }
+
+.process-view.process-view .pv-edit-hint { color: var(--fi-soft); font-size: var(--fi-size-s); }
+
+/* Focus: the app's 3px ring, inside the clipped strip where there is no room outside it. */
+.process-view.process-view .step-detail-toggle:focus-visible,
+.process-view.process-view .step-title-editable:focus-visible,
+.process-view.process-view .step-design-toggle:focus-visible,
+.process-view.process-view .flow-target-jump:focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 2px; }
+
+.process-view.process-view .outline-section-header:focus-visible { outline: 3px solid var(--fi-focus); outline-offset: -3px; }
+
+/* --- a narrow window ------------------------------------------------------------------------------------------------------------------------ */
+
+@media (max-width: 899px) {
+  .process-view.process-view .step-row { gap: var(--fi-s4); padding: var(--fi-s5) var(--fi-s6); }
+  .process-view.process-view .step-row.step-row-highlighted { padding-inline: var(--fi-s6); }
+  .process-view.process-view .escape-detail { margin-inline-start: 0; }
+  .process-view.process-view .read-flow-board:not(.read-flow-board-expanded) { block-size: 420px; }
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "key": "gem",
+  "name": "Gem",
+  "kind": "host",
+  "hosts": [
+    "jobs.gem.com"
+  ],
+  "address": {
+    "one_posting": [
+      {
+        "rank": 3,
+        "path": "[^/]+/[^/]*\\d[^/]*"
+      }
+    ]
+  }
+}

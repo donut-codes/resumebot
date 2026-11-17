@@ -1,0 +1,238 @@
+/* A step's specification (StepDetail.tsx) and the text editor in the Steps list (StepEditor.tsx).
+ * Every colour and size is a token with a fallback, so the package looks right in a host that defines none. */
+
+.pv-spec {
+  margin: var(--space-3, 12px) 0 0;
+  display: grid;
+  gap: var(--space-3, 12px);
+}
+
+.pv-spec-row dt {
+  font-size: var(--font-sm, 13px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--soft, #a8aeb6);
+  margin-bottom: var(--space-1, 4px);
+}
+
+.pv-spec-row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  max-width: 100ch;
+}
+
+.pv-spec-row dd p {
+  margin: 0 0 var(--space-1, 4px);
+}
+
+.pv-spec-row dd ol,
+.pv-spec-row dd ul {
+  margin: 0 0 var(--space-1, 4px);
+  padding-left: var(--space-5, 20px);
+  display: grid;
+  gap: var(--space-1, 4px);
+}
+
+.pv-spec-row dd ul ul {
+  margin-top: var(--space-1, 4px);
+}
+
+.pv-spec-row dd code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  padding: 0 0.3em;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--porter-wash, rgba(165, 148, 255, 0.12));
+  color: var(--ink, #eef0f2);
+}
+
+.pv-ways {
+  list-style: none;
+  padding-left: 0;
+}
+
+.pv-way-default {
+  color: var(--soft, #a8aeb6);
+}
+
+.pv-root {
+  display: grid;
+  gap: var(--space-3, 12px);
+  min-width: 0;
+}
+
+.pv-error {
+  color: var(--ink, #eef0f2);
+}
+
+.pv-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.pv-edit-toggle {
+  cursor: pointer;
+  font: inherit;
+}
+
+.pv-edit-toggle[aria-pressed='true'] {
+  border-color: var(--porter, #a594ff);
+  color: var(--ink, #eef0f2);
+}
+
+.pv-edit-status {
+  border: 1px solid var(--line-2, #353a41);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background: var(--card, #1c1f23);
+  display: grid;
+  gap: var(--space-2, 8px);
+}
+
+.pv-edit-status p,
+.pv-edit-status ul {
+  margin: 0;
+}
+
+.pv-edit-status ul {
+  padding-left: var(--space-5, 20px);
+}
+
+.pv-ok {
+  color: var(--done, #6fc28b);
+}
+
+.pv-problem {
+  color: var(--ink, #eef0f2);
+  border-left: 3px solid var(--porter, #a594ff);
+  padding-left: var(--space-3, 12px);
+}
+
+.pv-edit {
+  display: grid;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-3, 12px);
+  max-width: 100ch;
+}
+
+.pv-edit-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
+.pv-edit-group {
+  margin: var(--space-3, 12px) 0 0;
+  font-size: var(--font-sm, 13px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--soft, #a8aeb6);
+  border-top: 1px solid var(--line, #292d33);
+  padding-top: var(--space-3, 12px);
+}
+
+.pv-edit-field {
+  display: grid;
+  gap: var(--space-1, 4px);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.pv-edit-field label,
+.pv-edit-field legend,
+.pv-edit-addway label {
+  font-size: var(--font-sm, 13px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--soft, #a8aeb6);
+}
+
+.pv-edit-field textarea,
+.pv-edit-field input,
+.pv-edit-addway input,
+.pv-edit-addway select {
+  font: inherit;
+  color: var(--ink, #eef0f2);
+  background: var(--surface, #17191c);
+  border: 1px solid var(--line-2, #353a41);
+  border-radius: var(--radius-sm, 4px);
+  padding: var(--space-2, 8px);
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.pv-edit-field textarea:focus,
+.pv-edit-field input:focus,
+.pv-edit-addway input:focus,
+.pv-edit-addway select:focus {
+  outline: 2px solid var(--focus, #a594ff);
+  outline-offset: 1px;
+}
+
+.pv-edit-hint {
+  margin: 0;
+  font-size: var(--font-sm, 13px);
+  color: var(--muted, #8b929b);
+}
+
+.pv-edit-rules ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2, 8px);
+}
+
+.pv-edit-rules li {
+  display: grid;
+  grid-template-columns: 2.5em 1fr auto;
+  gap: var(--space-2, 8px);
+  align-items: start;
+}
+
+.pv-rule-n {
+  padding-top: var(--space-2, 8px);
+  text-align: right;
+  color: var(--soft, #a8aeb6);
+}
+
+.pv-edit-rules > button {
+  justify-self: start;
+}
+
+.pv-edit-rules legend {
+  padding: 0;
+}
+
+.pv-edit-way {
+  border: 1px solid var(--line, #292d33);
+  border-radius: var(--radius-sm, 4px);
+  padding: var(--space-3, 12px);
+  display: grid;
+  gap: var(--space-3, 12px);
+  margin: 0;
+}
+
+.pv-edit-way legend {
+  font-size: var(--font-sm, 13px);
+  color: var(--soft, #a8aeb6);
+  padding: 0 var(--space-1, 4px);
+}
+
+.pv-edit-ways {
+  display: grid;
+  gap: var(--space-3, 12px);
+}
+
+.pv-edit-addway {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+  align-items: end;
+}
+
+.pv-edit-addway label {
+  display: grid;
+  gap: var(--space-1, 4px);
+}

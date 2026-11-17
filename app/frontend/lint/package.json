@@ -1,0 +1,25 @@
+{
+  "name": "resumebot-frontend-lint",
+  "private": true,
+  "description": "ESLint for ../src. Its own folder and lockfile: typescript-eslint cannot run on the TypeScript 7 the app builds with (7 has no JavaScript API), so the linter carries the TypeScript 6 it parses with, and the app's dependencies stay as they are.",
+  "type": "module",
+  "scripts": {
+    "lint": "cd .. && eslint -c lint/eslint.config.js --suppressions-location lint/eslint-suppressions.json src",
+    "lint:rebaseline": "cd .. && eslint -c lint/eslint.config.js --suppressions-location lint/eslint-suppressions.json --suppress-all src",
+    "lint:prune": "cd .. && eslint -c lint/eslint.config.js --suppressions-location lint/eslint-suppressions.json --prune-suppressions src"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
+  }
+}

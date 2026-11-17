@@ -1,0 +1,435 @@
+/* My Resume (components/me/): what the screen adds to the shared parts: the pane's head, the sheets its parts are
+ * (a heading that folds, what is in it while folded, its lines), the fields and lines edited where they stand, the
+ * one Save bar, the writing rules' read-only column, the story library, Find Gaps and the review of Import your resume.
+ * The shared fields (components/primitives/fields.tsx) are laid out here; their boxes are the Focus `fi-input`.
+ * Every value comes from focus/tokens.css. */
+
+/* --- the frame: the rail lists the six parts, the pane holds the one open ------------------------------------------ */
+
+.fi-me { grid-template-columns: var(--fi-rail-width) minmax(0, 1fr); }
+.fi-me .fi-stage-name { white-space: normal; }
+.fi-me .fi-pane { scroll-padding-block-end: calc(var(--save-bar-height, 0px) + var(--fi-s9)); }
+.fi-me .fi-pane-in.is-wide { max-inline-size: calc(var(--fi-pane-measure) + 280px); }
+html.has-save-bar { scroll-padding-bottom: calc(var(--save-bar-height, 0px) + var(--fi-s7)); }
+
+.fi-me-head { margin-block-end: var(--fi-s8); }
+.fi-me-title { margin: 0; font-size: var(--fi-size-xxl); line-height: 1.15; font-weight: var(--fi-weight-heavy); letter-spacing: var(--fi-tracking-tight); color: var(--fi-ink); text-wrap: balance; }
+.fi-me-about { display: block; max-inline-size: 70ch; }
+.fi-me-actions { flex-wrap: wrap; justify-content: flex-end; max-inline-size: 340px; }
+.fi-me-why { margin: calc(-1 * var(--fi-s4)) 0 var(--fi-s8); max-inline-size: 70ch; color: var(--fi-soft); font-size: var(--fi-size-m); }
+
+.fi-me-tab { min-inline-size: 0; }
+.fi-me-page, .fi-me-parts { display: grid; gap: var(--fi-s7); min-inline-size: 0; }
+.fi-me-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--fi-s4) var(--fi-s7); }
+.fi-me-filled { margin: 0; padding: var(--fi-s5) var(--fi-s7); border-radius: var(--fi-r-l); background: var(--fi-sun-wash); color: var(--fi-sun-text); font-weight: var(--fi-weight-semi); }
+.fi-me-quiet { margin: 0; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-me-loading { margin: 0; padding: var(--fi-s9) var(--fi-s7); color: var(--fi-soft); text-align: center; }
+.fi-me-empty { margin: 0; padding: var(--fi-s7); color: var(--fi-soft); text-align: center; }
+.fi-me-hint { margin: 0; max-inline-size: 70ch; color: var(--fi-soft); font-size: var(--fi-size-m); }
+
+/* A section with its name over its sheet (the crib, the history, the target roles, a run). */
+.fi-me-sec > h2 { margin: 0 0 var(--fi-s4); font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); line-height: var(--fi-leading-tight); overflow-wrap: anywhere; }
+.fi-me-sec > .fi-me-hint { margin-block-end: var(--fi-s4); }
+.fi-me-history-sec { margin-block-end: var(--fi-s9); }
+.fi-me-sec + .fi-me-sec { margin-block-start: var(--fi-s9); }
+
+/* --- a part: a sheet whose head folds it; folded, one line of what is in it ---------------------------------------- */
+
+.fi-me-part-main { padding: 0; }
+.fi-me-part-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--fi-s5);
+  min-block-size: 56px;
+  padding: var(--fi-s4) var(--fi-s8);
+  border-radius: var(--fi-r-xl);
+  transition: background-color var(--fi-fast) ease;
+}
+.fi-me-part-head:hover { background: var(--fi-hover); }
+.fi-me-part-head { flex-wrap: wrap; }
+.fi-me-part-head h2, .fi-me-part-head h3 { flex: 1 1 10em; min-inline-size: 0; margin: 0; color: var(--fi-ink); line-height: var(--fi-leading-tight); }
+.fi-me-part-head h2 { font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); }
+.fi-me-part-head h3 { font-size: var(--fi-size-row); font-weight: var(--fi-weight-bold); line-height: 1.3; }
+/* The head's button is its target: its reach covers the head, and the focus ring is drawn round the head. */
+.fi-me-part-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fi-s5);
+  max-inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.fi-me-part-head button::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.fi-me-part-head button:focus-visible { outline: none; }
+.fi-me-part-head button:focus-visible::after { outline: 3px solid var(--fi-focus); outline-offset: -3px; }
+.fi-me-part-title { overflow-wrap: anywhere; }
+.fi-me-chevron {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: 24px;
+  block-size: 24px;
+  color: var(--fi-faint);
+  transition: transform var(--fi-mid) var(--fi-ease);
+}
+.fi-me-chevron svg { inline-size: 24px; block-size: 24px; }
+button[aria-expanded="false"] > .fi-me-chevron { transform: rotate(-90deg); }
+
+/* What is in the part, in a few words, at the right of its head. A part with nothing in it waits on the owner. */
+.fi-me-count { flex: none; font-size: var(--fi-size-m); font-weight: var(--fi-weight-semi); font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--fi-soft); }
+.fi-me-count.is-waiting { color: var(--fi-sun-text); }
+.fi-me-list-name .fi-me-count { font-weight: var(--fi-weight-mid); }
+.fi-me-dirty { flex: none; inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--fi-sun); }
+
+.fi-me-part-fold { padding: 0 var(--fi-s8) var(--fi-s6) calc(var(--fi-s8) + 24px + var(--fi-s5)); margin-block-start: calc(-1 * var(--fi-s3)); }
+.fi-me-part-summary {
+  display: -webkit-box;
+  max-inline-size: 70ch;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  color: var(--fi-soft);
+  font-size: var(--fi-size-m);
+}
+.fi-me-part-body { display: grid; gap: var(--fi-s6); padding: var(--fi-s6) var(--fi-s8) var(--fi-s8); border-block-start: 1px solid var(--fi-line); }
+.fi-me-part-body[hidden] { display: none; }
+
+/* A role of Experience: a row that opens in place; the open one is the selected one, as an open role is in the Pipeline. */
+.fi-me-part-sub > .fi-me-part-head { min-block-size: 48px; padding: var(--fi-s3) var(--fi-s5); border-radius: var(--fi-r-l); }
+.fi-me-part-sub[data-open="true"] > .fi-me-part-head { background: var(--fi-selected); }
+.fi-me-part-sub > .fi-me-part-fold { padding: 0 var(--fi-s5) var(--fi-s4) calc(var(--fi-s5) + 24px + var(--fi-s5)); margin-block-start: calc(-1 * var(--fi-s2)); }
+.fi-me-part-sub > .fi-me-part-body { padding: var(--fi-s7) var(--fi-s5) var(--fi-s4); border-block-start: 0; }
+
+/* The name of a list inside a part, with how many it holds. */
+.fi-me-list-name { display: flex; align-items: baseline; gap: var(--fi-s4); margin: var(--fi-s4) 0 0; font-size: var(--fi-size-row); font-weight: var(--fi-weight-bold); line-height: 1.3; letter-spacing: 0; color: var(--fi-ink); }
+.fi-me-part-body > .fi-me-list-name:first-child { margin-block-start: 0; }
+.fi-me-list-name + .fi-me-hint, .fi-me-list-name + .fi-me-list { margin-block-start: calc(-1 * var(--fi-s3)); }
+
+/* --- the shared fields, drawn in the Focus tokens -------------------------------------------------------------------- */
+
+.fi-me .fi-me-field { display: grid; gap: var(--fi-s2); min-inline-size: 0; }
+.fi-me .fi-me-label { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-me .fi-me-field-hint { margin: 0; color: var(--fi-soft); font-size: var(--fi-size-s); }
+.fi-me .fi-me-number { inline-size: 7em; }
+.fi-me .fi-me-note .fi-input, .fi-me-bullet-meta .fi-input { font-size: var(--fi-size-s); }
+.fi-me-check { display: inline-flex; align-items: center; gap: var(--fi-s4); min-block-size: 36px; color: var(--fi-soft); font-weight: var(--fi-weight-semi); cursor: pointer; }
+.fi-me-check span { min-inline-size: 0; }
+.fi-me-pair, .fi-me-bullet-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--fi-s5); }
+.fi-me-bullet-meta { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.fi-me-role-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--fi-s5); }
+.fi-me-span-6 { grid-column: span 6; }
+.fi-me-span-3 { grid-column: span 3; }
+
+/* A tick or a pick is the browser's own control, in the screen's blue. */
+.fi-me input[type="checkbox"], .fi-me input[type="checkbox"]:checked, .fi-me input[type="checkbox"]:disabled,
+.fi-me input[type="radio"], .fi-me input[type="radio"]:checked, .fi-me input[type="radio"]:disabled {
+  appearance: auto;
+  -webkit-appearance: auto;
+  flex: none;
+  inline-size: 20px;
+  block-size: 20px;
+  margin: 0;
+  border: revert;
+  border-radius: revert;
+  background: revert;
+  accent-color: var(--fi-blue);
+  cursor: pointer;
+}
+.fi-me input[type="checkbox"]:disabled, .fi-me input[type="radio"]:disabled { cursor: not-allowed; }
+
+/* The one filled control of a page is the sun one; a plain button is white with a hairline (parts.css). */
+.fi-me .fi-btn:disabled { cursor: default; }
+.fi-me-unsaved { background: var(--fi-sun-wash); color: var(--fi-sun-text); }
+.fi-me-tag { background: var(--fi-chip); color: var(--fi-soft); }
+.fi-me-tag[data-grade="P"], .fi-me-tag[data-fate="new"] { background: var(--fi-teal-wash); color: var(--fi-teal-text); }
+.fi-me-tag[data-grade="T"], .fi-me-tag[data-fate="similar"] { background: var(--fi-sun-wash); color: var(--fi-sun-text); }
+.fi-me-tag[data-grade="U"] { background: var(--fi-red-wash); color: var(--fi-red-text); }
+
+/* --- lines edited where they stand: hairlines between them, Remove at the right ---------------------------------- */
+
+.fi-me-list { min-inline-size: 0; }
+.fi-me-items { margin: 0; padding: 0; list-style: none; }
+.fi-me-item { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem; gap: var(--fi-s5); align-items: start; padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-me-items > .fi-me-item:first-child { border-block-start: 0; padding-block-start: 0; }
+.fi-me-item-body { display: grid; gap: var(--fi-s3); align-content: start; min-inline-size: 0; }
+.fi-me-item-tools { display: flex; align-items: flex-start; justify-content: flex-end; }
+/* Remove is always shown (a touch screen has no hover): the red of taking a thing away. */
+.fi-me .fi-me-remove { display: inline-flex; align-items: center; min-block-size: var(--fi-target); padding-inline: var(--fi-s3); color: var(--fi-red-text); font-size: var(--fi-size-m); }
+.fi-me-list-foot { margin-block-start: var(--fi-s5); }
+.fi-me-items + .fi-me-list-foot { padding-block-start: var(--fi-s5); border-block-start: 1px solid var(--fi-line); }
+
+/* Lines laid out in columns, named once above them. */
+.fi-me-cols-head { padding: 0 0 var(--fi-s3); border-block-start: 0; border-block-end: 1px solid var(--fi-line); color: var(--fi-faint); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-me-cols-area .fi-me-item-body, .fi-me-cols-banned .fi-me-item-body, .fi-me-cols-drift .fi-me-item-body { gap: var(--fi-s5); }
+.fi-me-cols-area .fi-me-item-body { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); }
+.fi-me-cols-banned .fi-me-item-body { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.fi-me-cols-drift .fi-me-item-body { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 2fr); }
+.fi-me-cols-area .fi-me-cols-head .fi-me-item-body, .fi-me-cols-banned .fi-me-cols-head .fi-me-item-body, .fi-me-cols-drift .fi-me-cols-head .fi-me-item-body { gap: var(--fi-s5); }
+.fi-me-cols-name .fi-me-item-body { gap: 0; }
+
+/* Lines that are read, not edited: a name and its words in two columns. */
+.fi-me-fixed { margin: 0; padding: 0; list-style: none; }
+.fi-me-fixed > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--fi-s5); padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-me-fixed > li:first-child { border-block-start: 0; padding-block-start: 0; }
+.fi-me-fixed > li > * { min-inline-size: 0; overflow-wrap: anywhere; }
+.fi-me-fixed > li > span { color: var(--fi-soft); }
+.fi-me-fixed strong, .fi-me-fixed .fi-me-check { color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+
+/* Experience: a role is a row that opens in place; its Remove stands level with its head. */
+.fi-me-flush > .fi-me-items > .fi-me-item { padding-block: var(--fi-s2); }
+.fi-me-flush > .fi-me-items > .fi-me-item > .fi-me-item-body { gap: 0; }
+.fi-me-flush > .fi-me-items > .fi-me-item > .fi-me-item-tools { align-items: center; min-block-size: 48px; }
+.fi-me-role-rules > .fi-me-item { grid-template-columns: minmax(0, 1fr); padding-block: var(--fi-s2); }
+.fi-me-role-rules > .fi-me-item > .fi-me-item-body { gap: 0; }
+
+/* On a wide screen a column's name is the header above the list; each field's own label is read, not drawn. */
+@media (min-width: 1001px) {
+  .fi-me-col { position: absolute; inline-size: 1px; block-size: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+}
+
+/* --- the facts forms ask for: a name and its value, divided by hairlines ----------------------------------------- */
+
+.fi-me-fact { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--fi-s7); padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-me-facts > .fi-me-fact:first-child { border-block-start: 0; padding-block-start: 0; }
+.fi-me-fact-name { display: grid; gap: var(--fi-s2); align-content: start; min-inline-size: 0; }
+.fi-me-fact-name label { display: block; padding-block-start: var(--fi-s5); color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.fi-me-fact-value { min-inline-size: 0; }
+
+/* --- the one Save: a white bar, lifted, stuck to the bottom of the pane while something is unsaved ------------------ */
+
+.fi-me-bar {
+  position: sticky;
+  inset-block-end: var(--fi-s7);
+  z-index: 30;
+  display: grid;
+  gap: var(--fi-s4);
+  margin-block-start: var(--fi-s8);
+  padding: var(--fi-s6) var(--fi-s7);
+  background: var(--fi-surface);
+  border-radius: var(--fi-r-xl);
+  box-shadow: var(--fi-pop);
+}
+.fi-me-bar .fi-alert { margin: 0; }
+.fi-me-bar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s4) var(--fi-s6); }
+.fi-me-bar-what { flex: 0 1 auto; min-inline-size: 0; margin: 0; color: var(--fi-text); overflow-wrap: anywhere; }
+.fi-me-bar-what strong { color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+.fi-me-bar-why { flex: 1 1 16em; inline-size: auto; min-inline-size: 0; }
+.fi-me-bar-actions { display: flex; gap: var(--fi-s4); margin-inline-start: auto; }
+
+/* --- the history ------------------------------------------------------------------------------------------------- */
+
+.fi-me-history { list-style: none; margin: 0; padding: 0; }
+.fi-me-history > li { padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-me-history > li:first-child { border-block-start: 0; padding-block-start: 0; }
+.fi-me-history > li:last-child { padding-block-end: 0; }
+.fi-me-history-head { display: flex; flex-wrap: wrap; gap: var(--fi-s2) var(--fi-s5); align-items: baseline; }
+.fi-me-history-head strong { color: var(--fi-ink); }
+.fi-me-history-head .fi-link { display: inline-flex; align-items: center; min-block-size: var(--fi-target); margin-inline-start: auto; }
+.fi-me-history-head span { color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-me-history-why { margin: var(--fi-s2) 0 0; color: var(--fi-ink); }
+.fi-me-history .fi-me-quiet { margin-block-start: var(--fi-s2); }
+
+/* --- Resume Rules and Cover Letter Rules: a crib, the rules, and a read-only column ------------------------------------ */
+
+.fi-me-crib { display: grid; gap: var(--fi-s5); max-inline-size: 70ch; }
+.fi-me-crib p { margin: 0; color: var(--fi-text); }
+.fi-me-crib ol { display: grid; gap: var(--fi-s3); margin: 0; padding-inline-start: var(--fi-s9); color: var(--fi-text); }
+.fi-me-rules-layout { display: grid; gap: var(--fi-s9); align-items: start; }
+.fi-me-rules-side { display: grid; gap: var(--fi-s9); min-inline-size: 0; }
+.fi-me-rules-side .fi-me-sec { margin: 0; }
+@media (min-width: 1280px) {
+  .fi-me-rules-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); }
+}
+
+/* The document as built: its sections in order, each with its rule count. */
+.fi-me-skeleton-page { margin: 0; padding-block-end: var(--fi-s5); border-block-end: 1px solid var(--fi-line); color: var(--fi-soft); }
+.fi-me-skeleton-list { margin: 0; padding: 0; list-style: none; }
+.fi-me-skeleton-list > li { padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-me-skeleton-list > li:first-child { border-block-start: 0; }
+.fi-me-skeleton-list > li:last-child { padding-block-end: 0; }
+.fi-me-skeleton-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--fi-s1) var(--fi-s5); }
+.fi-me-skeleton-name { color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+.fi-me-skeleton-shape { margin: var(--fi-s1) 0 0; color: var(--fi-soft); font-size: var(--fi-size-m); }
+
+/* --- the story library: one sheet for each role, the achievements and each story --------------------------------- */
+
+.fi-me-story { display: grid; gap: var(--fi-s7); }
+.fi-me-story-part h3 { margin: 0 0 var(--fi-s4); color: var(--fi-ink); font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); line-height: var(--fi-leading-tight); }
+.fi-me-story-part ul { display: grid; gap: var(--fi-s4); margin: 0; padding-inline-start: var(--fi-s8); }
+.fi-me-story-part li[data-held="true"] { color: var(--fi-soft); }
+.fi-me-held { font-size: var(--fi-size-s); }
+
+/* --- Find Gaps: the target roles, one run and its themes ------------------------------------------------------------ */
+
+.fi-me-gap-roles { --cols: minmax(0, 1.4fr) 9em minmax(0, 2fr) 8.5em auto; }
+.fi-me-gap-themes { --cols: minmax(0, 1fr) 8.5em 6em 8.5em; }
+.fi-me-gap-columns, .fi-me-gap-row { display: grid; grid-template-columns: var(--cols); gap: var(--fi-s6); align-items: center; }
+.fi-me-gap-columns { padding: 0 var(--fi-s5) var(--fi-s4); border-block-end: 1px solid var(--fi-line); color: var(--fi-faint); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-row { position: relative; padding: var(--fi-s5); border-radius: var(--fi-r-l); }
+.fi-me-gap-roles > .fi-me-gap-row[data-open="true"] { background: var(--fi-selected); border-radius: var(--fi-r-l); }
+.fi-me-gap-roles > .fi-me-gap-row { border-block-start: 1px solid var(--fi-line); border-radius: 0; }
+.fi-me-gap-roles > .fi-me-gap-columns + .fi-me-gap-row { border-block-start: 0; }
+.fi-me-gap-role-name { color: var(--fi-ink); font-size: var(--fi-size-row); font-weight: var(--fi-weight-bold); line-height: 1.3; }
+.fi-me-gap-role-open { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.fi-me-gap-role-open:hover { text-decoration: underline; text-underline-offset: 3px; }
+.fi-me-gap-role-open[aria-pressed="true"] { color: var(--fi-blue-text); }
+.fi-me-gap-act { display: flex; justify-content: flex-end; }
+.fi-me-gap-none { margin: 0; padding: var(--fi-s5); color: var(--fi-soft); }
+
+.fi-me-gap-bar { display: flex; block-size: 12px; border-radius: var(--fi-r-pill); background: var(--fi-chip); overflow: hidden; }
+.fi-me-gap-bar > span { display: block; block-size: 100%; }
+.fi-me-gap-bar > span + span { border-inline-start: 2px solid var(--fi-surface); }
+.fi-me-gap-bar [data-grade="P"] { background: var(--fi-teal); }
+.fi-me-gap-bar [data-grade="T"] { background: var(--fi-amber); }
+.fi-me-gap-bar [data-grade="U"] { background: var(--fi-red); }
+.fi-me-gap-legend { display: flex; flex-wrap: wrap; gap: var(--fi-s1) var(--fi-s6); list-style: none; margin: var(--fi-s3) 0 0; padding: 0; color: var(--fi-soft); font-size: var(--fi-size-s); }
+.fi-me-gap-legend li { display: inline-flex; align-items: baseline; gap: var(--fi-s3); }
+.fi-me-gap-legend li::before { content: ""; flex: none; align-self: center; inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--sw); }
+.fi-me-gap-legend [data-grade="P"] { --sw: var(--fi-teal); }
+.fi-me-gap-legend [data-grade="T"] { --sw: var(--fi-amber); }
+.fi-me-gap-legend [data-grade="U"] { --sw: var(--fi-red); }
+.fi-me-gap-legend b { color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+
+.fi-me-gap-try { display: grid; gap: var(--fi-s3); margin-block-start: var(--fi-s7); padding-block-start: var(--fi-s7); border-block-start: 1px solid var(--fi-line); }
+.fi-me-gap-try label { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-try-line { display: flex; flex-wrap: wrap; gap: var(--fi-s5); align-items: center; }
+.fi-me-gap-try-line .fi-input { flex: 1 1 18em; inline-size: auto; min-inline-size: 0; }
+.fi-me-gap-listing + .fi-alert, .fi-me-gap-try + .fi-alert { margin-block-start: var(--fi-s5); }
+.fi-me-gap-try select.fi-input { flex: 1 1 18em; inline-size: auto; min-inline-size: 0; }
+
+/* Working through the gaps with the Coach: its question cards and the lines it proposes. */
+.fi-me-gap-clarify { display: grid; gap: var(--fi-s6); margin-block-start: var(--fi-s7); padding-block-start: var(--fi-s7); border-block-start: 1px solid var(--fi-line); }
+.fi-me-gap-clarify-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fi-s4) var(--fi-s8); }
+.fi-me-gap-clarify-head h3, .fi-me-gap-clarify h4 { margin: 0; color: var(--fi-ink); }
+.fi-me-gap-card-group { display: grid; gap: var(--fi-s5); }
+.fi-me-gap-card, .fi-me-gap-proposal { display: grid; gap: var(--fi-s4); padding: var(--fi-s5); border: 1px solid var(--fi-line); border-radius: var(--fi-r-l); }
+.fi-me-gap-card p, .fi-me-gap-proposal p { margin: 0; }
+.fi-me-gap-card-actions { display: flex; flex-wrap: wrap; gap: var(--fi-s4); }
+.fi-me-gap-proposals { display: grid; gap: var(--fi-s5); }
+.fi-me-gap-proposal-line { max-inline-size: 70ch; color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-proposal-place { color: var(--fi-soft); font-size: var(--fi-size-s); }
+
+/* A run: what it read and the tools on it; while it works, how far it is. */
+.fi-me-gap-run-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fi-s5) var(--fi-s8); }
+.fi-me-gap-run-bar p { margin: 0; }
+.fi-me-gap-run-bar p + p { margin-block-start: var(--fi-s1); }
+.fi-me-gap-run-bar .fi-me-gap-run-line { color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-run-actions { display: flex; flex-wrap: wrap; gap: var(--fi-s4); }
+.fi-me-gap-run-progress { flex: 1 1 24em; min-inline-size: 0; }
+.fi-me-track { block-size: 6px; margin-block-start: var(--fi-s4); border-radius: var(--fi-r-pill); background: var(--fi-sun-wash); overflow: hidden; }
+.fi-me-fill { block-size: 100%; background: var(--fi-sun); transform-origin: left center; transition: transform var(--fi-slow) var(--fi-ease); }
+.fi-me-stale { margin: var(--fi-s2) 0 0; color: var(--fi-sun-text); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-run-sec .fi-me-gap-listing, .fi-me-gap-run-sec .fi-me-gap-run-bar + .fi-alert { margin-block-start: var(--fi-s7); }
+
+/* The themes: a row for each, opening in place to the postings that asked it. */
+.fi-me-gap-theme + .fi-me-gap-theme { border-block-start: 1px solid var(--fi-line); }
+.fi-me-gap-theme > .fi-me-gap-row:hover { background: var(--fi-hover); }
+.fi-me-gap-theme[data-open="true"] > .fi-me-gap-row { background: var(--fi-selected); }
+.fi-me-gap-theme-name { display: flex; flex-direction: column; gap: var(--fi-s2); }
+.fi-me .fi-me-gap-theme-btn { display: inline-flex; align-items: center; gap: var(--fi-s5); padding: 0; border: 0; background: none; color: var(--fi-ink); font: inherit; font-size: var(--fi-size-row); font-weight: var(--fi-weight-bold); line-height: 1.3; text-align: start; cursor: pointer; }
+/* The whole row is the button: its reach covers the row, and the focus ring is drawn round the row. */
+.fi-me-gap-theme-btn::after { content: ""; position: absolute; inset: 0; border-radius: var(--fi-r-l); }
+.fi-me-gap-theme-btn:focus-visible { outline: none; }
+.fi-me-gap-theme-btn:focus-visible::after { outline: 3px solid var(--fi-focus); outline-offset: -3px; }
+.fi-me-gap-theme-sub { margin: 0; padding-inline-start: calc(24px + var(--fi-s5)); }
+.fi-me-gap-quote { margin: 0; max-inline-size: 70ch; color: var(--fi-soft); font-size: var(--fi-size-s); line-height: 1.4; }
+/* A master line is a link to the master; it stays above the row's own reach. */
+.fi-me-gap-quote a, .fi-me-gap-lines a { position: relative; z-index: 1; color: inherit; text-decoration: none; }
+.fi-me-gap-quote a:hover, .fi-me-gap-lines a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.fi-me-gap-real { margin: 0; color: var(--fi-red-text); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-asked { color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-theme-body { display: grid; gap: var(--fi-s5); padding: var(--fi-s5) var(--fi-s5) var(--fi-s7); }
+.fi-me-gap-why { margin: 0; max-inline-size: 70ch; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-me-gap-lines { margin: 0; padding-inline-start: var(--fi-s8); color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-me-gap-postings { inline-size: 100%; max-inline-size: 56em; border-collapse: collapse; font-size: var(--fi-size-m); }
+.fi-me-gap-postings th { padding: var(--fi-s3) var(--fi-s5) var(--fi-s3) 0; border-block-end: 1px solid var(--fi-line); color: var(--fi-faint); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); text-align: start; }
+.fi-me-gap-postings td { padding: var(--fi-s4) var(--fi-s5) var(--fi-s4) 0; border-block-start: 1px solid var(--fi-line); overflow-wrap: anywhere; }
+.fi-me-gap-postings tbody tr:first-child td { border-block-start: 0; }
+.fi-me-gap-foot { display: flex; margin-block-start: var(--fi-s6); }
+.fi-me-gap-hidden { list-style: none; margin: var(--fi-s5) 0 0; padding: 0; }
+.fi-me-gap-hidden li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fi-s3) var(--fi-s6); padding: var(--fi-s4) 0; border-block-start: 1px solid var(--fi-line); }
+
+/* What the owner says of a theme. */
+.fi-me-gap-feedback { display: grid; gap: var(--fi-s6); padding-block-start: var(--fi-s6); border-block-start: 1px solid var(--fi-line); }
+.fi-me-gap-feedback fieldset { margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+.fi-me-gap-feedback legend, .fi-me-gap-label { padding: 0; color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-me-gap-choices { display: flex; flex-wrap: wrap; gap: var(--fi-s2) var(--fi-s8); margin-block-start: var(--fi-s2); }
+.fi-me-gap-choice { display: inline-flex; align-items: center; gap: var(--fi-s4); min-block-size: var(--fi-target); color: var(--fi-ink); font-weight: var(--fi-weight-semi); cursor: pointer; }
+.fi-me-gap-choice small { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-body); }
+.fi-me-gap-box { display: grid; gap: var(--fi-s3); }
+/* The two boxes are roomy: the words are written whole, and the draft is rewritten freely. */
+.fi-me-gap-box textarea { min-block-size: 9em; line-height: var(--fi-leading); resize: vertical; field-sizing: content; }
+.fi-me-gap-ask { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s5); }
+.fi-me-gap-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fi-s6) var(--fi-s8); }
+.fi-me-gap-add .fi-me-gap-box { flex: 1 1 18em; }
+.fi-me-gap-add .fi-me-gap-type { flex: 0 1 auto; }
+.fi-me-gap-add .fi-me-gap-choices { margin-block-start: 0; }
+.fi-me-added { margin: 0; color: var(--fi-teal-text); font-weight: var(--fi-weight-semi); }
+
+/* --- Import your resume: the review before anything is added (its dialog is the shared one in parts.css) -------------- */
+
+.fi-me-review-groups { display: grid; gap: var(--fi-s6); }
+.fi-me-review-group { display: grid; gap: var(--fi-s3); padding-block-start: var(--fi-s5); border-block-start: 1px solid var(--fi-line); }
+.fi-me-review-title { margin: 0; color: var(--fi-ink); font-size: var(--fi-size-row); font-weight: var(--fi-weight-bold); }
+.fi-me-review-note { margin: 0; font-size: var(--fi-size-m); }
+.fi-me-review-lines { display: grid; gap: var(--fi-s4); margin: 0; padding: 0; list-style: none; }
+.fi-me-review-line { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: var(--fi-s4); align-items: baseline; }
+.fi-me-review-line .fi-badge { justify-self: start; }
+.fi-me-review-line[data-fate="duplicate"] .fi-me-review-text { color: var(--fi-soft); }
+.fi-me-review-text { overflow-wrap: anywhere; }
+.fi-me-review-label { font-weight: var(--fi-weight-semi); }
+.fi-me-review-like { display: block; color: var(--fi-soft); font-size: var(--fi-size-m); }
+
+/* --- narrower windows: the lines stack, each tool under its line ---------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .fi-me { grid-template-columns: 220px minmax(0, 1fr); }
+}
+
+@media (max-width: 1000px) {
+  .fi-me-head { grid-template-columns: minmax(0, 1fr); }
+  .fi-me-actions { justify-content: flex-start; max-inline-size: none; }
+  .fi-me-fact { grid-template-columns: minmax(0, 1fr); gap: var(--fi-s2); }
+  .fi-me-fact-name label { padding-block-start: 0; }
+  .fi-me-item { grid-template-columns: minmax(0, 1fr); }
+  .fi-me-item > .fi-me-item-tools { justify-content: flex-start; }
+  .fi-me-flush > .fi-me-items > .fi-me-item > .fi-me-item-tools { min-block-size: 0; }
+  .fi-me-cols-head { display: none; }
+  .fi-me-cols-area .fi-me-item-body, .fi-me-cols-banned .fi-me-item-body, .fi-me-cols-drift .fi-me-item-body, .fi-me-pair, .fi-me-bullet-meta { grid-template-columns: minmax(0, 1fr); }
+  .fi-me-cols-name .fi-me-item-body { gap: var(--fi-s3); }
+  .fi-me-fixed > li { grid-template-columns: minmax(0, 1fr); gap: var(--fi-s1); }
+  .fi-me-span-6, .fi-me-span-3 { grid-column: 1 / -1; }
+  .fi-me-gap-columns { display: none; }
+  .fi-me-gap-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s2) var(--fi-s5); }
+  .fi-me-gap-row > :first-child { flex: 1 1 100%; }
+  .fi-me-gap-roles .fi-me-gap-row > :nth-child(3) { flex: 1 1 100%; order: 3; }
+  .fi-me-gap-roles .fi-me-gap-row > :nth-child(4) { order: 4; margin-inline-end: auto; }
+  .fi-me-gap-roles .fi-me-gap-row > :nth-child(5) { order: 5; }
+  .fi-me-gap-theme-sub { padding-inline-start: 0; }
+}
+
+@media (max-width: 760px) {
+  .fi-me .fi-stage-name { white-space: nowrap; }
+  .fi-me .fi-pane { overflow: visible; }
+  .fi-me-head { margin-block-end: var(--fi-s7); }
+  .fi-me-title { font-size: var(--fi-size-xl); }
+  .fi-me-part-head { padding-inline: var(--fi-s6); }
+  .fi-me-part-fold { padding-inline: calc(var(--fi-s6) + 24px + var(--fi-s5)) var(--fi-s6); }
+  .fi-me-part-body { padding-inline: var(--fi-s6); }
+  .fi-me-part-sub > .fi-me-part-body { padding-inline: var(--fi-s4); }
+  .fi-me-bar { inset-block-end: var(--fi-s4); padding: var(--fi-s5) var(--fi-s6); }
+  .fi-me-bar-actions { margin-inline-start: 0; }
+  .fi-me-gap-run-actions .fi-btn { flex: 1 1 auto; }
+}
+
+@media (max-width: 480px) {
+  .fi-me-review-line { grid-template-columns: minmax(0, 1fr); gap: var(--fi-s1); }
+}

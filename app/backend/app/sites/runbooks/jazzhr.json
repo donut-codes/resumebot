@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "key": "jazzhr",
+  "name": "JazzHR",
+  "kind": "host",
+  "hosts": [
+    "jazzhr.com"
+  ],
+  "shared_host": true
+}

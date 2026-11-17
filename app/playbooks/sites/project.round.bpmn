@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sites as projects (docs/PRD.md path 29): the project round, the parent of its sub-processes. Each site the owner wants
+     searched is a project, and each round of it is plan, do, check, act: the scout plans how to read the site, builds the
+     site's skill and tries it, code checks it, and the scout keeps what it learned. See app/PROVENANCE.md for its origin. It is not loaded by the job-search
+     library (backend/app/jobsearch/process.py reads only playbooks/jobsearch/), so it changes no running process.
+     The work that is the same for every item is in two sub-processes: Do one plan item (called once for each item;
+     playbooks/sites/do_one_item.bpmn) and Check one item (called once for each tried item; check_one_item.bpmn, whose
+     check is code, `site.check`). A plan whose site the server cannot read asks the owner nothing, since the owner
+     decided not to spend cycles on something that will fail. A site is turned off only when neither the server
+     nor the browser can read it: a plan that says its listings only load in a browser, which has not been tried, goes
+     (the fact `start.needs_browser`) to PR-7B, which sets the site to be read in the owner's browser; one that says the
+     site asks not to be read goes (the fact `start.unreadable`) to PR-7U, which switches the site off and tells the
+     owner in a notification, not a decision. The owner is never asked about a plan: every other plan starts without
+     asking, since a site plan only reads public pages (PRD 29.3). -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_project_round" targetNamespace="http://porter.local/bpmn">
+  <bpmn:message id="Message_PRT_2" name="PRT-2 The owner starts a project for a site"/>
+  <bpmn:message id="Message_PRT_4" name="PRT-4 A round's report is written"/>
+  <bpmn:message id="Message_PRT_5" name="PRT-5 The owner asks for another plan"/>
+  <bpmn:message id="Message_PRT_6" name="PRT-6 The scout submits a plan"/>
+  <bpmn:message id="Message_PRT_8" name="PRT-8 A planning task was not finished"/>
+  <bpmn:process id="Process_project_round" name="A project round" porter:key="project_round" isExecutable="true">
+    <bpmn:documentation>Learn how to read one site, in rounds. Each round: the scout writes a plan; a site the server cannot read is handed to the owner's browser, or switched off and the owner told if it refuses to be read; every other plan starts without asking; each item is done by its own run of Do one plan item and checked by its own run of Check one item (code fetches the site and counts); resumebot writes the round's report; the scout records what was learned and keeps the site's skill; and resumebot decides whether to run another round or finish. A planner that does not finish a planning task is asked again, and the third failure asks the owner.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="The owner the project belongs to (its id)."/>
+        <porter:field path="project" type="string" description="The project (its id)."/>
+        <porter:field path="site" type="string" description="The site the project learns to read (its id)."/>
+        <porter:field path="task" type="object" description="The planning task resumebot assembled for the scout."/>
+        <porter:field path="task.version" type="number" description="The plan version the scout is asked to write."/>
+        <porter:field path="plan" type="object" description="The plan the scout wrote."/>
+        <porter:field path="plan.id" type="string" description="The plan (its id)."/>
+        <porter:field path="plan.version" type="number" description="The plan's version."/>
+        <porter:field path="plan.items" type="list" description="The plan's `do` items: each is done once and, when it was tried, checked once."/>
+        <porter:field path="plan.items[].key" type="string" description="The item's key."/>
+        <porter:field path="plan.items[].title" type="string" description="The item, as the owner reads it."/>
+        <porter:field path="plan.items[].kind" type="string" description="The kind of work the item names (its id)."/>
+        <porter:field path="plan.items[].writes" type="boolean" description="The item's kind can change something (it is not read only)."/>
+        <porter:field path="start" type="object" description="What resumebot read about the plan and its site, published with the plan, to decide whether the site can be read."/>
+        <porter:field path="start.unreadable" type="boolean" description="The plan says the site asks not to be read (its robots rules or terms refuse), so nothing can read it. The owner is not asked; the site is switched off and they are told."/>
+        <porter:field path="start.needs_browser" type="boolean" description="The plan says the server cannot read the site (its listings only load in a browser) but the browser has not been tried. The owner is not asked; the site is set to be read in their browser. Never with `start.unreadable`."/>
+        <porter:field path="start.why" type="string" description="Why the server cannot read the site, as one plain clause (empty when it can)."/>
+        <porter:field path="turned_off" type="object" description="The site resumebot switched off because nothing can read it."/>
+        <porter:field path="turned_off.why" type="string" description="Why, as one plain clause."/>
+        <porter:field path="handed" type="object" description="The site resumebot handed to the owner's browser because the server cannot read it."/>
+        <porter:field path="handed.why" type="string" description="Why, as one plain clause."/>
+        <porter:field path="started" type="object" description="The plan resumebot started without asking."/>
+        <porter:field path="started.because" type="string" description="Why it could start on its own, in words."/>
+        <porter:field path="did" type="list" description="How each item ended: done or off_plan."/>
+        <porter:field path="checks" type="object" description="The checks resumebot made."/>
+        <porter:field path="checks.items" type="list" description="The items that were tried (done or off plan), each to be checked once."/>
+        <porter:field path="checks.items[].key" type="string" description="The item's key."/>
+        <porter:field path="checks.items[].title" type="string" description="The item, as the owner reads it."/>
+        <porter:field path="checks.items[].kind" type="string" description="The kind of work the item named (its id)."/>
+        <porter:field path="checks.items[].status" type="string" enum="done,off_plan" description="How the item ended."/>
+        <porter:field path="checks.items[].outcome_reason" type="string" description="Why the item went off plan, in the scout's words. Empty when it is done."/>
+        <porter:field path="checks.items[].evidence" type="string" description="What the scout said it found."/>
+        <porter:field path="checks.items[].result" type="object" description="The fields the item's kind asks for, as the scout reported them."/>
+        <porter:field path="checks.items[].data" type="object" description="What the item carried."/>
+        <porter:field path="checked" type="list" description="How each check came out: on plan (true) or not (false)."/>
+        <porter:field path="report" type="object" description="The round's report."/>
+        <porter:field path="report.verdict" type="string" enum="accepted,iterate" description="accepted: every check was on plan and nothing is left to look into. iterate: something was off plan, or something is still to look into."/>
+        <porter:field path="report.on_plan" type="number" description="How many checked items were on plan."/>
+        <porter:field path="report.off_plan" type="number" description="How many checked items were off plan."/>
+        <porter:field path="report.more" type="number" description="How many items of the plan still have more to do next round: `investigate` items, items of a kind that feeds the next plan (a read-only kind unless its file says otherwise), and items that were skipped or never tried."/>
+        <porter:field path="report.closable" type="boolean" description="The round only looked (every item a read-only kind, none still to look into) and nothing was off plan, so its Act may close the project when the scout finds nothing more to do."/>
+        <porter:field path="act" type="object" description="What the scout learned."/>
+        <porter:field path="act.summary" type="string" description="What was learned and kept, in a few words."/>
+        <porter:field path="act.resolved" type="boolean" description="The scout wrote the project's resolution (the problem, what was done, the outcome) because this round closes it."/>
+        <porter:field path="next_plan" type="object" description="The planning task resumebot made for another round."/>
+        <porter:field path="next_plan.version" type="number" description="The plan version the scout is asked to write."/>
+        <porter:field path="finished" type="object" description="How the project ended."/>
+        <porter:field path="finished.outcome" type="string" description="The project's outcome, in the owner's words."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_project_round">
+      <bpmn:lane id="Lane_owner" name="Owner">
+        <bpmn:flowNodeRef>PRT-2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRT-5</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_project" name="resumebot: project service">
+        <bpmn:flowNodeRef>PR-3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-7N</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-7U</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-7B</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-6S</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-14</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-14N</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-15</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E-finished</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E-unreadable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E-browser</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_do" name="resumebot: Do one plan item">
+        <bpmn:flowNodeRef>PR-9</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_check" name="resumebot: Check one item">
+        <bpmn:flowNodeRef>PR-11</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_report" name="resumebot: checks and report">
+        <bpmn:flowNodeRef>PRT-4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-11A</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-12</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_watch" name="resumebot: watchdog">
+        <bpmn:flowNodeRef>PRT-8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-18</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E-retried</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_scout" name="Scout (session agent)">
+        <bpmn:flowNodeRef>PRT-6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PR-13</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="PRT-2" name="PRT-2 The app starts a project for a site">
+      <bpmn:documentation>Actor: resumebot: project service
+Trigger: A site is switched on in Where to look (or the owner asks for it to be learned) and wants a project: the night's Scout mission starts one for each such site (`autostart.ensure_projects`).
+Rules:
+Fired by: creating a site's project (`sites/projects.py:create_project`), through `sites/round_process.py:drive_opened`
+Enters at: PR-3</bpmn:documentation>
+      <bpmn:outgoing>S_PRT_2__PR_3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_PRT_2"/>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="PRT-4" name="PRT-4 A round's report is written">
+      <bpmn:documentation>Actor: resumebot: checks and report
+Trigger: A round's report is written and the project does not finish. The running round passes its report step itself; this start is kept as the picture of where the next round begins.
+Rules:
+Fired by: nothing; `sites/check_flow.py` then `sites/loop.py:advance_after_report` do the work (creates Act, then the next planning task)
+Enters at: PR-13, PR-14</bpmn:documentation>
+      <bpmn:outgoing>S_PRT_4__PR_13</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_PRT_4"/>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="PRT-5" name="PRT-5 The owner asks for another plan">
+      <bpmn:documentation>Actor: The owner, or the app (when a site is switched on again or read by the app again)
+Trigger: A paused project is resumed and it was paused with a declined plan (stored data): it asks for a fresh plan.
+Rules:
+Fired by: `sites/completion.py:resume_project`, through `sites/round_process.py:drive_restarted`
+Enters at: PR-3</bpmn:documentation>
+      <bpmn:outgoing>S_PRT_5__PR_3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_PRT_5"/>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="PRT-6" name="PRT-6 The scout submits a plan">
+      <bpmn:documentation>Actor: Scout (session agent)
+Trigger: The scout submits a plan, or a revision of one, that replaces the one the run was waiting on.
+Rules:
+Fired by: `plan.propose`, `plan.revise` (MCP), through `sites/round_process.py:drive_proposed`. The plan is handed over with the facts `start.unreadable` and `start.needs_browser`.
+Enters at: PR-7N (the plan is written: can the server read the site?)</bpmn:documentation>
+      <bpmn:outgoing>S_PRT_6__PR_7N</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_PRT_6"/>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="PRT-8" name="PRT-8 A planning task was not finished">
+      <bpmn:documentation>Actor: resumebot: watchdog
+Trigger: The drive pass finds a planning task that has been in progress for more than 30 minutes, or whose session ended without finishing.
+Rules:
+Fired by: `sites/round_process.py:drive_planner_failed`, at each drive pass, and only when a planner failed (a project that is simply going on starts no run)
+Enters at: PR-18</bpmn:documentation>
+      <bpmn:outgoing>S_PRT_8__PR_18</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_PRT_8"/>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="PR-3" name="PR-3 Assemble the planning task" porter:action="round.assemble_task" porter:output="task">
+      <!-- code: sites/task_context.py:task_view, sites/loop.py:_create_next_plan_task, sites/checkout.py, jobsearch/work/wake.py -->
+      <bpmn:documentation>Actor: resumebot: project service. Also covers PR-2: the wake of the scout and the hand-out of the planning task. With no approved plan the only work is the project's own planning task.
+Trigger: Creation of a "Write plan v(n+1)" task (PRT-2, PRT-5, PR-14N), and each time a planning task is handed out.
+Rules:
+Inputs and rules. The planning task carries a context frozen when it was made and then a live part added at hand-out. All of it is held to the agent's payload budget (`planengine/budget.py`: 30,000 characters). Nothing is cut: the task is held, and Notifications says why with its size, only if the whole of it passes the 200,000 characters an agent is sent at most (`sites/agent_handout.py`).
+1. Frozen part for a next round: `based_on_version`, `write_version`; `review` (the report's verdict, summary and findings summary); the `lessons` in scope; `unresolved_items` (every off-plan check finding, then every `do` item of the plan with no finished task, then finished items of a kind that feeds the next plan with their evidence and result whole; `investigate` items "Still to look into."; the rest named by key).
+2. Live part at hand-out: the `lessons` (compact); the site (its address and kind, and its skill so far, one row for each version); the `vocab` and `kinds` the scout can run; the plan template (full if it fits, else the short form); sub-task results; what the owner said from the page (newest few).
+3. An owner-initiated first task carries `outcome`, `context`, `requested_by`.
+Outputs: The planning task's view.
+What the owner sees: Activity “resumebot asked for plan v&lt;N&gt;, from what the review found.”; the scout is woken.
+Source: `sites/loop.py:_create_next_plan_task`, `unresolved_items`; `sites/task_context.py:task_view`; `planengine/budget.py`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_3__PR_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="PR-4" name="PR-4 Write the plan" porter:role="scout" porter:harness="plan.write" porter:instructions="projects.plan.write" porter:template="projects.plan.response" porter:output="plan">
+      <bpmn:documentation>Actor: Scout (agent role), with `plan.propose` for the first plan or `plan.revise` for later ones.
+Trigger: PR-3: the planning task is handed to the scout and held by it.
+Rules:
+Preconditions. The connection takes `plan` work; no secrets in the text (`reject_secrets`).
+Processing rules (what resumebot validates, `sites/plans.py:propose_plan`, `revise_plan`, `sites/validation.py`).
+1. A plan has a `summary` and a `method` (how every item is done; a revision writes its own).
+2. At least one item; each with a stable unique `key`, a `title`, a `group`, an `action` in the valid set, `data` under the size cap. An item names a `kind`.
+3. Every `do` item's kind must exist, be switched on, and carry its required data fields.
+4. A `validation` section (its Check section) with `done_means`, `how_to_check` and `off_plan_means`; a new plan from an agent must carry it; a revision keeps the earlier one unless it sends a new one. Check is code (`site.check`): `how_to_check` says what it fetches and counts.
+5. A `problem` and a `proposal` (fresh for each revision).
+6. Everything left must be accounted for: each key in the task's `unresolved_items` must be an item or in `dropped` with a reason.
+7. A revision supersedes the earlier version's not-yet-done tasks (all of them if the method changed, else only the touched items). The planning task ends `done`.
+Exceptions. A refused plan: the scout is told every problem and may send it again.
+Outputs: `plans` row (`awaiting_approval`), `plan_items`, `trail_events` row; `plans.problem`, `proposal`, `validation`, `dropped`, `act_guidance`. The plan is handed to the process with the facts `start.unreadable` and `start.needs_browser`.
+What the owner sees: Activity "The scout proposed plan v&lt;N&gt;."
+Source: `sites/plans.py:propose_plan`, `revise_plan`; `sites/validation.py`; `jobsearch/doors/scout.py` (the `plan.*` tools).</bpmn:documentation>
+      <bpmn:outgoing>S_PR_4__PR_7N</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="PR-7N" name="PR-7N Can the server read the site? (start.unreadable, start.needs_browser)" default="F_starts">
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: The plan was written (PR-4, PRT-6).
+Rules:
+1. A plan whose site the server cannot read asks the owner nothing. No effort is spent on something that will fail. A site is turned off only when neither the server nor the browser can read it.
+2. A plan that says the site asks not to be read (its robots rules or terms refuse) is one nothing can read: `start.unreadable` is true and the site is switched off (PR-7U). Nothing else makes it true.
+3. A plan that says the server cannot read the site (its listings only load in a browser) but the browser has not been tried: `start.needs_browser` is true and the site is set to be read in the owner's browser (PR-7B), which decides. It is never true with `start.unreadable`.
+4. The owner is not asked about rounds: a project past `autostart.ROUND_CAP` rounds is `start.unreadable` (the site is switched off and the owner is told once: `unreadable.site_cannot_be_read`).
+5. Every other plan reads public pages only, so it starts without asking (PR-6S). The owner is never asked about a plan. No setting changes this.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.
+Source: `sites/autostart.py` (the facts: `unreadable_clause`, `needs_browser`); docs/PRD.md 29.3.</bpmn:documentation>
+      <bpmn:outgoing>F_unreadable</bpmn:outgoing>
+      <bpmn:outgoing>F_browser</bpmn:outgoing>
+      <bpmn:outgoing>F_starts</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="PR-7U" name="PR-7U Switch the site off and tell the owner" porter:action="round.turn_site_off" porter:output="turned_off">
+      <!-- code: sites/unreadable.py:site_cannot_be_read -->
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: The plan says the site asks not to be read, so nothing can read it (PR-7N, `start.unreadable`).
+Rules:
+1. Asks no one and opens no task. The project ends (every open task is skipped, open plans are set aside, the resolution says "Stopped: it can't be read (&lt;why&gt;), so resumebot switched the site off.").
+2. Any question the project still had open for the owner is closed as resolved by the switch-off.
+3. The site's `Look here` switch goes off by the app's own hand: the site keeps that it was the app (`off_by`) and why (`off_note`), and every mission skips it from then on (`sites/where.py:turn_off_unreadable`).
+4. The owner gets one notification, not a decision: "Turned off &lt;site&gt;: it can't be read (&lt;why&gt;). Turn it back on under Where to look when that changes." It links to the site.
+5. When the owner switches the site on again, the night's mission starts a project for it again; if the plan says the same, it is switched off again and the owner is told again.
+Outputs: The project ended, the site off, one notification.
+What the owner sees: The notification; Where to look says "Off: can't be read (&lt;why&gt;)" on the site's row; Activity "This project ended. Stopped: it can't be read (&lt;why&gt;), so resumebot switched the site off."
+Source: `sites/unreadable.py:site_cannot_be_read`; `sites/where.py:turn_off_unreadable`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_7U__E_unreadable</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="PR-7B" name="PR-7B Hand the site to the owner's browser" porter:action="round.hand_to_browser" porter:output="handed">
+      <!-- code: sites/unreadable.py:site_needs_browser -->
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: The plan says the server cannot read the site but the browser has not been tried (PR-7N, `start.needs_browser`).
+Rules:
+1. Asks no one and opens no task. The project ends (every open task is skipped, open plans are set aside, the resolution says "Handed to your browser: &lt;why&gt;, so the app can't read it from the server.").
+2. Any question the project still had open for the owner is closed as resolved by handing the site over.
+3. The site is set to be read in the owner's browser, the way "Ask resumebot to find out" does for a site the server's test could not read: a site left to resumebot is found to need the browser, with the reason as its note; one the app was told to read is set to the browser (`sites/where.py:hand_to_browser`). The browser reader decides from there.
+4. Nothing is switched off and the owner is told nothing. If the browser reader reports the site blocked, it is switched off then, and the owner is told then (`sites/where.py:turn_off_unreadable`).
+Outputs: The project ended, the site read in the owner's browser.
+What the owner sees: Where to look says "Read in your browser" on the site's row; Activity "This project ended. Handed to your browser: &lt;why&gt;, so the app can't read it from the server."
+Source: `sites/unreadable.py:site_needs_browser`; `sites/where.py:hand_to_browser`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_7B__E_browser</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="E-browser" name="Handed to the owner's browser">
+      <bpmn:documentation>Actor: resumebot: project service
+Trigger: The plan said the server cannot read the site (PR-7N), and PR-7B handed it to the owner's browser.
+Rules:
+1. The project is finished (`finished_at`, `resolution`) and the site is read in the owner's browser. No project is started for a site read in the browser.
+Outputs: A finished project, a site read in the owner's browser.
+What the owner sees: "Read in your browser" on Where to look.
+Source: `sites/unreadable.py`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="E-unreadable" name="Switched off: the site can't be read">
+      <bpmn:documentation>Actor: resumebot: project service
+Trigger: The plan said the site asks not to be read (PR-7N), and PR-7U switched it off.
+Rules:
+1. The project is finished (`finished_at`, `resolution`), the site is off with its reason, and the owner has been told. Nothing runs for the site until the owner switches it on again.
+Outputs: A finished project, a site switched off by the app.
+What the owner sees: A notification, and "Off: can't be read (&lt;why&gt;)" on Where to look.
+Source: `sites/unreadable.py`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="PR-6S" name="PR-6S Start the plan without asking" porter:action="round.start_plan" porter:output="started">
+      <!-- code: sites/plans.py:decide_plan -->
+      <bpmn:documentation>Actor: resumebot: project service (called without an owner).
+Trigger: The server can read the site (PR-7N).
+Rules: Approves the plan with no owner named and says why it could (`plans.auto_started` set). Its tasks are made, one for each item in plan order (`todo`; `skip` items `skipped`; `investigate` items get none).
+Outputs: The plan approved and its tasks made; why it could start.
+What the owner sees: Activity "Started without asking: &lt;summary&gt;, because &lt;reason&gt;."
+Source: `sites/plans.py:decide_plan`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_6S__PR_9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="PR-9" name="PR-9 Hand out and do each item" calledElement="do_one_item" porter:in="owner=owner, project=project, plan=plan.id" porter:out="did=reading.outcome">
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false" porter:collection="plan.items" porter:elementVariable="item"/>
+      <bpmn:documentation>Actor: resumebot: Do one plan item, a process of its own (`playbooks/sites/do_one_item.bpmn`), called once for each item of the plan.
+Trigger: The plan is approved (PR-6S): one task is made for each item in plan order (`todo`; `skip` items `skipped`; `investigate` items get none).
+Rules:
+1. One run of Do one plan item for each `do` item, beside each other; the round waits here until every item has ended. An item left `todo` or `waiting` holds the round open, and checks start only when no `do` task is open.
+2. Each run hands the item out to the scout and reads how it ended. A question the scout can't answer goes to the owner as a task in Notifications.
+3. Pause, Resume, Tell the scout something, Change course and Wake are the owner's controls at any time; nothing is handed out or woken while the project is paused.
+4. Each run reads how the item is handed out when it is handed out, not when the plan is approved.
+Outputs: `did`: how each item ended, done or off_plan.
+What the owner sees: What each run says (Activity lines); nothing of its own.
+Source: `playbooks/sites/do_one_item.bpmn`; `sites/plans.py:decide_plan`; `sites/checkout.py`; `sites/completion.py:complete_task`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_9__PR_11A</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:serviceTask id="PR-11A" name="PR-11A Make the checks" porter:action="round.make_checks" porter:output="checks">
+      <!-- code: sites/check_flow.py:advance_plan_checks, sites/plan_check.py:_create_plan_checks -->
+      <bpmn:documentation>Actor: resumebot: checks and report.
+Trigger: Every `do` task of the plan has ended (none `todo`, `in_progress` or `waiting`; superseded ones excluded) and no report exists for the plan version.
+Rules:
+1. One check is made for each tried item: each `do` task `done` or `off_plan`. Items never tried (skipped) are not checked. A plan with no tried items has nothing to check and its report is written at once.
+Outputs: `checks.items`: the items to check.
+What the owner sees: Activity "Every task in plan v&lt;N&gt; has been tried -- resumebot started K check(s), one per item."
+Source: `sites/plan_check.py:_create_plan_checks`; `sites/check_flow.py:advance_plan_checks`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_11A__PR_11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="PR-11" name="PR-11 Make and run the checks" calledElement="check_one_item" porter:in="owner=owner, project=project, plan=plan.id" porter:out="checked=found.on_plan">
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false" porter:collection="checks.items" porter:elementVariable="item"/>
+      <bpmn:documentation>Actor: resumebot: Check one item, a process of its own (`playbooks/sites/check_one_item.bpmn`), called once for each tried item.
+Trigger: The checks were made (PR-11A).
+Rules:
+1. One run of Check one item for each tried item, beside each other; the round waits here until every check has ended.
+2. Each run is code: `site.check` fetches the site itself and counts what came back. No agent is asked, and the scout's own word is never the evidence.
+3. When the last check has ended, the round writes its report (PR-12) and hands Act out (PR-13).
+Outputs: `checked`: how each check came out.
+What the owner sees: What each run says (Activity "On plan: &lt;title&gt;" or "Off plan: &lt;title&gt; — &lt;difference&gt;"); nothing of its own.
+Source: `playbooks/sites/check_one_item.bpmn`; `sites/check_flow.py:complete_plan_check`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_11__PR_12</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:serviceTask id="PR-12" name="PR-12 Write the round's report" porter:action="round.write_report" porter:harness="check.report" porter:output="report">
+      <!-- code: sites/plan_check.py:write_check_report -->
+      <bpmn:documentation>Actor: resumebot: checks and report. No model.
+Trigger: Every check of the plan is done, or there were no tried items.
+Rules:
+Processing rules.
+1. Over the checks that are `done`: N counts findings `ok`, K counts findings `issue` (grouped by identical difference), M = N + K. Summary "N of M on plan; K off plan." plus " J with more to do next round." where J counts plan items of action `investigate` and items whose kind `feeds_next_plan` (rule 2). The report's `verdict` is `iterate` if K &gt; 0 or J &gt; 0, else `accepted`. `findings_summary` is "Off plan: &lt;difference&gt; (&lt;items&gt;); ..." within its cap.
+2. A kind's `feeds_next_plan` defaults to true for a `read_only` kind and false otherwise; a kind file may say otherwise.
+Outputs: `review_reports` row (`verdict`, `summary`, `findings_summary`).
+What the owner sees: Activity "resumebot wrote the check report: &lt;on plan&gt; on plan, &lt;off plan&gt; off plan."
+Source: `sites/plan_check.py:write_check_report`, `_investigate_count`; `harness/loader.py:Kind.feeds_next_plan`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_12__PR_13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="PR-13" name="PR-13 Learn from the round (Act)" porter:role="scout" porter:harness="act.learn" porter:instructions="projects.act.learn" porter:template="projects.act.response" porter:output="act">
+      <bpmn:documentation>Actor: Scout (agent role).
+Trigger: `loop.advance_after_report` makes the Act task when a report exists and none does: key `act-v&lt;N&gt;`, title "Learn from the review", group "Act", action `act`, mode `plan`, status `todo`, with the plan's summary (`plan_summary`), the report, the round's items (outcome and evidence, 1,500 characters each), the owner's decision note (only on a plan decided before the owner stopped being asked about plans), the site, `closing` (the project's own outcome, `closing.outcome`, and the problem as it would be said, `closing.problem`; offered only when the review accepted and no item feeds the next plan) and the plan's `act_guidance`. resumebot wakes the scout (`act_ready`).
+Rules:
+Processing rules.
+1. Sub-tasks (`act_step`) first, one at a time, then the parent.
+2. The scout records each lesson with `lesson.record(project_id, task_id, text, applies_to, source, subject?)`: `text` one plain sentence about the site or the way sites work, never about resumebot's machinery; `applies_to` is "project", the site's kind, or "owner"; `source` names the items, the report or the owner's note of this round and is required; a newer lesson on the same `subject` retires the older. Lessons in scope reach every later planning task (the newest 30 in scope, `LESSONS_IN_CONTEXT_MAX`).
+3. The scout keeps the skill: what worked is saved as the site's skill, one row for each version (`js_site_skills`). Act keeps the skill and its lessons.
+4. `act.complete(summary, resolved?)` needs the Act task itself held and every sub-task done. The `summary` has named parts so it reads the same whichever model writes it: `planned`, `done`, `checks`, `learned` and `next`, each a plain sentence or two of at most 300 characters. The code checks the shape (a missing, empty or unknown part is refused, every problem at once); the writing is the model's. `resolved` is `{problem, done, outcome}`, each a plain sentence; it is kept when the review accepted and used only when this Act finishes the project; one that is not three plain sentences is refused.
+5. Act judges the round against `closing.outcome`, the project's own outcome (`resolution.closing_hint`). If this round's evidence meets it, the scout adds a resolution and the project ends here; otherwise it leaves it out and the project goes on. Work outside that outcome is for another project, never a reason to go on.
+Outputs: `lessons` rows; a new `js_site_skills` row when the skill changed; Act task `done` with `evidence = summary` (and `data.resolution`).
+What the owner sees: Activity "The scout finished Act for plan v&lt;N&gt;: K lesson(s) recorded."; the page's "Decided so far".
+Source: `sites/loop.py:_create_act_task`, `complete_act`; `jobsearch/doors/scout.py` (the `lesson.*` tools); `sites/lessons.py`; `sites/act_summary.py`; `sites/resolution.py:parse`, `closing_hint`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_13__PR_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="PR-14" name="PR-14 Next round or finish (gateway G14)" default="F_next">
+      <!-- code: sites/loop.py:advance_after_report -->
+      <bpmn:documentation>Actor: resumebot: project service, called when the report is written, by `act.complete`, and by every backstop.
+Rules:
+Processing rules.
+1. No report: nothing is due.
+2. No Act task yet: make it (PR-13) and wake the scout.
+3. Act (or an Act sub-task) still open: wait.
+4. Finish (PR-15) when the report's verdict is `accepted` AND no item of the plan is an `investigate` item, an item that was skipped or never tried, or of a kind that feeds the next plan; or when the round only looked with nothing off plan and the scout's Act wrote the project's resolution, because it met `closing.outcome`.
+5. Next round otherwise: if no planning task exists for this version, make "Write plan v(n+1)" (PR-3) and wake the scout (`plan_ready`).
+• The round cap (`autostart.ROUND_CAP`) holds every plan that would be a round past it, wherever the plan comes from: the site is switched off and the owner is told once (`unreadable.site_cannot_be_read`), with no question to the owner (PR-7N).
+What the owner sees: Activity "The review of plan v&lt;N&gt; is written -- resumebot started Act."; "resumebot asked for plan v&lt;N+1&gt;, from what the review found."
+Trigger: The round's report was written (PRT-4), Act ended (`act.complete`), or any backstop pass (`task.next`, the drive pass) finds Act done.
+Outputs: The way out taken: the project is finished (PR-15), or the next planning task is made (PR-3).
+Source: `sites/loop.py:advance_after_report`.</bpmn:documentation>
+      <bpmn:outgoing>F_finish</bpmn:outgoing>
+      <bpmn:outgoing>F_next</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="PR-14N" name="PR-14N Ask for the next plan" porter:action="round.next_plan" porter:output="next_plan">
+      <!-- code: sites/loop.py:advance_after_report, _create_next_plan_task -->
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: Something was off plan, or something is still to look into (PR-14).
+Rules: Makes "Write plan v(n+1)" from what the review found, once for each version.
+Outputs: The planning task and the version it asks for.
+What the owner sees: Activity "resumebot asked for plan v&lt;N&gt;, from what the review found."
+Source: `sites/loop.py:_create_next_plan_task`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_14N__PR_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="PR-15" name="PR-15 Finish" porter:action="round.finish" porter:output="finished">
+      <!-- code: sites/loop.py:_finish_from_report -->
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: PR-14 rule 4.
+Rules:
+Processing rules. `finished_at` is set; `finish_summary` is the first whole sentence of the Act note (else "Finished."); the resolution is the closing Act's own if it parsed (`resolution.of_act`), else resumebot's: `problem` from the project's purpose; `done` from the Act note's first sentence, else "&lt;n&gt; step(s) done[, k not as planned], over &lt;r&gt; round(s)" ("Nothing was changed." if there were none); `outcome` "Resolved: the last check confirmed it." Each part is held to 280 characters. Open plans are `superseded`. The site's skill stays as its latest version.
+Outputs: Finished project with `resolution`.
+What the owner sees: Activity "This project is finished. &lt;outcome&gt;". The site shows as working on the Where to look page.
+Source: `sites/loop.py:_finish_from_report`; `sites/resolution.py:close`, `build`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_15__E_finished</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="PR-18" name="PR-18 A planner run fails" porter:action="round.retry_planner">
+      <!-- code: sites/escalation.py:planner_run_failed, retry_planner_runs, jobsearch/missions/kinds/sweep.py:Sweep.start -->
+      <bpmn:documentation>Actor: resumebot: escalation, in the sweep mission (every 15 minutes), which wakes the scout for each task it hands back.
+Trigger: PRT-8: a planning-mode task `in_progress` for more than `plan_task_stuck_minutes` = 30, or its session ended without finishing.
+Rules:
+Processing rules. First failure: the task goes back to `todo` at once and the scout is woken (`planner_retry`). Second failure: the task waits `waiting` for 15 minutes (`PLANNER_RETRY_WAIT`), then returns to `todo`, with no task for the owner. Third failure: a task in Notifications, "I couldn't finish “&lt;title&gt;” after 3 tries.", with what was tried, options "Try again", "Pause", "Stop" (it never defaults: if nobody answers, it is left as it is). "Try again" hands the task to the scout once more with the retry count cleared; "Pause" pauses the project; "Stop" ends it (`resolution.STOPPED`, "stopped after the planner couldn't finish").
+Outputs: The planning task `todo` again (at once the first time, after 15 minutes the second time), or the task in Notifications on the third.
+What the owner sees: Activity "The scout didn't finish “&lt;title&gt;”; resumebot will try again" (and " in 15 minutes."); the task in Notifications.
+Source: `sites/escalation.py:planner_run_failed`, `retry_planner_runs`; `inbox/service.py`.</bpmn:documentation>
+      <bpmn:outgoing>S_PR_18__E_retried</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="E-finished" name="Project finished">
+      <bpmn:documentation>Actor: resumebot: project service
+Trigger: The review accepted the work and nothing is left to look into (PR-14), and PR-15 finished the project.
+Rules:
+1. The project closes with a three-part resolution (PR-15).
+Outputs: The finished project.
+What the owner sees: Activity "This project is finished. &lt;outcome&gt;".
+Source: `sites/loop.py:_finish_from_report`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="E-retried" name="The planner is asked again">
+      <bpmn:documentation>Actor: resumebot: escalation
+Trigger: PR-18 sent a planning task back to be tried again, or raised its task in Notifications on the third failure.
+Rules:
+1. The planning task is `todo` again (after 15 minutes on the second failure); on the third, the task in Notifications offers “Try again”, “Pause” and “Stop”.
+Outputs: A planning task to try again.
+What the owner sees: Activity "The scout didn't finish “&lt;title&gt;”; resumebot will try again"; the task in Notifications.
+Source: `sites/escalation.py:planner_run_failed`, `retry_planner_runs`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_PRT_2__PR_3" sourceRef="PRT-2" targetRef="PR-3"/>
+    <bpmn:sequenceFlow id="S_PRT_4__PR_13" sourceRef="PRT-4" targetRef="PR-13"/>
+    <bpmn:sequenceFlow id="S_PRT_5__PR_3" sourceRef="PRT-5" targetRef="PR-3"/>
+    <bpmn:sequenceFlow id="S_PRT_6__PR_7N" sourceRef="PRT-6" targetRef="PR-7N"/>
+    <bpmn:sequenceFlow id="S_PRT_8__PR_18" sourceRef="PRT-8" targetRef="PR-18"/>
+    <bpmn:sequenceFlow id="S_PR_3__PR_4" sourceRef="PR-3" targetRef="PR-4"/>
+    <bpmn:sequenceFlow id="S_PR_4__PR_7N" sourceRef="PR-4" targetRef="PR-7N"/>
+    <bpmn:sequenceFlow id="F_unreadable" name="The site can't be read by anyone" sourceRef="PR-7N" targetRef="PR-7U">
+      <bpmn:documentation>The plan says the site asks not to be read: no one is asked, the site is switched off and the owner told.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">start.unreadable = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_PR_7U__E_unreadable" sourceRef="PR-7U" targetRef="E-unreadable"/>
+    <bpmn:sequenceFlow id="F_browser" name="The server can't read the site: try the browser" sourceRef="PR-7N" targetRef="PR-7B">
+      <bpmn:documentation>The plan says the site's listings only load in a browser: no one is asked, the site is set to be read in the owner's browser, which decides.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">start.needs_browser = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_PR_7B__E_browser" sourceRef="PR-7B" targetRef="E-browser"/>
+    <bpmn:sequenceFlow id="F_starts" name="Starts without asking" sourceRef="PR-7N" targetRef="PR-6S">
+      <bpmn:documentation>The plan reads public pages only: it starts on its own.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_PR_6S__PR_9" sourceRef="PR-6S" targetRef="PR-9"/>
+    <bpmn:sequenceFlow id="S_PR_9__PR_11A" sourceRef="PR-9" targetRef="PR-11A"/>
+    <bpmn:sequenceFlow id="S_PR_11A__PR_11" sourceRef="PR-11A" targetRef="PR-11"/>
+    <bpmn:sequenceFlow id="S_PR_11__PR_12" sourceRef="PR-11" targetRef="PR-12"/>
+    <bpmn:sequenceFlow id="S_PR_12__PR_13" sourceRef="PR-12" targetRef="PR-13"/>
+    <bpmn:sequenceFlow id="S_PR_13__PR_14" sourceRef="PR-13" targetRef="PR-14"/>
+    <bpmn:sequenceFlow id="F_finish" name="Finish" sourceRef="PR-14" targetRef="PR-15">
+      <bpmn:documentation>The review accepted the work and nothing is left to look into. Or the round only looked, found nothing off plan, and the scout wrote the project's resolution in Act because the round met the project's outcome.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">(report.verdict = "accepted" and report.more = 0) or (act.resolved = true and report.closable = true)</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_next" name="Another round" sourceRef="PR-14" targetRef="PR-14N">
+      <bpmn:documentation>Something was off plan, or something is still to look into or was never tried: the next plan is asked for.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_PR_14N__PR_3" sourceRef="PR-14N" targetRef="PR-3"/>
+    <bpmn:sequenceFlow id="S_PR_15__E_finished" sourceRef="PR-15" targetRef="E-finished"/>
+    <bpmn:sequenceFlow id="S_PR_18__E_retried" sourceRef="PR-18" targetRef="E-retried"/>
+  </bpmn:process>
+</bpmn:definitions>

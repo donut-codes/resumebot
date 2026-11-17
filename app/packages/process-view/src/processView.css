@@ -1,0 +1,973 @@
+/* ProcessView styling (frontend/src/process/ProcessView.tsx).
+ *
+ * Ported from the upstream project's frontend/src/index.css (commit 8c2e050): the
+ * rules behind its process page's "Process flow" and "Steps" sections --
+ * the Living graph's circles, the board, the step list, the branch headers,
+ * the kind pills and the path numbers. Shapes, sizes and structure are
+ * the upstream project's; every colour is the host app's own token (styles/tokens.css), so
+ * it follows Evening and Daylight like the rest of the app. PROVENANCE.md
+ * lists what was cut.
+ *
+ * Token mapping used throughout (original -> host app):
+ *   --surface -> --surface        --surface-2 -> --card     --surface-3 -> --hover
+ *   --bg -> --ground              --border -> --line        --border-strong -> --line-2
+ *   --ink / --text / --muted -> same name   --text-soft -> --soft
+ *   --accent-soft -> --porter-wash          --link -> --text
+ *   --kind-event (teal) -> --done (green)   --kind-decision -> --porter-2
+ */
+
+.process-view {
+  --pv-start: var(--done, #6fc28b);
+  --pv-start-ink: var(--on-primary, #121416);
+  --pv-decision: var(--porter-2, #6f5cf0);
+  --pv-decision-soft: var(--porter-wash, rgba(165, 148, 255, 0.12));
+  --pv-decision-ink: var(--on-porter, #fff);
+  --pv-end: var(--line-2, #353a41);
+  --pv-edge: var(--faint, #7f868f);
+  display: grid;
+  gap: var(--space-6, 24px);
+  min-width: 0;
+}
+
+.process-view section {
+  min-width: 0;
+}
+
+.process-view h2 {
+  font-size: var(--font-md, 15.5px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--ink, #eef0f2);
+  margin: 0;
+}
+
+/* --- section header: title on the left, controls on the right ------------ */
+
+.process-view .section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-3, 12px);
+}
+
+.process-view .section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4, 16px);
+}
+
+.process-view .show-details-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--soft, #a8aeb6);
+  cursor: pointer;
+  user-select: none;
+}
+
+.process-view .show-details-toggle input {
+  accent-color: var(--porter-2, #6f5cf0);
+  cursor: pointer;
+}
+
+.process-view .mode-toggle {
+  flex-shrink: 0;
+  padding: 3px 11px;
+  border: 1px solid var(--line-2, #353a41);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--surface, #17191c);
+  color: var(--soft, #a8aeb6);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.process-view .steps-keyhint {
+  flex-basis: 100%;
+  order: 99;
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--muted, #8b929b);
+}
+
+.process-view .steps-keyhint-idle {
+  visibility: hidden;
+}
+
+.process-view .steps-keyhint kbd {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11px;
+  padding: 1px 5px;
+  margin-right: 2px;
+  border: 1px solid var(--line-2, #353a41);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--card, #1c1f23);
+  color: var(--soft, #a8aeb6);
+}
+
+/* --- the Process flow board ---------------------------------------------- */
+
+.process-view .read-flow-board {
+  height: 600px;
+  border: 1px solid var(--line, #292d33);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--ground, #121416);
+  overflow: hidden;
+}
+
+.process-view .read-flow-board-expanded {
+  height: 80vh;
+}
+
+.process-view .read-flow-board .react-flow__viewport {
+  transition: opacity 0.14s ease-out;
+}
+
+.process-view .read-flow-board.pw-flow-framing .react-flow__viewport {
+  opacity: 0;
+}
+
+.process-view .read-flow-board.pw-grabbing,
+.process-view .read-flow-board.pw-grabbing * {
+  cursor: grabbing !important;
+}
+
+.process-view .react-flow__attribution {
+  display: none;
+}
+
+.process-view .react-flow__controls {
+  background: var(--surface, #17191c);
+  border: 1px solid var(--line, #292d33);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.process-view .react-flow__controls-button {
+  background: var(--surface, #17191c);
+  border: none;
+  border-bottom: 1px solid var(--line, #292d33);
+  color: var(--text, #d6d9dd);
+  fill: var(--text, #d6d9dd);
+}
+
+.process-view .react-flow__controls-button:hover {
+  background: var(--hover, #22262b);
+}
+
+.process-view .react-flow__background pattern line,
+.process-view .react-flow__background pattern circle {
+  stroke: var(--line, #292d33) !important;
+}
+
+.process-view .react-flow__background {
+  background: var(--ground, #121416);
+}
+
+.process-view .react-flow__handle {
+  background: var(--ink, #eef0f2);
+  border: none;
+  width: 8px;
+  height: 8px;
+}
+
+/* --- the Living graph's circles ------------------------------------------ */
+
+.process-view .react-flow__node {
+  min-width: 160px;
+  max-width: 260px;
+}
+
+.process-view .pw-living-flow .react-flow__node {
+  min-width: 0;
+  max-width: none;
+  width: auto;
+}
+
+.process-view .pw-block {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 3px solid var(--soft, #a8aeb6);
+  background: var(--surface, #17191c);
+  color: var(--ink, #eef0f2);
+  text-align: center;
+  cursor: pointer;
+  --state-ring: 0 0 0 0 transparent;
+  box-shadow: var(--state-ring);
+}
+
+.process-view .pw-block.selected {
+  outline: 3px solid var(--focus, #a594ff);
+  outline-offset: 2px;
+}
+
+.process-view .pw-block.traced {
+  --state-ring: 0 0 0 3px var(--porter-wash, rgba(165, 148, 255, 0.12));
+}
+
+.process-view .pw-block-handle-side {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.process-view .pw-block-decision {
+  background: var(--pv-decision);
+  border-color: var(--pv-decision);
+  color: var(--pv-decision-ink);
+}
+
+.process-view .pw-block-event {
+  background: var(--pv-start);
+  border-color: var(--pv-start);
+  color: var(--pv-start-ink);
+}
+
+.process-view .pw-block-subprocess {
+  box-shadow: inset 0 0 0 3px var(--surface, #17191c), inset 0 0 0 6px var(--line-2, #353a41);
+}
+
+.process-view .pw-block-terminal {
+  border-width: 5px;
+  border-color: var(--pv-end);
+  background: var(--hover, #22262b);
+  color: var(--ink, #eef0f2);
+  font-weight: 700;
+}
+
+.process-view .pw-block-badge {
+  position: absolute;
+  top: var(--space-1, 4px);
+  right: var(--space-2, 8px);
+  font-size: var(--font-sm, 13px);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.process-view .pw-living-flow .pw-block {
+  cursor: grab;
+}
+
+.process-view .pw-block.pw-living-node {
+  border-radius: 50%;
+  border-width: 2px;
+  padding: 5px 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: opacity 0.15s ease;
+}
+
+.process-view .pw-living-node-badge {
+  top: 2px;
+  right: 6px;
+  font-size: 11px;
+}
+
+.process-view .pw-living-node-num {
+  position: relative;
+  z-index: 1;
+  /* --pw-num-fit and --pw-num-w come from the node (numberFontPx in livingGraphKit.tsx): a deep step's number breaks
+     after its dots and is sized to fit inside the node instead of running over it. */
+  inline-size: max-content;
+  max-inline-size: var(--pw-num-w, 100%);
+  font-size: min(9.5px, var(--pw-num-fit, 9.5px));
+  font-weight: 700;
+  opacity: 0.7;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.process-view .pw-living-node-label {
+  position: relative;
+  z-index: 1;
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  color: inherit;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.process-view .pw-living-edge {
+  stroke: var(--pv-edge);
+  stroke-width: 1.4px;
+  fill: none;
+  transition: opacity 0.15s ease;
+}
+
+.process-view .pw-living-edge.selected {
+  stroke: var(--focus, #a594ff) !important;
+}
+
+.process-view .pw-living-edge-attachment {
+  stroke-dasharray: 4 2.5;
+}
+
+.process-view .pw-edge-label {
+  background: var(--surface, #17191c);
+  border: 1px solid var(--line-2, #353a41);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text, #d6d9dd);
+  white-space: nowrap;
+}
+
+/* --- the Steps list ------------------------------------------------------- */
+
+.process-view .step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.process-view .step-row {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line, #292d33);
+}
+
+.process-view .step-row:last-child {
+  border-bottom: none;
+}
+
+.process-view .step-row-highlighted {
+  background: var(--hover, #22262b);
+  border-radius: var(--radius-lg, 12px);
+  margin: 0 -8px;
+  padding-left: 22px;
+  padding-right: 8px;
+}
+
+.process-view .step-row-highlighted .step-number:not(.step-number-end) {
+  border-color: var(--focus, #a594ff);
+  background: var(--porter-wash, rgba(165, 148, 255, 0.12));
+  color: var(--ink, #eef0f2);
+}
+
+.process-view .step-number {
+  flex-shrink: 0;
+  min-width: 26px;
+  padding: 0 5px;
+  height: 26px;
+  border-radius: 13px;
+  border: 1px solid var(--line-2, #353a41);
+  color: var(--muted, #8b929b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.process-view .step-number-end {
+  border: 2px solid var(--soft, #a8aeb6);
+  background: var(--surface, #17191c);
+  position: relative;
+}
+
+.process-view .step-number-terminate {
+  border-color: var(--ink, #eef0f2);
+  background: var(--surface, #17191c);
+}
+
+.process-view .step-number-terminate::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink, #eef0f2);
+}
+
+.process-view .step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.process-view .step-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* The actor under a step's title (ProcessView's `performerOnRows`; PROVENANCE.md). */
+.process-view .step-actor-line {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted, #8b929b);
+}
+
+/* The tags on the right of a step's title: a run's mark just left of the kind tag, the same place on every row. */
+.process-view .step-title-tags {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.process-view .step-title-tags-run .step-bpmn-badge,
+.process-view .step-title-tags-run .step-run-mark {
+  min-width: 5.5em;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* A running instance's place in the process (ProcessView's `marks`, the live view; PROVENANCE.md). */
+.process-view .step-run-mark {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm, 4px);
+  white-space: nowrap;
+}
+
+.process-view .step-run-mark-current {
+  background: var(--porter-wash, rgba(165, 148, 255, 0.12));
+  color: var(--porter, #a594ff);
+  box-shadow: inset 0 0 0 1px var(--porter, #a594ff);
+}
+
+.process-view .step-run-mark-passed {
+  background: var(--done-wash, rgba(111, 194, 139, 0.12));
+  color: var(--done, #6fc28b);
+}
+
+.process-view .step-row-run-current .step-number {
+  box-shadow: 0 0 0 3px var(--porter-wash, rgba(165, 148, 255, 0.12)), 0 0 0 4px var(--porter, #a594ff);
+}
+
+.process-view .pw-block.pw-run-current {
+  border-color: var(--porter, #a594ff);
+  --state-ring: 0 0 0 4px var(--porter-wash, rgba(165, 148, 255, 0.12)), 0 0 0 5px var(--porter, #a594ff);
+}
+
+.process-view .pw-block.pw-run-passed {
+  border-color: var(--done, #6fc28b);
+}
+
+.process-view .step-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink, #eef0f2);
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.process-view .step-title-editable {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 5px;
+  margin: -2px -5px;
+  min-height: 24px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+}
+
+.process-view .step-title-kind {
+  color: var(--soft, #a8aeb6);
+}
+
+.process-view .step-title-kind-terminate {
+  color: var(--ink, #eef0f2);
+  font-weight: 700;
+}
+
+.process-view .step-detail-toggle {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2, #353a41);
+  background: var(--surface, #17191c);
+  color: var(--muted, #8b929b);
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.process-view .step-detail-toggle:hover {
+  border-color: var(--focus, #a594ff);
+  color: var(--ink, #eef0f2);
+  background: var(--porter-wash, rgba(165, 148, 255, 0.12));
+}
+
+.process-view .step-detail-body {
+  margin-top: 6px;
+}
+
+.process-view .step-description {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--soft, #a8aeb6);
+  margin: 0 0 6px;
+}
+
+.process-view .step-instructions {
+  margin-top: 4px;
+}
+
+.process-view .step-instructions p {
+  margin: 0 0 4px;
+}
+
+.process-view .step-instructions ul,
+.process-view .step-instructions ol {
+  margin: 0 0 4px;
+  padding-left: 20px;
+}
+
+.process-view .step-instructions code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  padding: 0 0.3em;
+  border-radius: 4px;
+  background: var(--porter-wash, rgba(165, 148, 255, 0.12));
+  color: var(--ink, #eef0f2);
+}
+
+.process-view .step-derived:not(:empty) {
+  margin: 2px 0 8px;
+}
+
+.process-view .step-derived-line {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted, #8b929b);
+  line-height: 1.6;
+}
+
+.process-view .flow-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 8px;
+}
+
+.process-view .flow-target-jump {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--text, #d6d9dd);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-2, #353a41);
+  cursor: pointer;
+  text-align: left;
+}
+
+.process-view .flow-target-jump:hover {
+  text-decoration-color: currentColor;
+}
+
+.process-view .step-loop-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.process-view .step-decision-criteria {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--soft, #a8aeb6);
+  background: var(--card, #1c1f23);
+  border-left: 2px solid var(--line-2, #353a41);
+  border-radius: var(--radius-sm, 4px);
+  margin: 6px 0 0;
+  padding: 7px 10px;
+}
+
+.process-view .step-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.process-view .chip-group-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted, #8b929b);
+}
+
+.process-view .step-chip {
+  font-size: 12px;
+  padding: 1px 8px;
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid var(--line-2, #353a41);
+  background: var(--card, #1c1f23);
+  color: var(--text, #d6d9dd);
+}
+
+.process-view .step-design-body,
+.process-view .escape-detail {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 10px;
+  align-items: baseline;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--card, #1c1f23);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.process-view .escape-detail {
+  margin: 8px 0 10px 34px;
+  border-left: 1px solid var(--line, #292d33);
+}
+
+.process-view .step-field-row {
+  display: contents;
+}
+
+.process-view .step-field-row dt {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted, #8b929b);
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.process-view .step-field-row dt::after {
+  content: ':';
+}
+
+.process-view .step-field-row dd {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--soft, #a8aeb6);
+  margin: 0;
+  min-width: 0;
+}
+
+.process-view .source-ref {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px;
+  color: var(--muted, #8b929b);
+}
+
+.process-view .step-design {
+  margin-top: 6px;
+}
+
+.process-view .step-design-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12.5px;
+  color: var(--muted, #8b929b);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.process-view .step-design-toggle:hover {
+  color: var(--text, #d6d9dd);
+}
+
+.process-view .step-bpmn-attrs-label,
+.process-view .step-bpmn-attrs-note {
+  font-size: 12px;
+  color: var(--muted, #8b929b);
+  margin: 4px 0;
+}
+
+.process-view .step-bpmn-attrs-raw {
+  font-size: 11.5px;
+  color: var(--soft, #a8aeb6);
+  background: var(--card, #1c1f23);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm, 4px);
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.process-view .step-field-empty {
+  color: var(--muted, #8b929b);
+  font-style: italic;
+}
+
+/* the kind pills: what sort of step this is, in a word */
+
+.process-view .step-bpmn-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--hover, #22262b);
+  color: var(--soft, #a8aeb6);
+  white-space: nowrap;
+}
+
+.process-view .step-bpmn-badge-decision {
+  background: var(--pv-decision-soft);
+  color: var(--porter, #a594ff);
+}
+
+.process-view .step-bpmn-badge-event {
+  background: var(--done-wash, rgba(111, 194, 139, 0.12));
+  color: var(--done, #6fc28b);
+}
+
+.process-view .step-bpmn-badge-terminal {
+  background: var(--hover, #22262b);
+  color: var(--text, #d6d9dd);
+  font-weight: 700;
+  border: 1px solid var(--line-2, #353a41);
+}
+
+.process-view .step-bpmn-badge-subprocess {
+  box-shadow: 0 0 0 1px var(--surface, #17191c), 0 0 0 2px var(--line-2, #353a41);
+}
+
+.process-view .step-bpmn-badge-task {
+  background: var(--surface, #17191c);
+  color: var(--soft, #a8aeb6);
+  border: 1px solid var(--line-2, #353a41);
+}
+
+.process-view .step-bpmn-badge-path {
+  background: none;
+  border: 1px dashed var(--line-2, #353a41);
+  color: var(--soft, #a8aeb6);
+  font-style: italic;
+}
+
+.process-view .step-bpmn-badge-unmapped {
+  background: none;
+  border: 1px dashed var(--line-2, #353a41);
+  color: var(--muted, #8b929b);
+}
+
+.process-view .step-bpmn-badge-end {
+  margin-left: auto;
+}
+
+/* the up/down marks on the steps before and after the selected one */
+
+.process-view .step-trace-arrow {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--on-primary, #121416);
+}
+
+.process-view .step-trace-arrow-up {
+  background: var(--porter, #a594ff);
+}
+
+.process-view .step-trace-arrow-down {
+  background: var(--done, #6fc28b);
+}
+
+/* --- branch sections: one header per path --------------------------------- */
+
+.process-view .outline-section-title {
+  margin: 0;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+}
+
+.process-view .outline-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  background: var(--card, #1c1f23);
+  border: 1px solid var(--line, #292d33);
+  border-radius: var(--radius-lg, 12px);
+  margin: 10px -8px 0;
+  padding: 10px 8px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.process-view .outline-section-header:hover {
+  background: var(--hover, #22262b);
+  border-color: var(--line-2, #353a41);
+}
+
+.process-view .outline-section-fold {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2, #353a41);
+  background: var(--surface, #17191c);
+  color: var(--muted, #8b929b);
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.process-view .outline-section-header:hover .outline-section-fold {
+  border-color: var(--focus, #a594ff);
+  color: var(--ink, #eef0f2);
+  background: var(--porter-wash, rgba(165, 148, 255, 0.12));
+}
+
+.process-view .outline-section-number {
+  flex-shrink: 0;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--card, #1c1f23);
+  border: 1px solid var(--line-2, #353a41);
+  color: var(--soft, #a8aeb6);
+}
+
+.process-view .outline-section-heading {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--soft, #a8aeb6);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.process-view .outline-section-heading strong {
+  color: var(--ink, #eef0f2);
+  font-weight: 700;
+}
+
+.process-view .outline-section-parallel .outline-section-heading::before {
+  content: '∥ ';
+  opacity: 0.7;
+}
+
+.process-view .outline-section-empty {
+  font-size: 13.5px;
+  color: var(--muted, #8b929b);
+  font-style: italic;
+  padding: 2px 0 10px;
+}
+
+.process-view .step-detail-toggle:focus-visible,
+.process-view .outline-section-header:focus-visible,
+.process-view .step-title-editable:focus-visible,
+.process-view .step-design-toggle:focus-visible,
+.process-view .flow-target-jump:focus-visible {
+  outline: 2px solid var(--focus, #a594ff);
+  outline-offset: 2px;
+}
+
+/* --- the package's own small controls --------------------------------------
+ * The package draws its own buttons and hidden text instead of leaning on classes a host app happens to define
+ * (`.btn`, `.btn-quiet`, `.btn-sm`, `.muted`, `.visually-hidden`). Same tokens and sizes as the host app's, each with a
+ * fallback, so they look the same there and right in a host that defines none. */
+
+.pv-btn {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: var(--border-width, 1px) solid var(--border, var(--line, #292d33));
+  background: var(--surface, #17191c);
+  border-radius: var(--radius, 8px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  font-size: var(--font-base, 14px);
+}
+
+.pv-btn:hover {
+  border-color: var(--faint, #7f868f);
+}
+
+.pv-btn-quiet {
+  border-color: transparent;
+  background: transparent;
+}
+
+.pv-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pv-btn-sm {
+  padding: var(--space-1, 4px) var(--space-3, 12px);
+  font-size: 12.5px;
+}
+
+.pv-muted {
+  color: var(--muted, #8b929b);
+}
+
+.pv-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The view takes focus when it is clicked (so the arrow keys reach it); that is not a tab stop to outline. */
+.process-view:focus {
+  outline: none;
+}
+
+/* At phone width the upstream project's two-column field grids stack. */
+@media (max-width: 560px) {
+  .process-view .escape-detail,
+  .process-view .step-design-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .process-view .escape-detail > .step-field-row,
+  .process-view .step-design-body > .step-field-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 6px;
+  }
+}

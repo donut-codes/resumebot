@@ -1,0 +1,4574 @@
+{
+ "letter:company": {
+  "docx": {
+   "margins": [
+    [
+     0.9,
+     0.9,
+     0.9,
+     0.9
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": 14.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": true,
+     "runs": [
+      [
+       "Anytown, ST | 555-0100 | pat@example.test",
+       false,
+       false,
+       9.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Anytown, ST | 555-0100 | pat@example.test"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "October 5, 2026",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "October 5, 2026"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Globex",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Dear Hiring Manager,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Dear Hiring Manager,"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Only a body paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Only a body paragraph."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": 30.0,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Pat Example\nAnytown, ST | 555-0100 | pat@example.test\nOctober 5, 2026\nGlobex\nDear Hiring Manager,\nOnly a body paragraph.\nSincerely,\nPat Example"
+   ]
+  }
+ },
+ "letter:company_role": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": 14.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": true,
+     "runs": [
+      [
+       "Anytown, ST | 555-0100 | pat@example.test",
+       false,
+       false,
+       9.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Anytown, ST | 555-0100 | pat@example.test"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "October 5, 2026",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "October 5, 2026"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Globex",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Re: Senior Planner",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Re: Senior Planner"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Dear Ms. Rivera,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Dear Ms. Rivera,"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "First paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "First paragraph."
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Second paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Second paragraph."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": 30.0,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Pat Example\nAnytown, ST | 555-0100 | pat@example.test\nOctober 5, 2026\nGlobex\nRe: Senior Planner\nDear Ms. Rivera,\nFirst paragraph.\nSecond paragraph.\nSincerely,\nPat Example"
+   ]
+  }
+ },
+ "letter:empty_letter": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 14.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": true,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "October 5, 2026",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "October 5, 2026"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Dear Hiring Manager,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Dear Hiring Manager,"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "October 5, 2026\nDear Hiring Manager,\nSincerely,"
+   ]
+  }
+ },
+ "letter:neither": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": 14.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": true,
+     "runs": [
+      [
+       "Anytown, ST | 555-0100 | pat@example.test",
+       false,
+       false,
+       9.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Anytown, ST | 555-0100 | pat@example.test"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "October 5, 2026",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "October 5, 2026"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Dear Ms. Rivera,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Dear Ms. Rivera,"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "First paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "First paragraph."
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Second paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Second paragraph."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": 30.0,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Pat Example\nAnytown, ST | 555-0100 | pat@example.test\nOctober 5, 2026\nDear Ms. Rivera,\nFirst paragraph.\nSecond paragraph.\nSincerely,\nPat Example"
+   ]
+  }
+ },
+ "letter:no_contact": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Sam Sample",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sam Sample"
+    },
+    {
+     "after": 14.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": true,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "October 5, 2026",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "October 5, 2026"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Re: Clerk",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Re: Clerk"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Dear Hiring Manager,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Dear Hiring Manager,"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Only a body paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Only a body paragraph."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": 30.0,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Sam Sample",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sam Sample"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Sam Sample\nOctober 5, 2026\nInitech\nRe: Clerk\nDear Hiring Manager,\nOnly a body paragraph.\nSincerely,\nSam Sample"
+   ]
+  }
+ },
+ "letter:no_name": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 14.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": true,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "October 5, 2026",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "October 5, 2026"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Globex",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Dear Ms. Rivera,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Dear Ms. Rivera,"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "First paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "First paragraph."
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Second paragraph.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Second paragraph."
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "October 5, 2026\nGlobex\nDear Ms. Rivera,\nFirst paragraph.\nSecond paragraph.\nSincerely,\nPat Example\nSincerely,"
+   ]
+  }
+ },
+ "letter:role_only": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": 14.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": true,
+     "runs": [
+      [
+       "Anytown, ST | 555-0100 | pat@example.test",
+       false,
+       false,
+       9.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Anytown, ST | 555-0100 | pat@example.test"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "October 5, 2026",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "October 5, 2026"
+    },
+    {
+     "after": 12.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Re: Planner",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Re: Planner"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Dear Hiring Manager,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Dear Hiring Manager,"
+    },
+    {
+     "after": 8.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Body.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Body."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Sincerely,",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sincerely,"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": 30.0,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Pat Example\nAnytown, ST | 555-0100 | pat@example.test\nOctober 5, 2026\nRe: Planner\nDear Hiring Manager,\nBody.\nSincerely,\nPat Example"
+   ]
+  }
+ },
+ "resume:full": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": null,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Anytown, ST | 555-0100 | pat@example.test",
+       false,
+       false,
+       9.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Anytown, ST | 555-0100 | pat@example.test"
+    },
+    {
+     "after": null,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Operations Leader | Process | Analytics",
+       true,
+       false,
+       11.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Operations Leader | Process | Analytics"
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "PROFESSIONAL SUMMARY",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "PROFESSIONAL SUMMARY"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Runs teams that ship. Café “quotes” and dashes – kept.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Runs teams that ship. Café “quotes” and dashes – kept."
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "CORE COMPETENCIES",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "CORE COMPETENCIES"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Operations: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "Planning · Budgets · Vendors",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Operations: Planning · Budgets · Vendors"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Tools: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "SQL",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Tools: SQL"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Empty: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Empty: "
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "SELECTED ACHIEVEMENTS",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "SELECTED ACHIEVEMENTS"
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "PROFESSIONAL EXPERIENCE",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "PROFESSIONAL EXPERIENCE"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "EDUCATION",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "EDUCATION"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "BS, Economics",
+       true,
+       null,
+       null
+      ],
+      [
+       ", State University",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "BS, Economics, State University"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Certificate",
+       true,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Certificate"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Pat Example\nAnytown, ST | 555-0100 | pat@example.test\nOperations Leader | Process | Analytics\nPROFESSIONAL SUMMARY\nRuns teams that ship. Café “quotes” and dashes – kept.\nCORE COMPETENCIES\nOperations: Planning · Budgets · Vendors\nTools: SQL\nEmpty: \nSELECTED ACHIEVEMENTS\n- Cut cycle time by a third.\n- Opened two sites.\n-\nPROFESSIONAL EXPERIENCE\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nEDUCATION\nBS, Economics, State University\nCertificate"
+   ]
+  }
+ },
+ "resume:full_margin": {
+  "docx": {
+   "margins": [
+    [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": null,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Anytown, ST | 555-0100 | pat@example.test",
+       false,
+       false,
+       9.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Anytown, ST | 555-0100 | pat@example.test"
+    },
+    {
+     "after": null,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Operations Leader | Process | Analytics",
+       true,
+       false,
+       11.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Operations Leader | Process | Analytics"
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "PROFESSIONAL SUMMARY",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "PROFESSIONAL SUMMARY"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Runs teams that ship. Café “quotes” and dashes – kept.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Runs teams that ship. Café “quotes” and dashes – kept."
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "CORE COMPETENCIES",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "CORE COMPETENCIES"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Operations: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "Planning · Budgets · Vendors",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Operations: Planning · Budgets · Vendors"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Tools: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "SQL",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Tools: SQL"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Empty: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Empty: "
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "SELECTED ACHIEVEMENTS",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "SELECTED ACHIEVEMENTS"
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "PROFESSIONAL EXPERIENCE",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "PROFESSIONAL EXPERIENCE"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "EDUCATION",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "EDUCATION"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "BS, Economics",
+       true,
+       null,
+       null
+      ],
+      [
+       ", State University",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "BS, Economics, State University"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Certificate",
+       true,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Certificate"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Pat Example\nAnytown, ST | 555-0100 | pat@example.test\nOperations Leader | Process | Analytics\nPROFESSIONAL SUMMARY\nRuns teams that ship. Café “quotes” and dashes – kept.\nCORE COMPETENCIES\nOperations: Planning · Budgets · Vendors\nTools: SQL\nEmpty: \nSELECTED ACHIEVEMENTS\n- Cut cycle time by a third.\n- Opened two sites.\n-\nPROFESSIONAL EXPERIENCE\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nEDUCATION\nBS, Economics, State University\nCertificate"
+   ]
+  }
+ },
+ "resume:long": {
+  "docx": {
+   "margins": [
+    [
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Pat Example",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Pat Example"
+    },
+    {
+     "after": null,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Anytown, ST | 555-0100 | pat@example.test",
+       false,
+       false,
+       9.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Anytown, ST | 555-0100 | pat@example.test"
+    },
+    {
+     "after": null,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Operations Leader | Process | Analytics",
+       true,
+       false,
+       11.5
+      ]
+     ],
+     "style": "Normal",
+     "text": "Operations Leader | Process | Analytics"
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "PROFESSIONAL SUMMARY",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "PROFESSIONAL SUMMARY"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Runs teams that ship. Café “quotes” and dashes – kept.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Runs teams that ship. Café “quotes” and dashes – kept."
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "CORE COMPETENCIES",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "CORE COMPETENCIES"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Operations: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "Planning · Budgets · Vendors",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Operations: Planning · Budgets · Vendors"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Tools: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "SQL",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Tools: SQL"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Empty: ",
+       true,
+       null,
+       null
+      ],
+      [
+       "",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Empty: "
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "SELECTED ACHIEVEMENTS",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "SELECTED ACHIEVEMENTS"
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Cut cycle time by a third.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Cut cycle time by a third."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Opened two sites.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Opened two sites."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [],
+     "style": "List Bullet",
+     "text": ""
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "PROFESSIONAL EXPERIENCE",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "PROFESSIONAL EXPERIENCE"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Globex Corp, Anytown, ST",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Globex Corp, Anytown, ST"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Director",
+       true,
+       null,
+       null
+      ],
+      [
+       " | Jan 2020 to Present",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Director | Jan 2020 to Present"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "A regional manufacturer.",
+       false,
+       true,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "A regional manufacturer."
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Led the whole plant.",
+       false,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Led the whole plant."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Built the plan.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Built the plan."
+    },
+    {
+     "after": 1.0,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Hired nine people.",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "List Bullet",
+     "text": "Hired nine people."
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Initech",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Initech"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Manager",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2015",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Manager | 2015"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [],
+     "style": "Normal",
+     "text": ""
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Analyst",
+       true,
+       null,
+       null
+      ],
+      [
+       " | 2014",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Analyst | 2014"
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "EDUCATION",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "EDUCATION"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "BS, Economics",
+       true,
+       null,
+       null
+      ],
+      [
+       ", State University",
+       null,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "BS, Economics, State University"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Certificate",
+       true,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Certificate"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Pat Example\nAnytown, ST | 555-0100 | pat@example.test\nOperations Leader | Process | Analytics\nPROFESSIONAL SUMMARY\nRuns teams that ship. Café “quotes” and dashes – kept.\nCORE COMPETENCIES\nOperations: Planning · Budgets · Vendors\nTools: SQL\nEmpty: \nSELECTED ACHIEVEMENTS\n- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-- Cut cycle time by a third.\n- Opened two sites.\n-\nPROFESSIONAL EXPERIENCE\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014",
+    "Globex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015",
+    "Analyst | 2014\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nGlobex Corp, Anytown, ST\nDirector | Jan 2020 to Present\nA regional manufacturer.\nLed the whole plant.\n- Built the plan.\n- Hired nine people.\nInitech\nManager | 2015\nAnalyst | 2014\nEDUCATION\nBS, Economics, State University\nCertificate"
+   ]
+  }
+ },
+ "resume:nothing": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    ""
+   ]
+  }
+ },
+ "resume:sparse": {
+  "docx": {
+   "margins": [
+    [
+     0.7,
+     0.7,
+     0.6,
+     0.6
+    ]
+   ],
+   "meta": [
+    "",
+    "",
+    ""
+   ],
+   "normal": [
+    "Calibri",
+    10.5,
+    2.0
+   ],
+   "paragraphs": [
+    {
+     "after": 0.0,
+     "align": 1,
+     "before": null,
+     "keep": null,
+     "rule": false,
+     "runs": [
+      [
+       "Sam Sample",
+       true,
+       false,
+       16.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "Sam Sample"
+    },
+    {
+     "after": 2.0,
+     "align": null,
+     "before": 8.0,
+     "keep": true,
+     "rule": true,
+     "runs": [
+      [
+       "PROFESSIONAL EXPERIENCE",
+       true,
+       false,
+       11.0
+      ]
+     ],
+     "style": "Normal",
+     "text": "PROFESSIONAL EXPERIENCE"
+    },
+    {
+     "after": 0.0,
+     "align": null,
+     "before": 6.0,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Acme",
+       true,
+       false,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Acme"
+    },
+    {
+     "after": null,
+     "align": null,
+     "before": null,
+     "keep": true,
+     "rule": false,
+     "runs": [
+      [
+       "Clerk",
+       true,
+       null,
+       null
+      ]
+     ],
+     "style": "Normal",
+     "text": "Clerk"
+    }
+   ],
+   "tables": 0
+  },
+  "pdf": {
+   "pages": [
+    "Sam Sample\nPROFESSIONAL EXPERIENCE\nAcme\nClerk"
+   ]
+  }
+ }
+}

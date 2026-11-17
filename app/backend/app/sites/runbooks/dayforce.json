@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "key": "dayforce",
+  "name": "Dayforce",
+  "kind": "job_system",
+  "hosts": [
+    "dayforcehcm.com"
+  ],
+  "order": 18,
+  "address": {
+    "board": [
+      {
+        "host": ".*dayforcehcm\\.com.*",
+        "skip_locale": true,
+        "path": "(?P<tenant>[^/]+)(?:/.*)?",
+        "capture": {
+          "host": "host",
+          "tenant": "group:tenant"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "path": "(?=(?:.*/)?posting(?:/|$))(?:(?!view(?:/|$))[^/]+/)*view/[0-9]+(?:/.*)?"
+      },
+      {
+        "path": "(?:(?!candidateportal/jobs/)[^/]+/)*candidateportal/jobs/[0-9]+(?:/.*)?"
+      }
+    ]
+  },
+  "flags": {
+    "own_parts": [
+      "tenant"
+    ]
+  }
+}

@@ -1,0 +1,182 @@
+/* The Focus Inbox's design tokens: the one place its colours, type, spacing, radii, depth and motion are decided.
+ * focus.css uses nothing but these, so a theme is only a new set of these values. Two sets ship: daylight (the
+ * default) and night (from prefers-color-scheme). There is no theme picker.
+ *
+ * The world: a calm, light inbox. Cool paper and white sheets, ink-dark type, one warm sun yellow that marks only what
+ * waits on the person (Ready to Launch, Launch in Browser, the star), teal for what fits, red for what stopped, blue
+ * for a link and for focus. Rounded, soft-shadowed surfaces; tabular numerals everywhere a figure stands. */
+
+:root {
+  /* Surfaces. */
+  --fi-ground: #f3f5f7;
+  --fi-surface: #ffffff;
+  --fi-rail: #eaeef1;
+  --fi-rail-hover: #dfe5e9;
+  --fi-hover: #f1f4f6;
+  --fi-selected: #e8eefa;
+  --fi-chip: #eceff2;
+  --fi-seg: #e5eaee;
+  --fi-line: #e1e6ea;
+  --fi-field: #8a96a1;
+
+  /* Type ink, strongest to quietest (each 4.5:1 or better on the rail, the ground and the sheet). */
+  --fi-ink: #111a22;
+  --fi-text: #1f2a33;
+  --fi-soft: #46535f;
+  --fi-faint: #56636f;
+  --fi-quiet: #a3adb6;
+
+  /* The sun: what waits on you. */
+  --fi-sun: #f5b700;
+  --fi-sun-hover: #ffc61a;
+  --fi-on-sun: #2a1f00;
+  --fi-sun-wash: #fff3cc;
+  --fi-sun-text: #7f5600;
+
+  /* Fit, stop, link. */
+  --fi-teal: #0f7a62;
+  --fi-teal-wash: #ddf1ea;
+  --fi-teal-text: #0b5c49;
+  --fi-amber: #b07800;
+  --fi-red: #b3372d;
+  --fi-red-wash: #fbe6e3;
+  --fi-red-text: #a3302a;
+  --fi-unknown: #8b96a0;
+  --fi-blue: #2457c5;
+  --fi-blue-wash: #e2ebfb;
+  --fi-blue-text: #1d4aa8;
+  --fi-on-dot: #ffffff;
+  --fi-mark: #ffe58a;
+  --fi-focus: #2457c5;
+  --fi-focus-halo: #2457c522;
+  --fi-select: #fff3cc;
+
+  /* The robot's own pixels (the one character the app keeps): its outline, steel, visor and page, the lamp that blinks, and
+     the agents' disguises (the scout's pith helmet, the analyst's deerstalker and glass, the writer's beret and mustache).
+     The same in both sets. */
+  --fi-signal: #3fb6f2;
+  --fi-lamp: #e5483a;
+  --fi-lamp-dim: #b0524a;
+  --fi-bot-outline: #0b1222;
+  --fi-bot-steel: #b9c3d0;
+  --fi-bot-page: #ffffff;
+  --fi-bot-khaki: #d9b778;
+  --fi-bot-band: #7a5230;
+  --fi-bot-tweed: #8a6a48;
+  --fi-bot-tweed-check: #5f4630;
+  --fi-bot-brass: #e2b13c;
+  --fi-bot-beret: #3a3f55;
+  --fi-bot-mustache: #4a3220;
+
+  /* A select's drawn chevron, in the soft ink of its set. */
+  --fi-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75L6 6.25l4.5-4.5' fill='none' stroke='%2346535f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  /* Depth: an offset and a soft blur, never a halo. */
+  --fi-raise: 0 1px 2px #15202b14, 0 4px 10px -6px #15202b26;
+  --fi-pop: 0 0 0 1px var(--fi-line), 0 16px 30px -12px #15202b40;
+  --fi-ring: 0 0 0 1px var(--fi-line);
+  /* The veil behind a dialog. */
+  --fi-scrim: #10151c6b;
+
+  /* Type. */
+  --fi-font: "Archivo Variable", "Archivo", "Segoe UI", system-ui, sans-serif;
+  --fi-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+  --fi-size-xs: 0.78rem;
+  --fi-size-s: 0.875rem;
+  --fi-size-m: 0.94rem;
+  --fi-size-base: 1rem;
+  --fi-size-row: 1.03rem;
+  --fi-size-l: 1.125rem;
+  --fi-size-xl: 1.5rem;
+  --fi-size-xxl: 1.875rem;
+  --fi-weight-body: 400;
+  --fi-weight-mid: 500;
+  --fi-weight-semi: 600;
+  --fi-weight-bold: 700;
+  --fi-weight-heavy: 800;
+  --fi-leading: 1.5;
+  --fi-leading-tight: 1.2;
+  --fi-tracking-tight: -0.02em;
+
+  /* Space. */
+  --fi-s1: 2px;
+  --fi-s2: 4px;
+  --fi-s3: 6px;
+  --fi-s4: 8px;
+  --fi-s5: 10px;
+  --fi-s6: 12px;
+  --fi-s7: 16px;
+  --fi-s8: 20px;
+  --fi-s9: 24px;
+  --fi-s10: 32px;
+  --fi-s11: 48px;
+  --fi-rail-width: 248px;
+  --fi-pane-measure: 900px;
+  --fi-target: 44px;
+
+  /* Corners. */
+  --fi-r-s: 6px;
+  --fi-r-m: 9px;
+  --fi-r-l: 12px;
+  --fi-r-xl: 14px;
+  --fi-r-pill: 999px;
+
+  /* Motion. */
+  --fi-ease: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --fi-ease-fold: cubic-bezier(0.4, 0, 0.2, 1);
+  --fi-fast: 160ms;
+  --fi-mid: 240ms;
+  --fi-slow: 360ms;
+  --fi-roll: 420ms;
+  --fi-tap: 120ms;
+  --fi-fade: 400ms;
+  --fi-flash: 700ms;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fi-ground: #0f1317;
+    --fi-surface: #161b20;
+    --fi-rail: #0b0e11;
+    --fi-rail-hover: #1b2228;
+    --fi-hover: #1c2329;
+    --fi-selected: #1a2740;
+    --fi-chip: #222a32;
+    --fi-seg: #1d242b;
+    --fi-line: #262e36;
+    --fi-field: #6f7b87;
+    --fi-ink: #f1f5f8;
+    --fi-text: #dbe2e8;
+    --fi-soft: #aab6c1;
+    --fi-faint: #94a0ac;
+    --fi-quiet: #5f6b77;
+    --fi-sun: #f5b700;
+    --fi-sun-hover: #ffc61a;
+    --fi-on-sun: #221900;
+    --fi-sun-wash: #33290a;
+    --fi-sun-text: #f3c64a;
+    --fi-teal: #2a9f80;
+    --fi-teal-wash: #12352c;
+    --fi-teal-text: #74d8b9;
+    --fi-amber: #d39a1c;
+    --fi-red: #d65c51;
+    --fi-red-wash: #3a1b18;
+    --fi-red-text: #ff9b90;
+    --fi-unknown: #6b7782;
+    --fi-blue: #7fa6ff;
+    --fi-blue-wash: #1a2948;
+    --fi-blue-text: #a9c2ff;
+    --fi-on-dot: #0f1317;
+    --fi-mark: #6b5400;
+    --fi-focus: #7fa6ff;
+    --fi-focus-halo: #7fa6ff33;
+    --fi-select: #4d3d08;
+    --fi-raise: 0 1px 2px #00000066, 0 6px 14px -8px #00000099;
+    --fi-pop: 0 0 0 1px var(--fi-line), 0 18px 34px -12px #000000b3;
+    --fi-scrim: #000000a6;
+    --fi-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75L6 6.25l4.5-4.5' fill='none' stroke='%23aab6c1' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    color-scheme: dark;
+  }
+}

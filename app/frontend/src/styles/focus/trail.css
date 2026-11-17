@@ -1,0 +1,61 @@
+/* The trail (components/trail/Trail.tsx): what happened, newest first, as plain sentences. The filter is a row of pills on
+ * a track; the days and the speeches are one white sheet, a day's head over its rows divided by hairlines. Every value comes
+ * from focus/tokens.css. */
+
+.trail { min-inline-size: 0; }
+.trail-filters { margin-block-end: var(--fi-s6); }
+
+.trail-list, .trail-speeches, .trail-msgs { list-style: none; margin: 0; padding: 0; }
+.trail-list { background: var(--fi-surface); border-radius: var(--fi-r-xl); box-shadow: var(--fi-ring); overflow: hidden; }
+
+/* A day's head: the date over the rows of that day. */
+.trail-day { padding: var(--fi-s4) var(--fi-s8); background: var(--fi-hover); border-block: 1px solid var(--fi-line); color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-bold); }
+.trail-day-block:first-child > .trail-day { border-block-start: 0; }
+.trail-day-block:last-child > .trail-speeches > .trail-speech:last-child { border-block-end: 0; }
+
+/* A run of messages by one speaker: who and when at the left, the sentences beside it. */
+.trail-speech { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: var(--fi-s7); min-inline-size: 0; padding: var(--fi-s6) var(--fi-s8); border-block-start: 1px solid var(--fi-line); overflow-wrap: anywhere; }
+.trail-speeches > .trail-speech:first-child { border-block-start: 0; }
+.trail-head { display: flex; flex-direction: column; gap: var(--fi-s1); }
+.trail-who { color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+.trail-time { color: var(--fi-soft); font-size: var(--fi-size-s); font-variant-numeric: tabular-nums; }
+.trail-msgs { min-inline-size: 0; }
+.trail-msg + .trail-msg { margin-block-start: var(--fi-s5); }
+.trail-line { display: flex; align-items: baseline; gap: var(--fi-s6); }
+.trail-line .trail-sentence { flex: 1 1 auto; min-inline-size: 0; }
+.trail-time-inline { flex: none; }
+.trail-sentence { color: var(--fi-text); }
+/* What needs you reads heavier; a routine step quieter. Weight and colour, never colour alone. */
+.trail-sentence-strong { color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+.trail-msg-routine .trail-sentence { color: var(--fi-soft); }
+.trail-more { margin-block-start: var(--fi-s1); font-size: var(--fi-size-m); }
+.fi-ag .trail-more { display: inline-flex; align-items: center; min-block-size: 32px; }
+
+/* A collapsed line opens into its list, indented under it. */
+.trail-nested { margin-block-start: var(--fi-s3); padding-inline-start: var(--fi-s7); border-inline-start: 1px solid var(--fi-line); }
+.trail-nested .trail-msg { margin-block-start: var(--fi-s3); }
+
+/* On plan, off plan, beside the message: a drawn check or detour, with its words on hover and for a screen reader. */
+.trail-mark { display: inline-flex; vertical-align: -3px; margin-inline-start: var(--fi-s3); }
+.trail-mark svg { inline-size: 16px; block-size: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.trail-mark-on { color: var(--fi-teal-text); }
+.trail-mark-off { color: var(--fi-red-text); }
+
+/* The one "Show more": the agent's words, its evidence and its steps, opened in place. */
+.trail-details { display: flex; flex-direction: column; gap: var(--fi-s5); margin: var(--fi-s3) 0 var(--fi-s2); padding: var(--fi-s6) var(--fi-s7); border-radius: var(--fi-r-l); background: var(--fi-ground); color: var(--fi-text); }
+.trail-details p { margin: 0; white-space: pre-wrap; /* A hand move's note, a packet ask and a requirement's reason have no length limit: a long one wraps. */ overflow-wrap: anywhere; }
+.trail-label { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.trail-steps { display: flex; flex-direction: column; margin: var(--fi-s1) 0 0; padding: 0; border-block-start: 1px solid var(--fi-line); list-style: none; }
+.trail-steps li { padding: var(--fi-s2) 0; border-block-end: 1px solid var(--fi-line); }
+
+/* Nothing yet, loading, the way to older lines. */
+.trail-empty, .trail > .loading, .trail > .error-banner { margin: 0; padding: var(--fi-s9) var(--fi-s8); background: var(--fi-surface); border-radius: var(--fi-r-xl); box-shadow: var(--fi-ring); }
+.trail-empty { text-align: center; }
+.trail > .error-banner { background: var(--fi-red-wash); box-shadow: none; padding: var(--fi-s6) var(--fi-s7); }
+.trail-older { margin-block-start: var(--fi-s6); }
+
+@media (max-width: 760px) {
+  .trail-day { padding-inline: var(--fi-s7); }
+  .trail-speech { grid-template-columns: minmax(0, 1fr); gap: var(--fi-s2); padding-inline: var(--fi-s7); }
+  .trail-head { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--fi-s1) var(--fi-s5); }
+}

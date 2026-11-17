@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "key": "recruitee",
+  "name": "Recruitee",
+  "kind": "job_system",
+  "hosts": [
+    "recruitee.com"
+  ],
+  "order": 6,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "recruitee.com"
+    ]
+  },
+  "address": {
+    "board": [
+      {
+        "host": ".*\\.recruitee\\.com",
+        "customer_host": true,
+        "capture": {
+          "slug": "host_name"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "path": "o/[^/]+(?:/(?s:.*))?"
+      }
+    ],
+    "apply_page": [
+      {
+        "path": "o/(?P<id>[^/]+)/c/new",
+        "capture": {
+          "id": "group:id"
+        },
+        "template": "https://{host}/o/{id}"
+      }
+    ],
+    "board_url": [
+      {
+        "template": "https://{slug}.recruitee.com/",
+        "needs": [
+          "slug"
+        ]
+      }
+    ]
+  },
+  "read": {
+    "kind": "request",
+    "url": "https://{slug}.recruitee.com/api/offers/",
+    "items": "offers",
+    "fields": {
+      "ext_id": "id",
+      "title": "title",
+      "location": [
+        "location",
+        {
+          "join": [
+            "city",
+            "country"
+          ]
+        }
+      ],
+      "posted": [
+        "published_at",
+        "created_at"
+      ],
+      "url": "careers_url",
+      "apply_url": "careers_apply_url",
+      "text": {
+        "join": [
+          {
+            "html": "description"
+          },
+          {
+            "html": "requirements"
+          }
+        ],
+        "sep": "\n\n"
+      },
+      "department": "department"
+    },
+    "work_mode": {
+      "flags": [
+        {
+          "path": "remote",
+          "mode": "remote"
+        },
+        {
+          "path": "hybrid",
+          "mode": "hybrid"
+        },
+        {
+          "path": "on_site",
+          "mode": "onsite"
+        }
+      ]
+    },
+    "comp": {
+      "range": {
+        "path": "salary",
+        "min": "min",
+        "max": "max",
+        "currency": "currency",
+        "period": "period",
+        "writes_text": true
+      },
+      "part_time": {
+        "title": "title",
+        "kind": "employment_type_code"
+      }
+    }
+  },
+  "flags": {
+    "probe_names": true
+  },
+  "probe": {
+    "url": "https://{slug}.recruitee.com/api/offers/",
+    "present": "offers",
+    "name": "offers.0.company_name"
+  }
+}

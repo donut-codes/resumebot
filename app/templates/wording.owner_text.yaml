@@ -1,0 +1,8 @@
+# The two sentences for an owner text that is too large to send an agent whole (jobsearch/owner_text.py,
+# too_large_words). Placeholders: what (the text in the owner's words), size, room, result, fix, and for the second
+# sentence also other_name and other_size. Sizes arrive already formatted with thousands separators.
+too_large_alone: >-
+  {{what}} is {{size}} characters. An agent can be sent at most {{room}} at once, so {{result}} {{fix}}
+too_large_beside: >-
+  {{what}} is {{size}} characters, and {{other_name}} is {{other_size}}. An agent can be sent at most {{room}} of the two
+  at once, so {{result}} {{fix}}

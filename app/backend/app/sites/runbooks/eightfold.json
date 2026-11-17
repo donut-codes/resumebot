@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "key": "eightfold",
+  "name": "Eightfold",
+  "kind": "job_system",
+  "hosts": [
+    "eightfold.ai"
+  ],
+  "order": 15,
+  "address": {
+    "board": [
+      {
+        "host": ".*\\.eightfold\\.ai",
+        "customer_host": true,
+        "capture": {
+          "host": "host"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "query": {
+          "pid": "any"
+        }
+      },
+      {
+        "path": "(?:(?!job(?:/|$))[^/]+/)*job/[0-9]+(?:/.*)?"
+      }
+    ]
+  },
+  "flags": {
+    "customer_host": true,
+    "own_parts": [
+      "host"
+    ]
+  }
+}

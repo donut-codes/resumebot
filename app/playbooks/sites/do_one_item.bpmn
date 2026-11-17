@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sites as projects (docs/PRD.md path 29): the "Do one plan item" sub-process, called once for each item of an approved
+     plan from the project round (playbooks/sites/project.round.bpmn). See app/PROVENANCE.md for its origin. The first step waits until the item is handed out
+     (sites/checkout.py); the scout does it (it builds the site's skill and tries one real read), and the code reads how it
+     ended. The scout builds the skill in this
+     step, and code runs saved skills later, through jobsearch/fetch/polite.py. Not loaded by the job-search library. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_do_one_item" targetNamespace="http://porter.local/bpmn">
+  <bpmn:message id="Message_item_to_do" name="item.to_do"/>
+  <bpmn:process id="Process_do_one_item" name="Do one plan item" porter:key="do_one_item" isExecutable="true">
+    <bpmn:documentation>One item of an approved plan, done once. resumebot hands it to the scout, which does it as its kind says. The item ends done, or off plan with what differed. Looking is free inside an item; the scout only reads public pages, signs in to nothing and fills in no form.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="The owner the project belongs to (its id)."/>
+        <porter:field path="project" type="string" description="The project the item belongs to (its id)."/>
+        <porter:field path="plan" type="string" description="The plan version that carries the item (its id)."/>
+        <porter:field path="item" type="object" description="The plan item to do."/>
+        <porter:field path="item.key" type="string" description="The item's key, stable across plan versions."/>
+        <porter:field path="item.title" type="string" description="The item, as the owner reads it."/>
+        <porter:field path="item.kind" type="string" description="The kind of work the item names (its id)."/>
+        <porter:field path="item.writes" type="boolean" description="The item's kind can change something (it is not read only)."/>
+        <porter:field path="hand" type="object" description="How the item is handed out."/>
+        <porter:field path="hand.task_id" type="string" description="The item's task (its id)."/>
+        <porter:field path="hand.kind" type="string" description="The kind of work it is done with (its id)."/>
+        <porter:field path="looked" type="object" description="What the scout answered."/>
+        <porter:field path="looked.outcome" type="string" enum="done,off_plan,waiting" description="done: it did the item. off_plan: it said the item didn't go to plan. waiting: nobody is left to take it."/>
+        <porter:field path="reading" type="object" description="What the item's ending says, read the way the code reads it."/>
+        <porter:field path="reading.outcome" type="string" enum="done,off_plan" description="How the item ended: done, or off_plan."/>
+        <porter:field path="reading.said" type="string" description="The scout's own reason, in its words. Untrusted text: it is read as data."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_do_one_item">
+      <bpmn:lane id="Lane_resumebot" name="resumebot: hand-out">
+        <bpmn:flowNodeRef>Start_item</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Hand_out</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_who</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Read_item</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_ended</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_done</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_off_plan</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_scout" name="Scout (session agent)">
+        <bpmn:flowNodeRef>Specialist_does</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_item" name="An item of an approved plan is to be done">
+      <!-- code: sites/plans.py:decide_plan -->
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: A plan is started without asking (the owner is never asked about a plan), and one task is made for each item (`todo`; `skip` items `skipped`; `investigate` items get none).
+Rules:
+1. One run for each item (a `do` item) of the plan, run beside the others.
+2. resumebot decides there is an item to do, with no model.
+Outputs: A run of this process with the item.
+What the owner sees: Nothing yet.
+Source: `sites/plans.py:decide_plan`; `sites/checkout.py`.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_item__Hand_out</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_item_to_do"/>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Hand_out" name="Hand the item out" porter:action="item.hand_out" porter:output="hand">
+      <!-- code: sites/checkout.py -->
+      <bpmn:documentation>Actor: resumebot: hand-out.
+Trigger: The item is to be done (the start).
+Rules:
+Preconditions. Project not paused or finished; plan `approved`; task `todo` and not superseded.
+Processing rules.
+1. The scout takes the item with `task.next`. An unknown or switched-off kind is denied and the item ends `off_plan` with the reason in words.
+Outputs: `hand`: the item's task and the kind it is done with.
+What the owner sees: The page's "who is on it, since when".
+Source: `sites/checkout.py:checkout_next_task`.</bpmn:documentation>
+      <bpmn:outgoing>S_Hand_out__Gw_who</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_who" name="Who does it?">
+      <bpmn:documentation>Actor: resumebot: hand-out.
+Trigger: The item is handed out.
+Rules:
+1. The scout does it. Code runs a saved skill in the nightly scan, not here, and the scout reads public pages only.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.
+Source: `sites/checkout.py`.</bpmn:documentation>
+      <bpmn:outgoing>F_agent</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Specialist_does" name="The scout does the item" porter:role="scout" porter:harness="do.item" porter:instructions="projects.do.item" porter:template="projects.do.item.response" porter:output="looked">
+      <bpmn:documentation>Actor: Scout (session agent), through `task.next` and `task.complete`.
+Trigger: The scout takes the item.
+Rules:
+1. The scout is sent the item: its data, its kind and what done means, within the payload budget. It does the item as its kind says: it builds the site's skill (a known system's adapter, the page's data request replayed, or the list pages read) and tries one real read.
+2. It ends the item with `task.complete`: `outcome` `done` or `off_plan`; off plan needs an `off_plan_reason`. For a look-only item, going off plan needs `tried` (up to 8 lines of 200 characters) unless it is a first look; looking is free inside an item.
+3. `result` is checked against the kind's declared result fields (required ones for `done`), at most 8,000 bytes unless a size dispute raised the cap.
+4. A question it can't answer goes to the owner as a task in Notifications, with what was checked and what happens if nobody answers.
+Outputs: `looked.outcome`: done, off_plan or waiting.
+What the owner sees: Activity "Done: “&lt;title&gt;”" or "The scout found “&lt;title&gt;” didn't go to plan."; the page's "who is on it, since when".
+Source: `sites/completion.py:complete_task`; `sites/tools.py:task_escalate`.</bpmn:documentation>
+      <bpmn:outgoing>S_Specialist_does__Read_item</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Read_item" name="Read how the item ended" porter:action="item.read" porter:output="reading">
+      <!-- code: sites/completion.py -->
+      <bpmn:documentation>Actor: resumebot reading the item's task.
+Trigger: The item ended (the scout's `task.complete`).
+Rules:
+1. The item ended `done` or `off_plan`.
+2. An off-plan item is a finding, not a refusal: it stays off plan with the scout's own reason, is checked, and counts as something to look into in the next plan.
+Outputs: `reading`: how it ended, and the scout's reason.
+What the owner sees: Nothing at this step.
+Source: `sites/completion.py:complete_task`.</bpmn:documentation>
+      <bpmn:outgoing>S_Read_item__Gw_ended</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_ended" name="How did the item end?" default="F_done">
+      <bpmn:documentation>Actor: resumebot.
+Trigger: The item ended.
+Rules:
+1. An item that went off plan stays off plan and is checked.
+2. A done item is checked.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.
+Source: `sites/completion.py:complete_task`.</bpmn:documentation>
+      <bpmn:outgoing>F_off</bpmn:outgoing>
+      <bpmn:outgoing>F_done</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_done" name="The item was done">
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: The item ended done.
+Rules:
+1. The item is a finished task with its evidence and result; it is checked once every item of the plan has been tried (Check one item).
+Outputs: `reading.outcome` is done.
+What the owner sees: Activity "Done: “&lt;title&gt;”".
+Source: `sites/completion.py:complete_task`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_off_plan" name="The item went off plan">
+      <bpmn:documentation>Actor: resumebot: project service.
+Trigger: The item ended off plan.
+Rules:
+1. The item is off plan with the reason in words; it is checked once every item has been tried, and counts as something to look into in the next plan.
+Outputs: `reading.outcome` is off_plan.
+What the owner sees: Activity "The scout found “&lt;title&gt;” didn't go to plan."
+Source: `sites/completion.py:complete_task`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_item__Hand_out" sourceRef="Start_item" targetRef="Hand_out"/>
+    <bpmn:sequenceFlow id="S_Hand_out__Gw_who" sourceRef="Hand_out" targetRef="Gw_who"/>
+    <bpmn:sequenceFlow id="F_agent" name="The scout" sourceRef="Gw_who" targetRef="Specialist_does">
+      <bpmn:documentation>A scout session takes it.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Specialist_does__Read_item" sourceRef="Specialist_does" targetRef="Read_item"/>
+    <bpmn:sequenceFlow id="S_Read_item__Gw_ended" sourceRef="Read_item" targetRef="Gw_ended"/>
+    <bpmn:sequenceFlow id="F_off" name="Off plan" sourceRef="Gw_ended" targetRef="End_off_plan">
+      <bpmn:documentation>The item didn't go to plan: it is a finding.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">reading.outcome = "off_plan"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_done" name="Done" sourceRef="Gw_ended" targetRef="End_done">
+      <bpmn:documentation>The item was done.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+</bpmn:definitions>

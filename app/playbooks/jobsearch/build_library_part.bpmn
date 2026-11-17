@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Write one part of the story library", called once for each part from "Build the story library"
+     (playbooks/jobsearch/build_library.bpmn; docs/PRD.md path 43, the packet committee spec). The parts run side by
+     side, so a build takes as long as the longer of them, not the sum: the resume lines (with the owner's rules read
+     for code), and the letter blocks. The resume lines stay one turn: split by role, every part repeated the
+     instructions, the owner's rules and the master, and a build cost half again as much. Each agent step is a seat: one model
+     turn (backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/library.py), writing its part onto the draft library. Nothing is sent or
+     applied to. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_library_part" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_library_part" name="Write one part of the story library" porter:key="jobsearch_library_part" isExecutable="true">
+    <bpmn:documentation>One part of a story library build: the resume lines with the owner's rules read for code, or the letter blocks. It writes onto the draft library the build checks next; nothing is sent or applied to.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose library this is."/>
+        <porter:field path="library" type="string" description="The draft library version being built (its id)."/>
+        <porter:field path="part" type="object" description="The part this run writes."/>
+        <porter:field path="part.kind" type="string" enum="lines,letters" description="lines: the resume lines and the owner's rules; letters: the letter blocks."/>
+        <porter:field path="lines" type="object" description="The resume lines written."/>
+        <porter:field path="lines.written" type="number" description="How many lines were written."/>
+        <porter:field path="letters" type="object" description="The letter blocks written."/>
+        <porter:field path="letters.stories" type="number" description="How many stories the library holds."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="Start_part" name="A part to write">
+      <!-- code: backend/app/jobsearch/writing/library.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: "Build the story library" calls this once for each part of its plan.
+Rules:
+1. Called, never started on its own.
+Outputs: A run of this process with its part.
+What the owner sees: "Building" on the story library, on My Resume.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_part__Gw_part</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gw_part" name="Which part is it?" default="F_lines">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A part to write.
+Rules:
+1. The letter blocks, or the resume lines.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Start_part__Gw_part</bpmn:incoming>
+      <bpmn:outgoing>F_letters</bpmn:outgoing>
+      <bpmn:outgoing>F_lines</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Write_lines" name="The writer writes the resume lines" porter:role="writer" porter:instructions="jobsearch.library.lines" porter:template="jobsearch.library.lines" porter:output="lines">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/library.py -->
+      <bpmn:documentation>Actor: Library writer (Opus), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The part is the resume lines.
+Rules:
+1. For each entry to decide: a resume line that tells one accomplishment as action, scope and result, in plain words (a second only where it serves another kind of role, under the same claim), folded into another entry's line, or skipped with a reason; and each role's scope line when it needs one.
+2. Each line names its claim (the accomplishment it tells, so a resume never prints two lines of one claim), carries the figures of its claim with the master's own hedges, and lists the skills a recruiter would search for that it shows. Every line cites the master lines it rests on and says no more than they do.
+3. It also reads from the owner's rules what code enforces: the names the client rule keeps out of writing (every form the master writes them in), the approved wordings, and for each role the bullet count, whether its scope line always prints and whether its work owned inside the employer comes first.
+Outputs: `lines.written`.
+What the owner sees: "Building" on the story library.</bpmn:documentation>
+      <bpmn:incoming>F_lines</bpmn:incoming>
+      <bpmn:outgoing>S_Write_lines__End_part</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Write_letters" name="The writer writes the letter blocks" porter:role="writer" porter:instructions="jobsearch.library.letters" porter:template="jobsearch.library.letters" porter:output="letters">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/library.py -->
+      <bpmn:documentation>Actor: Library writer (Opus), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The part is the letter blocks.
+Rules:
+1. One polished cover-letter paragraph for each story (situation, what the candidate did, what changed), a second angle where a story serves two kinds of role; each sentence cites its master lines. Each block stands alone: no employer named, no pointer to another block, no opening about the reader, no closing ask. The client, the work and the team carry most sentences.
+Outputs: `letters.stories`.
+What the owner sees: "Building" on the story library.</bpmn:documentation>
+      <bpmn:incoming>F_letters</bpmn:incoming>
+      <bpmn:outgoing>S_Write_letters__End_part</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_part" name="The part is written">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The part's seat answered.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Write_lines__End_part</bpmn:incoming>
+      <bpmn:incoming>S_Write_letters__End_part</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_part__Gw_part" sourceRef="Start_part" targetRef="Gw_part"/>
+    <bpmn:sequenceFlow id="F_letters" name="The letter blocks" sourceRef="Gw_part" targetRef="Write_letters">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">part.kind = "letters"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_lines" name="Resume lines" sourceRef="Gw_part" targetRef="Write_lines"/>
+    <bpmn:sequenceFlow id="S_Write_lines__End_part" sourceRef="Write_lines" targetRef="End_part"/>
+    <bpmn:sequenceFlow id="S_Write_letters__End_part" sourceRef="Write_letters" targetRef="End_part"/>
+  </bpmn:process>
+</bpmn:definitions>

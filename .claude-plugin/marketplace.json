@@ -1,0 +1,21 @@
+{
+  "name": "resumebot",
+  "owner": {
+    "name": "Raginwald"
+  },
+  "description": "resumebot: a job-search app that runs on your own computer. This marketplace lists the plugin that installs it.",
+  "plugins": [
+    {
+      "name": "resumebot-setup",
+      "source": "./plugins/resumebot-setup",
+      "description": "Sets up the resumebot app on your computer and connects it to your Claude Code, then walks you through onboarding: ask Claude to \"set up resumebot\".",
+      "category": "productivity",
+      "keywords": [
+        "job-search",
+        "resume",
+        "setup",
+        "onboarding"
+      ]
+    }
+  ]
+}

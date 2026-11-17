@@ -1,0 +1,101 @@
+# Check-in rule: a file belongs here only if the app, the plugin or the
+# extension needs it to run, or a maintainer needs it to build, check or
+# release one. Everything else stays local.
+#
+# The tiers:
+#   the app       -- app/ (the product), docs/, and the Markdown at the root
+#   the plugin    -- plugins/, .claude-plugin/, evals/ (frozen; it retires
+#                    when the app does its last job: docs/plugin-retirement.md)
+#   the extension -- resumebot-browser-plugin/ (a Chrome extension that is
+#                    not part of the app and is not maintained; its own
+#                    .gitignore covers machine-specific files)
+#   tooling       -- scripts/ (tracked: CI and contributors run the checks),
+#                    .github/, .claude/ (the project's skills and settings)
+#   local         -- everything below
+
+# --- build output -------------------------------------------------------
+# Artifacts are rebuilt from source on every release. Committing them is how
+# a stale bundle outlives the tree it was built from.
+dist/
+build/
+*.plugin
+*.zip
+*.tar
+*.tgz
+# The page the app serves itself: `npm run build:package` (app/frontend) writes it into the backend package.
+app/backend/app/page/
+
+# --- python ------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+# What `stack.py setup` leaves beside pyproject.toml when it adds the `resumebot` command (pip install -e).
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- node --------------------------------------------------------------
+node_modules/
+# What `tsc -b` leaves beside the config when it runs outside a container (a build or a typecheck on this machine).
+*.tsbuildinfo
+
+# --- local agent + editor state ----------------------------------------
+# Machine-specific: permissions, worktrees, MCP auth. Never portable.
+.claude/settings.local.json
+.claude/worktrees/
+.claude/sessions/
+.vscode/
+.idea/
+*.code-workspace
+
+# --- private working material ------------------------------------------
+# QC notes and scratch work. Useful to keep, wrong to publish. (PROVENANCE.md
+# is tracked: the root one records where third-party files came from, and the
+# validator looks for it.)
+scratchpad/
+notes/
+*.local.md
+*.draft.md
+
+# On trial. A digest of published practice for commits, comments, READMEs,
+# changelogs, and docs, kept local until it has been used against real work
+# long enough to know which parts earn their place.
+references/writing.md
+
+# --- secrets -----------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# --- os ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# `dev.py shots` output (app/scripts/shots.mjs): screenshots of the live app, read and thrown away.
+shots/
+
+# Impeccable: the platform binary is fetched by its launcher on first run; caches are local.
+.claude/skills/impeccable/scripts/bin/
+.impeccable/hook.cache.json
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/critique/
+
+# graft: the hooks and status line `graft init` writes. They hard-code the install path of the machine that ran it, so they
+# are generated per machine, never committed. settings.json runs them only when they exist.
+.claude/helpers/
+
+# app/scripts/dev.py links app/node_modules to app/frontend/node_modules, as the frontend image does: the vendored process-view
+# package is found by its real path, which looks for node_modules in app/. A link is not a folder to git, so the `node_modules/`
+# pattern above does not match it.
+/app/node_modules

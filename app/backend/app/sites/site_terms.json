@@ -1,0 +1,362 @@
+[
+ {
+  "name": "ADP",
+  "hosts": [
+   "workforcenow.adp.com",
+   "recruiting.adp.com",
+   "myjobs.adp.com",
+   "adp.com"
+  ],
+  "terms_url": "https://www.adp.com/legal",
+  "date_read": "2026-11-14",
+  "quote": "you will not access the Site in a manner that sends more requests to ADP servers than a human can reasonably produce in the same",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Apollo",
+  "hosts": [
+   "apollo.io"
+  ],
+  "terms_url": "https://www.apollo.io/terms",
+  "date_read": "2026-11-14",
+  "quote": "Use automated means, such as bots, crawlers, or data scraping, to access any data on the Platform",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Ashby",
+  "hosts": [
+   "ashbyhq.com"
+  ],
+  "terms_url": "https://www.ashbyhq.com/terms",
+  "date_read": "2026-11-14",
+  "quote": "This API allows you to get data for all currently published Job Postings for your organization.",
+  "verdict": "allows"
+ },
+ {
+  "name": "Avature",
+  "hosts": [
+   "avature.net"
+  ],
+  "terms_url": "https://www.avature.net/terms-of-use/",
+  "date_read": "2026-11-16",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "BambooHR",
+  "hosts": [
+   "bamboohr.com"
+  ],
+  "terms_url": "https://www.bamboohr.com/legal/terms-of-service",
+  "date_read": "2026-11-14",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Breezy HR",
+  "hosts": [
+   "breezy.hr"
+  ],
+  "terms_url": "https://breezy.hr/terms",
+  "date_read": "2026-11-14",
+  "quote": "access or search the Service by any means other than our publicly supported interfaces (for example, \"scraping\")",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Built In",
+  "hosts": [
+   "builtin.com"
+  ],
+  "terms_url": "https://builtin.com/community-terms-of-use",
+  "date_read": "2026-11-14",
+  "quote": "access, use or copy any portion of the Site or Services through the use of bots, spiders, scrapers, web crawlers, indexing agents, or other automated",
+  "verdict": "forbids"
+ },
+ {
+  "name": "CareerPlug",
+  "hosts": [
+   "careerplug.com"
+  ],
+  "terms_url": "https://www.careerplug.com/terms/",
+  "date_read": "2026-11-16",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Dayforce",
+  "hosts": [
+   "dayforcehcm.com"
+  ],
+  "terms_url": "https://dfonlinehelp.dayforcehcm.com/Global/Legal/en-US/TermsOfUse.html",
+  "date_read": "2026-11-14",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Dice",
+  "hosts": [
+   "dice.com"
+  ],
+  "terms_url": "https://www.dice.com/about/terms-and-conditions",
+  "date_read": "2026-11-14",
+  "quote": "Use any robot, spider, site search/retrieval application, or other manual or automatic device or process",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Eightfold",
+  "hosts": [
+   "eightfold.ai"
+  ],
+  "terms_url": "https://eightfold.ai/acceptable-use-policy/",
+  "date_read": "2026-11-14",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Gem",
+  "hosts": [
+   "gem.com"
+  ],
+  "terms_url": "https://www.gem.com/terms",
+  "date_read": "2026-11-16",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Glassdoor",
+  "hosts": [
+   "glassdoor.com"
+  ],
+  "terms_url": "https://www.glassdoor.com/about/terms.htm",
+  "date_read": "2026-11-14",
+  "quote": "scrape, strip or mine data from Glassdoor without our express written permission",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Google jobs search",
+  "hosts": [
+   "google.com"
+  ],
+  "terms_url": "https://policies.google.com/terms",
+  "date_read": "2026-11-14",
+  "quote": "using automated means to access content from any of our services in violation of the machine-readable instructions",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Greenhouse",
+  "hosts": [
+   "greenhouse.io",
+   "greenhouse-mail.io"
+  ],
+  "terms_url": "https://docs.greenhouse.io/job-board.html",
+  "date_read": "2026-11-14",
+  "quote": "Job Board data is publicly available, so authentication is not required for any GET endpoints.",
+  "verdict": "allows"
+ },
+ {
+  "name": "HireVue",
+  "hosts": [
+   "hirevue.com"
+  ],
+  "terms_url": "https://legal.hirevue.com/legal-center/terms-of-use",
+  "date_read": "2026-11-14",
+  "quote": "You may not scrape or collect any information available on the Site or in the Services.",
+  "verdict": "forbids"
+ },
+ {
+  "name": "iCIMS",
+  "hosts": [
+   "icims.com"
+  ],
+  "terms_url": "https://www.icims.com/legal/terms-of-use/",
+  "date_read": "2026-11-14",
+  "quote": "Use any robot, spider or other automatic device, process, or means to access the Website",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Indeed",
+  "hosts": [
+   "indeed.com"
+  ],
+  "terms_url": "https://www.indeed.com/legal",
+  "date_read": "2026-11-14",
+  "quote": "Use any automated system (bots, scrapers, spiders, AI or Agentic AI) to access, data-mine, or submit content to the Site",
+  "verdict": "forbids"
+ },
+ {
+  "name": "JazzHR",
+  "hosts": [
+   "jazzhr.com"
+  ],
+  "terms_url": "https://www.jazzhr.com/terms-of-service/",
+  "date_read": "2026-11-16",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Jobvite",
+  "hosts": [
+   "jobvite.com"
+  ],
+  "terms_url": "https://www.jobvite.com/terms-of-use/",
+  "date_read": "2026-11-14",
+  "quote": "You may not copy, distribute, scrape, disassemble, reverse engineer or otherwise appropriate",
+  "verdict": "forbids"
+ },
+ {
+  "name": "LinkedIn",
+  "hosts": [
+   "linkedin.com"
+  ],
+  "terms_url": "https://www.linkedin.com/legal/user-agreement",
+  "date_read": "2026-11-14",
+  "quote": "Use bots or other unauthorized automated methods to access the Services",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Monster",
+  "hosts": [
+   "monster.com"
+  ],
+  "terms_url": "https://www.monster.com/inside/terms-of-use",
+  "date_read": "2026-11-14",
+  "quote": "use any data mining, robots, spiders or other similar data gathering or extraction methods;",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Paycom",
+  "hosts": [
+   "paycomonline.net",
+   "paycomonline.com",
+   "paycom.com"
+  ],
+  "terms_url": "https://paycom.com/terms-of-use/",
+  "date_read": "2026-11-14",
+  "quote": "You are prohibited from using any automated system or software to extract or scrape data from the websites",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Paycor",
+  "hosts": [
+   "paycor.com",
+   "recruitingbypaycor.com"
+  ],
+  "terms_url": "https://www.paycor.com/terms-of-use/",
+  "date_read": "2026-11-16",
+  "quote": "Use any robot, spider, or other automatic device, process, or means to access the Applications for any purpose",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Paylocity",
+  "hosts": [
+   "paylocity.com"
+  ],
+  "terms_url": "https://recruiting.paylocity.com/recruiting/jobs/All/",
+  "date_read": "2026-11-14",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Recruitee",
+  "hosts": [
+   "recruitee.com"
+  ],
+  "terms_url": "https://recruitee.com/terms",
+  "date_read": "2026-11-14",
+  "quote": "Returns a collection of published company jobs. Offers can be filtered by department or tag.",
+  "verdict": "allows"
+ },
+ {
+  "name": "Secret Remote",
+  "hosts": [
+   "secretremote.com"
+  ],
+  "terms_url": "https://secretremote.com/terms-of-service",
+  "date_read": "2026-11-14",
+  "quote": "Scrape, crawl, or harvest data from the Service by automated means without our prior written permission.",
+  "verdict": "forbids"
+ },
+ {
+  "name": "SimplyHired",
+  "hosts": [
+   "simplyhired.com"
+  ],
+  "terms_url": "https://www.indeed.com/legal?hl=en",
+  "date_read": "2026-11-14",
+  "quote": "Use any automated system (bots, scrapers, spiders, AI or Agentic AI) to access, data-mine, or submit content to the Site,",
+  "verdict": "forbids"
+ },
+ {
+  "name": "SmartRecruiters",
+  "hosts": [
+   "smartrecruiters.com"
+  ],
+  "terms_url": "https://www.smartrecruiters.com/legal/terms-of-use/",
+  "date_read": "2026-11-14",
+  "quote": "Available only to specific endpoints which contain publicly available data",
+  "verdict": "allows"
+ },
+ {
+  "name": "Taleo",
+  "hosts": [
+   "taleo.net"
+  ],
+  "terms_url": "https://www.oracle.com/legal/terms/",
+  "date_read": "2026-11-14",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Teamtailor",
+  "hosts": [
+   "teamtailor.com"
+  ],
+  "terms_url": "https://www.teamtailor.com/en/terms-and-conditions/",
+  "date_read": "2026-11-14",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Wellfound",
+  "hosts": [
+   "wellfound.com"
+  ],
+  "terms_url": "https://wellfound.com/terms",
+  "date_read": "2026-11-14",
+  "quote": "use any automated system (including a spider, robot, or offline reader) to access the Site or Services",
+  "verdict": "forbids"
+ },
+ {
+  "name": "Workable",
+  "hosts": [
+   "workable.com"
+  ],
+  "terms_url": "https://jobs.workable.com/terms",
+  "date_read": "2026-11-14",
+  "quote": "",
+  "verdict": "silent"
+ },
+ {
+  "name": "Workday",
+  "hosts": [
+   "myworkdayjobs.com",
+   "myworkdaysite.com",
+   "myworkday.com",
+   "workday.com"
+  ],
+  "terms_url": "https://www.workday.com/en-us/legal/site-terms.html",
+  "date_read": "2026-11-14",
+  "quote": "Use any data mining, robots or similar data gathering or extraction methods designed to scrape or extract data from our Sites;",
+  "verdict": "forbids"
+ },
+ {
+  "name": "ZipRecruiter",
+  "hosts": [
+   "ziprecruiter.com"
+  ],
+  "terms_url": "https://www.ziprecruiter.com/terms",
+  "date_read": "2026-11-14",
+  "quote": "using any automated system or means, including without limitation \"bots,\" \"robots,\" \"spiders,\" \"offline readers,\" \"scrapers,\"",
+  "verdict": "forbids"
+ }
+]

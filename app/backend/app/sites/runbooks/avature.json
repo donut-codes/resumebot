@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "key": "avature",
+  "name": "Avature",
+  "kind": "host",
+  "hosts": [
+    "avature.net"
+  ],
+  "shared_host": true
+}

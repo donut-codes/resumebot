@@ -1,0 +1,112 @@
+/* The bar over every page (the screens rebuild spec, "The shell"): white, 56px, the robot and the wordmark on the
+ * left, the six pages as pill tabs on a segment track, the needs-you count as the one sun pill. At phone width the tabs
+ * scroll sideways in one line and never wrap. Every value comes from focus/tokens.css. */
+
+/* The page's frame under the bar: every page fills the window below it, edge to edge, and scrolls inside its own parts. */
+.app-shell {
+  min-block-size: 100%;
+  block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.app-main {
+  flex: 1;
+  inline-size: 100%;
+  min-block-size: 0;
+  display: flex;
+}
+/* A page may be narrower than the widest thing in it: its parts wrap or scroll inside themselves. */
+.app-main > * { min-inline-size: 0; }
+/* The frame is the window and nothing else scrolls it: the document never scrolls, each column inside a page is its own
+ * scroll container, and a page that is not made of columns (a loading line, an error) scrolls inside the main area, never
+ * the bar. On a phone the frame is as tall as its page and the document scrolls it. */
+@media (min-width: 761px) {
+  html, body { overflow: hidden; }
+  .app-shell { overflow: hidden; }
+  .app-main { overflow: auto; overscroll-behavior: contain; }
+}
+@media (max-width: 760px) {
+  .app-shell { block-size: auto; }
+}
+
+.fi-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--fi-s9);
+  min-block-size: 56px;
+  padding: var(--fi-s2) var(--fi-s8);
+  background: var(--fi-surface);
+  border-block-end: 1px solid var(--fi-line);
+  font-family: var(--fi-font);
+  font-variant-numeric: tabular-nums;
+  color: var(--fi-ink);
+}
+.fi-bar :focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 2px; }
+
+.fi-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--fi-s5);
+  flex: none;
+  border: 0;
+  background: none;
+  padding: var(--fi-s2);
+  margin-inline-start: calc(-1 * var(--fi-s2));
+  border-radius: var(--fi-r-m);
+  cursor: pointer;
+  color: var(--fi-ink);
+}
+.fi-brand:hover { background: var(--fi-hover); }
+.fi-brand-name { font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); letter-spacing: var(--fi-tracking-tight); line-height: 1; }
+
+.fi-tabs { min-inline-size: 0; }
+.fi-tabs ul {
+  display: flex;
+  gap: var(--fi-s1);
+  margin: 0;
+  padding: var(--fi-s2);
+  list-style: none;
+  background: var(--fi-seg);
+  border-radius: var(--fi-r-l);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.fi-tabs ul::-webkit-scrollbar { display: none; }
+.fi-tabs li { display: flex; flex: none; }
+.fi-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fi-s4);
+  block-size: 40px;
+  padding: 0 var(--fi-s7);
+  border: 0;
+  border-radius: var(--fi-r-m);
+  background: none;
+  color: var(--fi-soft);
+  font: var(--fi-weight-semi) var(--fi-size-m) var(--fi-font);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--fi-fast), color var(--fi-fast);
+}
+.fi-tab:hover { color: var(--fi-ink); background: var(--fi-rail-hover); }
+.fi-tab[aria-current="page"] { background: var(--fi-surface); color: var(--fi-ink); box-shadow: var(--fi-raise); }
+
+/* What waits on the owner: the one sun pill. */
+.fi-pill {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 24px;
+  padding: 0 var(--fi-s4);
+  border-radius: var(--fi-r-pill);
+  background: var(--fi-sun);
+  color: var(--fi-on-sun);
+  font-size: var(--fi-size-s);
+  font-weight: var(--fi-weight-heavy);
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .fi-bar { gap: var(--fi-s6); padding-inline: var(--fi-s6); }
+  .fi-brand-name { display: none; }
+  .fi-tab { padding: 0 var(--fi-s6); }
+}

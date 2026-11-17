@@ -1,0 +1,10 @@
+{
+  "name": "resumebot-setup",
+  "version": "1.1.0",
+  "description": "Sets up the resumebot app on this computer and connects it to your Claude Code, then walks you through onboarding. Ask Claude to \"set up resumebot\".",
+  "keywords": ["job-search", "resume", "setup", "onboarding"],
+  "skills": [
+    "./skills/install-resumebot",
+    "./skills/onboarding"
+  ]
+}

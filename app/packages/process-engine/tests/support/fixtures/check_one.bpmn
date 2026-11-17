@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sample sub-process for the engine tests: look at one thing and say how it went. Called by intake.bpmn. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_check_one" targetNamespace="http://porter.local/bpmn/test">
+  <bpmn:process id="Process_check_one" name="Look at one thing" porter:key="check.one" isExecutable="true">
+    <bpmn:documentation>Look at one thing, and if it looks bad get a second opinion.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="item" type="object" description="The thing to look at."/>
+        <porter:field path="item.name" type="string" description="What it is called."/>
+        <porter:field path="item.risk" type="string" enum="low,medium,high" description="How risky it is."/>
+        <porter:field path="look" type="object" description="What the look found."/>
+        <porter:field path="look.verdict" type="string" enum="ok,bad" description="How it looked."/>
+        <porter:field path="second" type="object" description="The second opinion."/>
+        <porter:field path="second.agrees" type="boolean" description="Whether the second opinion agrees."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_app" name="The app">
+        <bpmn:flowNodeRef>Start_one</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Look</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_look</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_second</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_doer" name="Specialist">
+        <bpmn:flowNodeRef>Second_look</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_one" name="Asked to look at one thing"/>
+    <bpmn:serviceTask id="Look" name="Look at it" porter:action="item.look" porter:output="look"/>
+    <bpmn:exclusiveGateway id="Gw_look" name="Did it look fine?"/>
+    <bpmn:task id="Second_look" name="Get a second opinion" porter:role="doer"
+               porter:instructions="second.look" porter:template="second.look.response" porter:output="second"/>
+    <bpmn:endEvent id="End_ok" name="Looked fine"/>
+    <bpmn:endEvent id="End_second" name="Second opinion given"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="Start_one" targetRef="Look"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="Look" targetRef="Gw_look"/>
+    <bpmn:sequenceFlow id="F_ok" name="Fine" sourceRef="Gw_look" targetRef="End_ok">
+      <bpmn:documentation>It looked fine, so nothing more is needed.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">look.verdict = "ok"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_bad" name="Not fine" sourceRef="Gw_look" targetRef="Second_look">
+      <bpmn:documentation>It did not look fine, so a specialist takes a second look.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">look.verdict != "ok"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F3" sourceRef="Second_look" targetRef="End_second"/>
+  </bpmn:process>
+</bpmn:definitions>

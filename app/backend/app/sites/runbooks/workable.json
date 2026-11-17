@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "key": "workable",
+  "name": "Workable",
+  "kind": "job_system",
+  "hosts": [
+    "workable.com"
+  ],
+  "order": 4,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "workable.com"
+    ]
+  },
+  "address": {
+    "board": [
+      {
+        "host": "apply\\.workable\\.com",
+        "path": "j(?:/(?s:.*))?"
+      },
+      {
+        "host": "apply\\.workable\\.com",
+        "path": "(?P<slug>(?!j(?:/|$))[^/]+)(?:/(?s:.*))?",
+        "capture": {
+          "slug": "group:slug"
+        }
+      },
+      {
+        "host": "(?!apply\\.workable\\.com$).*\\.workable\\.com",
+        "customer_host": true,
+        "capture": {
+          "slug": "host_name"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "host": "apply\\.workable\\.com",
+        "path": "j/[^/]+"
+      },
+      {
+        "path": "[^/]+/(?:[^/]+/)*?j/[^/]+(?:/(?s:.*))?"
+      }
+    ],
+    "apply_page": [
+      {
+        "host": "apply\\.workable\\.com",
+        "path": "j/(?P<id>[^\\W_]+)/apply(?:/(?s:.*))?",
+        "capture": {
+          "id": "group:id"
+        },
+        "template": "https://{host}/j/{id}"
+      },
+      {
+        "host": "apply\\.workable\\.com",
+        "path": "(?!j/)(?P<tenant>[^/]+)/j/(?P<id>[^\\W_]+)/apply(?:/(?s:.*))?",
+        "capture": {
+          "tenant": "group:tenant",
+          "id": "group:id"
+        },
+        "template": "https://{host}/{tenant}/j/{id}/"
+      }
+    ],
+    "board_url": [
+      {
+        "template": "https://apply.workable.com/{slug}/",
+        "needs": [
+          "slug"
+        ]
+      }
+    ]
+  },
+  "read": {
+    "kind": "request",
+    "url": "https://apply.workable.com/api/v1/widget/accounts/{slug}?details=true",
+    "items": "jobs",
+    "fields": {
+      "ext_id": [
+        "shortcode",
+        "id"
+      ],
+      "title": "title",
+      "location": [
+        "location.location_str",
+        {
+          "join": [
+            "city",
+            "state",
+            "country"
+          ]
+        }
+      ],
+      "posted": [
+        "published_on",
+        "created_at"
+      ],
+      "url": [
+        "url",
+        "shortlink"
+      ],
+      "apply_url": "application_url",
+      "text": {
+        "join": [
+          {
+            "html": "description"
+          },
+          {
+            "html": "requirements"
+          },
+          {
+            "html": "benefits"
+          }
+        ],
+        "sep": "\n\n"
+      },
+      "department": "department"
+    },
+    "work_mode": {
+      "written": "location.workplace_type",
+      "flags": [
+        {
+          "path": "telecommuting",
+          "mode": "remote"
+        },
+        {
+          "path": "location.telecommuting",
+          "mode": "remote"
+        }
+      ]
+    }
+  },
+  "flags": {
+    "probe_names": true
+  },
+  "probe": {
+    "proves_board": false,
+    "url": "https://apply.workable.com/api/v1/widget/accounts/{slug}",
+    "present": "jobs",
+    "name": "name"
+  }
+}

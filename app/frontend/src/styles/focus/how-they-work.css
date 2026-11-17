@@ -1,0 +1,149 @@
+/* How they work (components/agents/HowTheyWork.tsx and its parts): the processes as pills on a track, the one open as a
+ * diagram and a list of steps (focus/process-view.css), and under each step what the agent is sent: files in a sheet, their
+ * text in a scrolling box, the fields added with a task, a real example. A run in progress and one search's payload are
+ * blocks above. Every value comes from focus/tokens.css. */
+
+.how-they-work { display: flex; flex-direction: column; gap: var(--fi-s6); min-inline-size: 0; }
+.how-they-work > .fi-block { margin-block-start: var(--fi-s6); }
+.how-they-work > .fi-ag-about { margin-block-end: var(--fi-s2); }
+
+/* --- the process, under its name: the diagram and the steps stand on the pane, each its own sheet ----------------------------- */
+
+.how-process > .fi-block-body { padding: 0; background: none; box-shadow: none; border-radius: 0; overflow: visible; }
+.how-called-from { margin: 0 0 var(--fi-s6); max-inline-size: 70ch; color: var(--fi-soft); }
+.how-about { max-inline-size: 70ch; margin: var(--fi-s2) 0 var(--fi-s6); }
+.how-open-sub { margin: var(--fi-s4) 0 0; }
+.how-saved { max-inline-size: 70ch; margin: 0 0 var(--fi-s6); padding: var(--fi-s5) var(--fi-s7); border-radius: var(--fi-r-l); background: var(--fi-teal-wash); color: var(--fi-teal-text); font-weight: var(--fi-weight-semi); }
+
+/* --- what the specification says about a step, in its order: names and words on rows ------------------------------------------- */
+
+.how-spec { display: grid; margin: var(--fi-s5) 0 0; border-radius: var(--fi-r-l); background: var(--fi-ground); box-shadow: var(--fi-ring); overflow: hidden; }
+.how-spec-row { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: var(--fi-s6); padding: var(--fi-s5) var(--fi-s7); border-block-start: 1px solid var(--fi-line); }
+.how-spec-row:first-child { border-block-start: 0; }
+.how-spec-row dt { margin: 0; color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.how-spec-row dd { min-inline-size: 0; margin: 0; color: var(--fi-text); overflow-wrap: anywhere; }
+.how-spec-row dd p { max-inline-size: 70ch; margin: 0 0 var(--fi-s2); }
+.how-spec-row dd ol, .how-spec-row dd ul { display: grid; gap: var(--fi-s2); max-inline-size: 70ch; margin: 0 0 var(--fi-s2); padding-inline-start: var(--fi-s9); }
+.how-spec-row dd ul ul { margin-block-start: var(--fi-s2); }
+.how-spec-row dd code, .how-ways-list code, .how-fields code, .mission-prose code {
+  padding: 0 var(--fi-s2);
+  border-radius: var(--fi-r-s);
+  background: var(--fi-chip);
+  color: var(--fi-ink);
+  font-family: var(--fi-mono);
+  font-size: var(--fi-size-s);
+  overflow-wrap: anywhere;
+}
+
+/* --- what the agent is sent at a step ------------------------------------------------------------------------------------------ */
+
+.how-sent { margin-block-start: var(--fi-s6); padding-block-start: var(--fi-s6); border-block-start: 1px solid var(--fi-line); }
+.how-sent code { overflow-wrap: anywhere; }
+/* A toggle inside a line of words is a link; the two that open a whole part are real buttons. */
+.how-toggle:not(.fi-btn) { padding: var(--fi-s1) 0; border: 0; background: none; color: var(--fi-blue-text); font: inherit; font-weight: var(--fi-weight-semi); text-align: start; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.how-part { margin-block-start: var(--fi-s7); }
+.how-part-title { margin: 0 0 var(--fi-s3); color: var(--fi-ink); font-size: var(--fi-size-base); font-weight: var(--fi-weight-bold); }
+
+/* The files: one to a row, what it is, its name, its size. */
+.how-files { border-radius: var(--fi-r-l); background: var(--fi-ground); box-shadow: var(--fi-ring); overflow: hidden; }
+.how-file-item + .how-file-item { border-block-start: 1px solid var(--fi-line); }
+.how-file-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) auto; align-items: baseline; gap: var(--fi-s6); padding: var(--fi-s4) var(--fi-s7); }
+.how-file-name { color: var(--fi-soft); font-family: var(--fi-mono); font-size: var(--fi-size-s); overflow-wrap: anywhere; }
+.how-file-size { white-space: nowrap; }
+
+/* Text as the agent gets it, verbatim: a box that scrolls, in monospace. */
+.how-file {
+  max-block-size: 420px;
+  margin: var(--fi-s4) 0 0;
+  padding: var(--fi-s6) var(--fi-s7);
+  overflow: auto;
+  border: 1px solid var(--fi-line);
+  border-radius: var(--fi-r-l);
+  background: var(--fi-surface);
+  color: var(--fi-text);
+  font-family: var(--fi-mono);
+  font-size: var(--fi-size-m);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.how-file-item > .how-file { margin: 0 var(--fi-s7) var(--fi-s6); }
+/* A file the owner can change: what is under its toggle (actions, the edit form, the history) sits in the row's inset. */
+.how-file-body { padding: 0 var(--fi-s7) var(--fi-s6); }
+.how-file-body > .how-file, .how-version > .how-file { margin: var(--fi-s4) 0 0; }
+.how-file-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s2) var(--fi-s8); }
+/* An agent at work with the file: said in a line, in words. */
+.how-file-busy { margin: 0; padding: 0 var(--fi-s7) var(--fi-s4); color: var(--fi-text); }
+.how-file-body > .how-file-busy { padding: var(--fi-s3) 0 0; }
+.how-file-edit { display: grid; gap: var(--fi-s7); margin-block-start: var(--fi-s5); }
+.how-file-text .fi-input { font-family: var(--fi-mono); font-size: var(--fi-size-m); line-height: 1.5; }
+
+/* The versions of a file, newest first: number, when and who, why, and what can be done with it. */
+ol.how-versions { margin: var(--fi-s4) 0 0; padding: 0; list-style: none; border-block-start: 1px solid var(--fi-line); }
+ol.how-versions > .how-version { padding: var(--fi-s4) 0; border-block-end: 1px solid var(--fi-line); }
+.how-version-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) auto; align-items: baseline; gap: var(--fi-s6); }
+.how-version-num { color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.how-version-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s2) var(--fi-s7); }
+
+.how-fields { inline-size: 100%; border-collapse: collapse; }
+.how-fields th { padding: 0 var(--fi-s6) var(--fi-s3) 0; text-align: start; color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.how-fields td { padding: var(--fi-s4) var(--fi-s6) var(--fi-s4) 0; border-block-start: 1px solid var(--fi-line); vertical-align: top; color: var(--fi-text); }
+.how-fields td, .how-fields th { overflow-wrap: anywhere; }
+.how-fields th.num, .how-fields td.num { text-align: end; white-space: nowrap; padding-inline-end: 0; }
+.how-fields td.num { color: var(--fi-soft); }
+.how-meter { block-size: 8px; margin: var(--fi-s4) 0; border-radius: var(--fi-r-pill); background: var(--fi-chip); overflow: hidden; }
+.how-meter > span { display: block; block-size: 100%; border-radius: inherit; background: var(--fi-blue); }
+
+/* --- one search's payload, and where one run is: blocks above the process ---------------------------------------------------- */
+
+.how-sent-task .how-sent { margin-block-start: 0; padding-block-start: 0; border-block-start: 0; }
+.how-sent-for { margin: 0 0 var(--fi-s1); color: var(--fi-ink); font-size: var(--fi-size-l); font-weight: var(--fi-weight-bold); line-height: 1.3; }
+.how-sent-says { max-inline-size: 70ch; margin: 0 0 var(--fi-s5); color: var(--fi-soft); }
+.how-sent-foot { margin-block-start: var(--fi-s7); padding-block-start: var(--fi-s6); border-block-start: 1px solid var(--fi-line); }
+.how-run { display: grid; gap: var(--fi-s3); }
+.how-run p { margin: 0; }
+.how-run-state { color: var(--fi-ink); font-size: var(--fi-size-row); line-height: 1.4; }
+.how-run-when, .how-run-line { color: var(--fi-soft); font-size: var(--fi-size-m); }
+.how-run-line { max-inline-size: 70ch; }
+.how-run-links .fi-link { font-size: inherit; }
+.how-run-sent-list { display: grid; gap: var(--fi-s3); margin: 0; padding: 0; list-style: none; }
+
+/* --- a decision's ways out, read-only: one way to a row ------------------------------------------------------------------------ */
+
+.how-ways { margin: var(--fi-s6) 0 0; }
+.how-ways-list { margin: 0; padding: 0; list-style: none; border-radius: var(--fi-r-l); background: var(--fi-ground); box-shadow: var(--fi-ring); overflow: hidden; }
+.how-ways-list li { padding: var(--fi-s5) var(--fi-s7); }
+.how-ways-list li + li { border-block-start: 1px solid var(--fi-line); }
+.how-ways-list li > strong { color: var(--fi-ink); font-size: var(--fi-size-row); }
+.how-ways-list p { margin: var(--fi-s1) 0 0; overflow-wrap: anywhere; }
+.how-way-meaning { max-inline-size: 70ch; }
+/* What a rule can look at: a toggle, and the facts as a table. */
+.how-model-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s5); }
+.how-model .how-fields { margin-block-start: var(--fi-s6); }
+
+/* --- changing how a process works (docs/PRD.md path 16): the editor's bar and the versions -------------------------------------- */
+
+.how-edit-bar { display: grid; gap: var(--fi-s5); margin: 0 0 var(--fi-s6); padding: var(--fi-s7) var(--fi-s8); border-radius: var(--fi-r-xl); background: var(--fi-surface); box-shadow: var(--fi-ring); }
+.how-edit-says { max-inline-size: 70ch; margin: 0; color: var(--fi-soft); }
+.how-edit-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fi-s6); }
+.how-edit-why { flex: 1 1 280px; }
+.how-edit-buttons { display: flex; flex-wrap: wrap; gap: var(--fi-s4); }
+
+.how-version-list { display: grid; margin: 0; padding: 0; border-radius: var(--fi-r-l); background: var(--fi-ground); box-shadow: var(--fi-ring); overflow: hidden; list-style: none; }
+.how-version-list > .how-version { display: grid; gap: var(--fi-s3); padding: var(--fi-s6) var(--fi-s7); }
+.how-version-list > .how-version + .how-version { border-block-start: 1px solid var(--fi-line); }
+.how-version-list > .how-version.current { background: var(--fi-teal-wash); }
+.how-version-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s4); }
+.how-version-head strong { color: var(--fi-ink); }
+.how-version-why, .how-version-problem { max-inline-size: 70ch; margin: 0; /* A reason has no limit on its length: a long one with no spaces wraps instead of widening the page. */ overflow-wrap: anywhere; }
+.how-version-why { color: var(--fi-ink); }
+.how-version-problem { color: var(--fi-red-text); font-weight: var(--fi-weight-semi); }
+.how-version-changes { margin: 0; padding-inline-start: var(--fi-s9); }
+.how-version-viewed { margin-block-start: var(--fi-s5); }
+
+/* A narrow window must not scroll the page sideways: files, rules and names wrap, the rows stack. */
+@media (max-width: 899px) {
+  .how-file-row, .how-version-row { grid-template-columns: minmax(0, 1fr); gap: var(--fi-s1); }
+  .how-spec-row { grid-template-columns: minmax(0, 1fr); gap: var(--fi-s1); }
+  .how-edit-bar { padding-inline: var(--fi-s7); }
+}

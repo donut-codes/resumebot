@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sites as projects (docs/PRD.md path 29): the "Check one item" sub-process, called once for each item that was tried,
+     from the project round (playbooks/sites/project.round.bpmn). See app/PROVENANCE.md for its origin. Check is code, never a model (PRD 29.2): one service step,
+     `site.check`, fetches the site itself and counts what came back, so the scout's own word is never the evidence.
+     The scout has no tool that writes a check result. Not loaded by the job-search library. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_check_one_item" targetNamespace="http://porter.local/bpmn">
+  <bpmn:message id="Message_item_to_check" name="item.to_check"/>
+  <bpmn:process id="Process_check_one_item" name="Check one item" porter:key="check_one_item" isExecutable="true">
+    <bpmn:documentation>One item that was tried, checked once. resumebot makes one check for each item that was done or went off plan (never for one that wasn't tried). Then code runs it: it fetches the site and counts what came back (postings, how their number compares with what the page says, titles and links, sample links that open). It says on plan, or off plan with the difference. No agent is asked.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="The owner the project belongs to (its id)."/>
+        <porter:field path="project" type="string" description="The project the item belongs to (its id)."/>
+        <porter:field path="plan" type="string" description="The plan version that carries the item (its id)."/>
+        <porter:field path="item" type="object" description="The item that was tried."/>
+        <porter:field path="item.key" type="string" description="The item's key."/>
+        <porter:field path="item.title" type="string" description="The item, as the owner reads it."/>
+        <porter:field path="item.kind" type="string" description="The kind of work the item named (its id)."/>
+        <porter:field path="item.status" type="string" enum="done,off_plan" description="How the item ended."/>
+        <porter:field path="item.outcome_reason" type="string" description="Why the item went off plan, in the scout's words. Empty when it is done."/>
+        <porter:field path="item.evidence" type="string" description="What the scout said it found."/>
+        <porter:field path="item.result" type="object" description="The fields the item's kind asks for, as the scout reported them."/>
+        <porter:field path="item.data" type="object" description="What the item carried."/>
+        <porter:field path="made" type="object" description="The check resumebot made for the item."/>
+        <porter:field path="made.task_id" type="string" description="The check (its id)."/>
+        <porter:field path="found" type="object" description="What the check found."/>
+        <porter:field path="found.on_plan" type="boolean" description="The item is on plan: the site's fetch and count match the plan's done-means."/>
+        <porter:field path="found.difference" type="string" description="How it differs from the plan, in the plan's own words. Empty when it is on plan."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_check_one_item">
+      <bpmn:lane id="Lane_resumebot" name="resumebot: checks and report">
+        <bpmn:flowNodeRef>Start_check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Make_check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Site_checks</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_found</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_on_plan</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_off_plan</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_check" name="An item was tried">
+      <!-- code: sites/check_flow.py:advance_plan_checks -->
+      <bpmn:documentation>Actor: resumebot: checks and report.
+Trigger: Starts for each tried item when the round's step PR-11A makes the checks (`round_process.drive_make_checks`).
+Rules:
+1. One run for each tried item: each `do` task `done` or `off_plan`. Items never tried (skipped) are not checked.
+Outputs: A run of this process with the item.
+What the owner sees: Nothing yet.
+Source: `sites/check_flow.py:advance_plan_checks`; `sites/plan_check.py:_create_plan_checks`.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_check__Make_check</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_item_to_check"/>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Make_check" name="Make the check" porter:action="check.make" porter:output="made">
+      <!-- code: sites/plan_check.py:_create_plan_checks -->
+      <bpmn:documentation>Actor: resumebot: checks and report.
+Trigger: The item was tried.
+Rules:
+1. The check is a record (`review_check`, key `check-v&lt;version&gt;-&lt;item key&gt;`, title "Check: &lt;item title&gt;") carrying the item's data and the plan's `done_means`, `how_to_check` and `off_plan_means`.
+Outputs: `made`: the check.
+What the owner sees: Activity "Every task in plan v&lt;N&gt; has been tried -- resumebot started K check(s), one per item."
+Source: `sites/plan_check.py:_create_plan_checks`.</bpmn:documentation>
+      <bpmn:outgoing>S_Make_check__Site_checks</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Site_checks" name="Code fetches the site and counts" porter:action="site.check" porter:output="found">
+      <bpmn:documentation>Actor: resumebot: checks and report (`site.check`). No model, and no word from the scout.
+Trigger: The check is made.
+Rules:
+1. The action fetches the site itself, through the site's saved skill and `jobsearch/fetch/polite.py`, and counts what came back: postings came back, their number matches what the page says, titles and links are there, sample links open.
+2. An item `done` is on plan only when the counts meet the plan's `done_means`. An item `done` with nothing fetched is off plan ("Nothing came back"), unless the item reports `expected_count` 0 in its `result`: the page itself says it lists nothing. The item arrives with how it ended and what it found (`item.status`, `outcome_reason`, `evidence`, `result`, `data`).
+3. An item that went off plan (`item.status` off_plan) is off plan with its reason (cut to 2,000 characters, `CHECK_DIFFERENCE_MAX_CHARS`), or "It didn't go to plan"; nothing is fetched.
+Outputs: `found`: on plan or not, and the difference.
+What the owner sees: Activity "On plan: &lt;title&gt;" or "Off plan: &lt;title&gt; — &lt;difference&gt;".
+Source: `site.check` (code); `jobsearch/fetch/polite.py`.</bpmn:documentation>
+      <bpmn:outgoing>S_Site_checks__Gw_found</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_found" name="Is the item on plan?" default="F_off_plan">
+      <bpmn:documentation>Actor: resumebot: checks and report.
+Trigger: The check ended.
+Rules:
+1. On plan when the code's own count says so (`found.on_plan` true); otherwise off plan with the difference.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.
+Source: `sites/check_flow.py:complete_plan_check`.</bpmn:documentation>
+      <bpmn:outgoing>F_on_plan</bpmn:outgoing>
+      <bpmn:outgoing>F_off_plan</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_on_plan" name="On plan">
+      <bpmn:documentation>Actor: resumebot: checks and report.
+Trigger: The check found the item on plan.
+Rules:
+1. The check's finding is `ok`.
+Outputs: A finished check.
+What the owner sees: Activity "On plan: &lt;title&gt;".
+Source: `sites/check_flow.py:complete_plan_check`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_off_plan" name="Off plan">
+      <bpmn:documentation>Actor: resumebot: checks and report.
+Trigger: The check found the item off plan.
+Rules:
+1. The check's finding is `issue`, with the difference; the report groups items by identical difference.
+Outputs: A finished check.
+What the owner sees: Activity "Off plan: &lt;title&gt; — &lt;difference&gt;".
+Source: `sites/check_flow.py:complete_plan_check`.</bpmn:documentation>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_check__Make_check" sourceRef="Start_check" targetRef="Make_check"/>
+    <bpmn:sequenceFlow id="S_Make_check__Site_checks" sourceRef="Make_check" targetRef="Site_checks"/>
+    <bpmn:sequenceFlow id="S_Site_checks__Gw_found" sourceRef="Site_checks" targetRef="Gw_found"/>
+    <bpmn:sequenceFlow id="F_on_plan" name="On plan" sourceRef="Gw_found" targetRef="End_on_plan">
+      <bpmn:documentation>The item is on plan.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">found.on_plan = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_off_plan" name="Off plan" sourceRef="Gw_found" targetRef="End_off_plan">
+      <bpmn:documentation>The item differs from the plan.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+</bpmn:definitions>

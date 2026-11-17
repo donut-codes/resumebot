@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- The first tab of the browser jobs' window (app/scout/own-chrome.mjs opens it, by the app's own address): a plain page the
+     app serves beside the shell. No script and no call to the API, so it loads at once, needs no sign-in and goes on showing if
+     the app restarts while it is open. It says what the window is and links back; it shows no status, count or control. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>resumebot</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/browser-window.css" />
+  </head>
+  <body>
+    <main class="bw-page">
+      <div class="bw-card">
+        <p class="bw-brand">resumebot</p>
+        <h1 class="bw-title">This is resumebot's browser window</h1>
+        <p>resumebot's browser jobs work in the tabs of this window. Each job closes its own tabs when it is done.</p>
+        <p>Leave this window open. It closes itself when the browser jobs have nothing left to do.</p>
+        <a class="bw-back" href="/">Back to resumebot</a>
+      </div>
+    </main>
+  </body>
+</html>

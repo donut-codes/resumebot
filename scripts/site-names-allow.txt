@@ -1,0 +1,14 @@
+# Permanent allowances for the site-name rule (scripts/check_no_one.py). One per line: PATH KIND VALUE REASON.
+#   file  VALUE = sha256 of the file's content (LF endings): its hits are not hits while the content is unchanged.
+#   code  VALUE = sha256 of check_migrations.code_of(file): a name in the migration's code may stand, a name in its
+#         comments or docstrings may not; change the code and the check fails.
+#   name  VALUE = '-': the file's own path may carry a name (a released migration's file cannot be renamed).
+# A new line needs a reason that names no site. This list is meant to stay small.
+app/backend/app/jobsearch/measures/data/us_places.csv file f35e541d463998e8325ecb620b9d5f301c955aa2148048cb540cf4a2c6d8e5e1 public place names that read like names of sites
+app/backend/app/jobsearch/browser/go.py file c71ffe2bafa5b5bc2ad6319fcfe83e6ddafd7f6913c8be0135fb29b1216e73f6 the browser maker's install folder name in a path on disk
+app/backend/tests/jobsearch/test_apply_go_browser.py file 7e4d44b2329c1f19d6081170819d97a0d5a46b8a1ce6ec154a44d691992a5219 the browser maker's install folder name in a path on disk
+app/scout/lanes-local.mjs file baec0520c06ff107fb9a6f7e0a61d7a1e4fee0d02e78147802503b6e8e6ed4af the browser maker's install folder names in paths on disk
+app/scout/own-chrome.mjs file 87c271dc3eeed25b7fb55951e65ce7c4adf2080b7cd7984b7f582923e4aeb06b the browser maker's profile folder names in paths on disk
+app/scout/own-chrome.test.mjs file 7b7c018a02c257034d03289e9ab8aae334e22d85bb524000b1e83e48622d8b46 the browser maker's profile folder names in paths on disk
+app/scout/lanes-local.test.mjs file 04a0985bf94b77a3963c28f0f3b85c3f6a32902fabbc8a61ba5308bed3190e15 a Node standard-library function name that holds the word 'builtin'
+app/backend/app/jobsearch/profile/integrity.py file d16daf13d32eada3cbd5997038920d40ea8538a0992869f4ce452a795cfb26df a certification's own name in the list of credentials a resume may hold

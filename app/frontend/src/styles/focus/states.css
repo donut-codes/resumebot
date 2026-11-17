@@ -1,0 +1,136 @@
+/* The shared states every screen shows, in the Focus Inbox's look: the toast, the loading line, the error banner and the
+ * empty lines (components/toast, components/primitives). They stand on their own, outside any `.fi` screen, because they
+ * show over every page. Every value comes from focus/tokens.css. */
+
+/* --- the toast: a white sheet that floats at the foot of the page, lifted by Pop ------------------------------------ */
+
+.toast-stack {
+  position: fixed;
+  inset-inline-start: var(--fi-s8);
+  inset-block-end: var(--fi-s8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fi-s4);
+  z-index: 40;
+}
+
+.toast {
+  min-inline-size: 14rem;
+  max-inline-size: 28rem;
+  padding: var(--fi-s6) var(--fi-s7);
+  background: var(--fi-surface);
+  color: var(--fi-ink);
+  border-radius: var(--fi-r-l);
+  box-shadow: var(--fi-pop);
+  font-family: var(--fi-font);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-semi);
+  line-height: var(--fi-leading);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast { animation: fi-toast-in var(--fi-mid) var(--fi-ease); }
+}
+
+@keyframes fi-toast-in {
+  from { opacity: 0; transform: translateY(var(--fi-s4)); }
+}
+
+/* --- loading: soft words and a small ring that turns --------------------------------------------------------------- */
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: var(--fi-s5);
+  padding: var(--fi-s9) var(--fi-s7);
+  color: var(--fi-soft);
+  font-family: var(--fi-font);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-semi);
+  line-height: var(--fi-leading);
+}
+
+.loading::before {
+  content: "";
+  flex: none;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--fi-line);
+  border-block-start-color: var(--fi-blue);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .loading::before { animation: fi-turn 900ms linear infinite; }
+}
+
+@keyframes fi-turn {
+  to { transform: rotate(1turn); }
+}
+
+/* --- the error banner: red words on a red wash, with a "!" so it never rests on colour alone --------------------- */
+
+.error-banner {
+  position: relative;
+  margin: 0 0 var(--fi-s7);
+  padding: var(--fi-s5) var(--fi-s7) var(--fi-s5) calc(var(--fi-s7) + 20px + var(--fi-s5));
+  background: var(--fi-red-wash);
+  color: var(--fi-red-text);
+  border-radius: var(--fi-r-l);
+  font-family: var(--fi-font);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-semi);
+  line-height: var(--fi-leading);
+}
+
+.error-banner::before {
+  content: "!";
+  content: "!" / "";
+  position: absolute;
+  inset-inline-start: var(--fi-s7);
+  inset-block-start: var(--fi-s5);
+  display: grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  margin-block-start: 1px;
+  border-radius: 50%;
+  background: var(--fi-red);
+  color: var(--fi-on-dot);
+  font-size: var(--fi-size-s);
+  font-weight: var(--fi-weight-heavy);
+  line-height: 1;
+}
+
+.error-banner p + p { margin-block-start: var(--fi-s4); }
+.error-banner :focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 2px; border-radius: var(--fi-r-s); }
+
+/* --- empty lines: a quiet sheet for a whole screen's "nothing yet", plain soft words inside a panel ----------------- */
+
+.empty-state {
+  padding: var(--fi-s10) var(--fi-s7);
+  background: var(--fi-surface);
+  color: var(--fi-soft);
+  border-radius: var(--fi-r-xl);
+  box-shadow: var(--fi-ring);
+  font-family: var(--fi-font);
+  font-size: var(--fi-size-base);
+  line-height: var(--fi-leading);
+  text-align: center;
+}
+
+.empty-state-small {
+  padding: var(--fi-s4) 0;
+  color: var(--fi-soft);
+  font-family: var(--fi-font);
+  font-size: var(--fi-size-m);
+  line-height: var(--fi-leading);
+}
+
+/* --- a phone: the toasts take the page's width -------------------------------------------------------------------- */
+
+@media (max-width: 599px) {
+  .toast-stack { inset-inline: var(--fi-s6); inset-block-end: var(--fi-s6); }
+  .toast { max-inline-size: none; }
+}

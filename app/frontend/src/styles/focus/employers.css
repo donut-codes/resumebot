@@ -1,0 +1,73 @@
+/* Employers (components/employers/): what the screen adds to the shared parts: the industry choice beside the find
+ * field, the hard pass badge on a row, the pane's facts, roles and forms. Every value comes from focus/tokens.css. */
+
+/* --- the list ---------------------------------------------------------------------------------------------------- */
+
+.fi-emp .fi-list-head { grid-template-columns: minmax(0, 1fr) minmax(0, 180px); }
+.fi-emp .fi-list-head > .fi-find { grid-column: 1; grid-row: 1; }
+.fi-emp .fi-list-head > .fi-emp-industry { grid-column: 2; grid-row: 1; }
+.fi-emp .fi-list-head > :not(.fi-find):not(.fi-emp-industry) { grid-column: 1 / -1; }
+.fi-emp-industry select { cursor: pointer; }
+.fi-emp-total { font-size: var(--fi-size-m); font-weight: var(--fi-weight-semi); color: var(--fi-soft); }
+.fi-emp-pass-badge { margin-inline-start: var(--fi-s4); vertical-align: 2px; background: var(--fi-red-wash); color: var(--fi-red-text); }
+.fi-emp-more { list-style: none; display: grid; justify-items: center; padding: var(--fi-s6) 0; }
+
+/* --- the pane ---------------------------------------------------------------------------------------------------- */
+
+.fi-emp-watching { margin: var(--fi-s4) 0 0; font-size: var(--fi-size-m); color: var(--fi-soft); }
+.fi-emp-quiet { color: var(--fi-soft); font-size: var(--fi-size-m); margin: 0; }
+.fi-emp-line { margin: 0; }
+.fi-emp-pass { inline-size: 300px; gap: var(--fi-s4); padding: var(--fi-s5); }
+/* The menu's confirm is the primary button, not a menu item. */
+.fi-close-menu.fi-emp-pass button.fi-btn-go {
+  justify-content: center;
+  block-size: var(--fi-target);
+  border-radius: var(--fi-r-l);
+  border: 1px solid var(--fi-sun);
+  background: var(--fi-sun);
+  color: var(--fi-on-sun);
+  font-weight: var(--fi-weight-bold);
+}
+.fi-close-menu.fi-emp-pass button.fi-btn-go:hover { background: var(--fi-sun-hover); }
+
+.fi-emp-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--fi-s6) var(--fi-s8); margin: 0; }
+.fi-emp-facts dt { font-size: var(--fi-size-s); color: var(--fi-faint); font-weight: var(--fi-weight-semi); }
+.fi-emp-facts dd { margin: var(--fi-s1) 0 0; color: var(--fi-ink); overflow-wrap: anywhere; white-space: pre-line; }
+.fi-emp-src { display: block; font-size: var(--fi-size-s); color: var(--fi-soft); }
+
+.fi-emp-lines { list-style: none; margin: 0; padding: 0; }
+.fi-emp-lines > li { padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-emp-lines > li:first-child { border-block-start: 0; padding-block-start: 0; }
+.fi-emp-lines > li:last-child { padding-block-end: 0; }
+.fi-emp-role { display: flex; gap: var(--fi-s6); align-items: center; justify-content: space-between; }
+.fi a.fi-emp-role-title { color: var(--fi-ink); font-weight: var(--fi-weight-bold); text-decoration: none; }
+.fi a.fi-emp-role-title:hover { text-decoration: underline; }
+.fi-emp-role .fi-badge-stage { margin: 0; flex: none; }
+
+/* --- forms in the pane: facts, merge, split ---------------------------------------------------------------------- */
+
+.fi-emp-move, .fi-emp-form { display: grid; gap: var(--fi-s5); margin-block-start: var(--fi-s7); }
+.fi-emp-move .fi-actions, .fi-emp-form .fi-actions { margin-block-start: var(--fi-s3); }
+.fi-emp-label { font-weight: var(--fi-weight-semi); color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-emp-fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: var(--fi-s3); }
+.fi-emp-choices { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fi-s2); }
+.fi-emp-choices label { display: inline-flex; gap: var(--fi-s4); align-items: center; min-block-size: 36px; cursor: pointer; }
+.fi-emp-words { margin: 0; color: var(--fi-ink); max-inline-size: 70ch; }
+.fi-emp-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--fi-s6); }
+.fi-sheet > .fi-emp-form { margin: 0; box-shadow: none; padding: 0; }
+
+@media (max-width: 760px) {
+  .fi-emp .fi-list-head { grid-template-columns: minmax(0, 1fr); }
+  /* The industry choice sits under the find field, above the title. */
+  .fi-emp .fi-list-head > .fi-emp-industry { grid-column: 1; grid-row: 2; }
+  .fi-emp .fi-list-head > .fi-list-title { grid-row: 3; }
+  .fi-emp-pass { inline-size: min(300px, calc(100vw - 32px)); }
+}
+
+/* A row's meta stays one line: a long industry is cut, never wrapped under the dots. */
+.fi-emp .fi-row-meta { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fi-emp .fi-row-meta > * + *::before { content: "·"; margin-inline: var(--fi-s4); color: var(--fi-faint); }
+/* The five facts in rows of three (or as many as the pane's measure holds), a long value cut at two lines. */
+.fi-emp .fi-facts { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.fi-emp .fi-facts dd { overflow-wrap: break-word; }
+.fi-emp .fi-facts dd:not(.fi-facts-sub) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }

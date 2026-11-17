@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Read the employers' boards" (docs/PRD.md paths 28, 29 and 30). The app's own work before the search, with
+     no Claude: each employer's job system found from new links, every switched-on site read into the posting index
+     (through its job system's adapter, or the skill the scout learned for it), the roles found on a job board followed
+     to their employer's own posting where the index holds it, state
+     layoff notices matched to employers, the new postings filtered in code (the gates, then the classifier's ranking),
+     the roles whose posting the employer took down, or that heard nothing back, moved to Gone Quiet, the postings of a
+     board no longer read marked Not checked, and the description of every posting the code gates let
+     through read. Every posting the gates let through becomes a role at once (backend/app/jobsearch/pipeline/from_posting.py); the search
+     round (jobsearch_round) has the scout find the boards of employers the app does not read yet. Nothing is applied to or sent. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_read_boards" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_read_boards" name="Read the employers' boards" porter:key="jobsearch_read_boards" isExecutable="true">
+    <bpmn:documentation>One night's read of the sites the owner switched on, before the search: first, the stops and scores a release left under an older Hard pass or Prioritization judged and worked out again, then new links resolved to job systems, every switched-on site read into the posting index (an employer on a known job system through its adapter, asked for the owner's places and what is new where the system has filters; any other site through the skill the scout learned for it), the roles found on a job board followed to their employer's own posting, layoff notices matched, the postings of a board the app no longer reads marked Not checked, the new postings filtered in code, the roles whose posting the employer took down, or that heard nothing back, moved to Gone Quiet, and the description of every open posting the code gates let through read. Every board is read to its last page, so the read has a time limit (3 hours): when it runs out nothing new is begun, the board being read keeps the pages it has (and closes nothing), and the run ends done with what was read, the rest left for the next read. No Claude; nothing is applied to or sent.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose search this is."/>
+        <porter:field path="details_per_night" type="number" description="The most descriptions to read for postings the code gates let through that have none (-1: all of them)."/>
+        <porter:field path="current" type="object" description="Stops and scores a release left under an older setting, brought up to date."/>
+        <porter:field path="current.gates" type="string" description="The line the re-gate says (how many postings and roles it checked again and how many moved), or nothing when every stop was judged under the Hard pass in force."/>
+        <porter:field path="current.scores" type="string" description="The line the re-score says, or nothing when every score was worked out under the Prioritization in force."/>
+        <porter:field path="links" type="object" description="Employers whose job system was found from links."/>
+        <porter:field path="links.found" type="number" description="How many employers gained a job system from their links."/>
+        <porter:field path="read" type="object" description="The read of the boards."/>
+        <porter:field path="read.employers" type="number" description="Boards read: employers read through their job system's adapter, and sites read through a skill the scout learned."/>
+        <porter:field path="read.failed" type="number" description="Boards that failed, each with its reason on the employer."/>
+        <porter:field path="read.seen" type="number" description="Open postings seen."/>
+        <porter:field path="read.new" type="number" description="Postings seen for the first time."/>
+        <porter:field path="read.closed" type="number" description="Postings gone from their boards."/>
+        <porter:field path="read.unread" type="number" description="Boards not begun because the read's time ran out: they wait for the next read."/>
+        <porter:field path="read.cut" type="number" description="Boards the read's time ran out in the middle of: read in part, so they close nothing."/>
+        <porter:field path="read.not_checked" type="number" description="Open postings marked Not checked this time: their board is no longer read."/>
+        <porter:field path="board_feed" type="object" description="A followed board's public job search, read as a step of its own."/>
+        <porter:field path="board_feed.seen" type="number" description="Open postings the board's search showed."/>
+        <porter:field path="board_feed.new" type="number" description="Postings the board's search showed for the first time."/>
+        <porter:field path="board_feed.requests" type="number" description="Requests made to the board, those asked again after a back-off included."/>
+        <porter:field path="board_feed.backoffs" type="number" description="Times the board asked the reader to slow down and the reader waited."/>
+        <porter:field path="board_feed.searches" type="number" description="Searches made from the owner's profile."/>
+        <porter:field path="board_feed.searches_read" type="number" description="Searches the board answered."/>
+        <porter:field path="board_feed.skipped" type="number" description="Searches the board could not answer, left for the next night."/>
+        <porter:field path="board_feed.unread" type="number" description="Signed-in searches whose page loaded but gave no card the reader could read; the guest feed read them."/>
+        <porter:field path="board_feed.stopped" type="string" description="Why the run ended early at a refusal, a security check or after repeated slow-downs; empty when it did not."/>
+        <porter:field path="board_feed.mode" type="string" description="How the board was read: guest (its public feed), signed_in (through the app's own Chrome) or both (signed in, then the guest feed for the searches a sign-in page left)."/>
+        <porter:field path="board_feed.details" type="number" description="Postings whose own page gave their whole text in this step (a role's page is read by the browser's queue, docs/PRD.md 48.14)."/>
+        <porter:field path="followed" type="object" description="Roles found on a job board, looked for among their employer's own listings."/>
+        <porter:field path="followed.looked" type="number" description="Roles with only a job board link that were looked at."/>
+        <porter:field path="followed.followed" type="number" description="Roles that now have their employer's own posting as their link."/>
+        <porter:field path="duplicates" type="object" description="Employer records that may be one employer."/>
+        <porter:field path="duplicates.merged" type="number" description="Pairs of employer records merged into one."/>
+        <porter:field path="notices" type="object" description="State layoff notices matched to employers."/>
+        <porter:field path="notices.added" type="number" description="New layoff events added."/>
+        <porter:field path="sifted" type="object" description="What the filter did."/>
+        <porter:field path="sifted.candidates" type="number" description="Postings that passed the gates (each becomes a role)."/>
+        <porter:field path="sifted.stopped" type="object" description="How many postings each rule stopped."/>
+        <porter:field path="sifted.routes" type="object" description="How many passed postings were routed to become a role (every one that passed)."/>
+        <porter:field path="sifted.read" type="number" description="How many postings' own pages the filter read to learn where they are (their list gave no place, or only a count of places such as 26 Locations); they count against the night's descriptions."/>
+        <porter:field path="quiet" type="object" description="The roles that went quiet."/>
+        <porter:field path="quiet.went" type="number" description="Roles moved to Gone Quiet because the employer took their posting down."/>
+        <porter:field path="quiet.silent" type="number" description="Applied roles moved to Gone Quiet because no word came back in the owner's number of days."/>
+        <porter:field path="quiet.days" type="number" description="The owner's number of days for an Applied role to hear nothing back (Missions, Read the employers' boards); absent when it is blank, and then no Applied role is moved."/>
+        <porter:field path="details" type="object" description="Descriptions read for the postings the code gates let through."/>
+        <porter:field path="details.filled" type="number" description="How many descriptions were read."/>
+        <porter:field path="details.left" type="number" description="How many descriptions were left unread because the read's time ran out: the next read takes them first."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_read_boards">
+      <bpmn:lane id="Lane_read_app" name="Job search: read, match, filter (no Claude)">
+        <bpmn:flowNodeRef>Start_read</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Keep_current</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Resolve_links</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Read_boards</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Read_board_feed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Follow_postings</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Merge_employers</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Layoff_notices</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Filter_postings</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Quiet_roles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Read_descriptions</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ready</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_read" name="The night's read starts">
+      <!-- code: backend/app/jobsearch/missions/boards_night.py, backend/app/jobsearch/missions/core.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The "Read the employers' boards" mission comes due (01:00 by default), or the owner runs it now. Peak hours never hold it: it uses no Claude.
+Rules:
+1. One read at a time; it runs beside the scheduler, in its own session.
+Outputs: A run of this process.
+What the owner sees: the mission running on Missions, and "How the search is doing".</bpmn:documentation>
+      <bpmn:outgoing>S_Start_read__Keep_current</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Keep_current" name="Bring the stops and scores a release left up to date" porter:action="jobs.keep_current" porter:output="current">
+      <!-- code: backend/app/jobsearch/research/keep_current.py, backend/app/jobsearch/gating/regate.py, backend/app/jobsearch/research/prioritize.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The read started.
+Rules:
+1. A stop (a posting a gate stopped, a Gated out role) records the version of Hard pass it was judged under (docs/PRD.md 39.12). When some were judged under an older Hard pass than the one in force, or under none (stops made before the version was kept, or by older gates), the whole log and every role are checked against the gates again, in code, as a save of Hard pass does: a stop that no longer holds goes back to where it would have been, one that does is kept with the current version, and what a gate now stops is stopped. A save of Hard pass that changes nothing makes no new version, which is why this is needed.
+2. A score records the version of Prioritization it was worked out under (39.21). When some were worked out under an older one, or under none, every score is worked out again from the answers and facts already stored, as a save of Prioritization does.
+3. When every stop and score is current this does nothing. It uses no Claude and fetches nothing, and takes seconds. The same check runs when the app starts.
+Outputs: `current.gates`, `current.scores`.
+What the owner sees: a line in each role's history that the re-gate moved; the stops and scores themselves, current.</bpmn:documentation>
+      <bpmn:outgoing>S_Keep_current__Resolve_links</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Resolve_links" name="Find job systems from new links" porter:action="jobs.resolve_links" porter:output="links">
+      <!-- code: backend/app/jobsearch/employers/resolve.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The read started.
+Rules:
+1. Each employer's job system is read from the links the app holds: its roles' postings and apply pages, its careers page (ats.py knows the job systems the registry lists).
+2. The most common system among its links wins. What the owner set is never changed. The board of a system found this way is kept as the employer's careers page when it has none and the owner set none. A board is one employer's own: its tenant, id, slug or host on the system, never the system's root host (a link to one names the system and no board). When two employers claim one board, the one whose name it carries (or the owner set it for) keeps it and the other looks again; with nobody's name on it neither has it. A careers page the app took from a board is not a second link to it, and a careers page that links to a board another employer holds does not take it unless the board carries the employer's name.
+3. For employers still unknown whose site the owner switched on and that have a careers page, the page is read (plain HTTP, up to 40 a night) and the job system its links or frames point at is taken. A page that names none is not read again. One the site did not answer (a timeout, a 5xx, "too many requests") is read again the next night. One the server is refused (robots.txt asks not to read it, or a 403) is a stop: the employer's site is sent to the owner's browser, with the reason on its row, and the employer is not asked again (docs/PRD.md 30.3).
+4. Last, an employer whose site is on and read by the app and that posts on a job system the server has no reader for and knows why (a job system the registry lists as unread) has its site sent to the owner's browser, with the reason on its row: a site project could not succeed at it and would take one of the night's few slots. Not one a recipe the scout learned reads, nor one whose project is at work. The Scout mission does the same before it starts its projects.
+Outputs: `links.found`.
+What the owner sees: each employer's job system on Employers; a site sent to the owner's browser, with why, on Where to look.</bpmn:documentation>
+      <bpmn:outgoing>S_Resolve_links__Read_boards</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Read_boards" name="Read every switched-on site" porter:action="jobs.read_boards" porter:output="read">
+      <!-- code: backend/app/jobsearch/postings/index.py, backend/app/jobsearch/postings/site_reads.py, adapters.py, sites/skills.py, backend/app/jobsearch/fetch/polite.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The job systems are known.
+Rules:
+1. Every employer whose site the owner switched on, with a readable system, a board address and no gate, is read through its system's adapter: one request a second to each site, robots.txt honoured, a refusal taken as a stop.
+2. Every other site the owner switched on and keeps in the app's own night (not in the owner's browser) is read through the skill the scout learned for it: a data request replayed, or list pages read, by the same runner the site's check uses, through the same polite fetcher. A site is read once: an employer whose skill is a learned recipe is left out of rule 1, and an employer whose skill is a job system's adapter stays there. A site that belongs to no employer (a job board, an association's board) is read through its skill whatever kind it is. A skill that reads a page into text cannot be run yet, so its site waits. A site that is off, one the owner avoids, an employer the owner gated, and a site with no skill (it is still being learned, or its skill broke) are not read.
+3. Each posting is kept with when it was first and last seen; a posting gone from a whole read is closed; a read cut short closes nothing, and neither does a read that could not have returned the posting (rule 6). Postings from a site that is an employer's belong to that employer; those from a job board or an association are kept under the site, with the company the posting names.
+4. A refusal, a changed shape, or a board that had roles and now answers none is a fault on the employer or site, never a silence, and the skill that read it is retired (path 29.4): the next night's Scout mission starts a new project for the site, and until it has a skill again the read leaves that site alone. A board that is gone is looked for again, and one that could not be reached is tried again tomorrow; neither retires a skill.
+5. A board is read to its last page, however many that is: there is no page cap, for a job system's adapter or a learned recipe. A read stops early only when pages go round in circles (a page brings nothing not already read) or the read's time runs out (3 hours from the start). Then the board keeps what it read, is marked cut short and closes nothing, and the boards not yet begun are left for the next read.
+6. A job system whose board can be asked for less than all of it is asked, a little wider than the gates (backend/app/jobsearch/adapters/_ask.py). One is asked for the places on its board that the owner's work location on Hard pass cannot rule out; another for the ways of working that work location accepts and, between full reads, for the postings of the last week or month; another, for an owner who takes no remote work, for the places in its search form that cannot be ruled out. A board that fits on its first page, or where asking would not save a page, is read whole. The gates still judge everything a board returns. A read of only what is new closes no posting, and a read of some places closes only the postings in those places. Each such board is read in full for the owner's places once a week, and on the first night after the owner's places (or the board's address) change; a board whose job system has no filters (most of them) is read whole every night.
+7. A board the app does not read (its site is off, its employer is gated, its job system is switched off, or it has no site) has its open postings marked Not checked, with the day they were last seen: nothing is checking whether the employer still lists them, so the log does not call them open. They are not closed either, since nothing says the employer took them down, and no stage works them. The same happens at once when the owner switches the site, the employer or the job system off, or the app turns a site off. When the board is read again each of its postings is open or closed as that read finds it; a read cut short leaves a Not checked posting as it was.
+Outputs: `read.employers`, `read.failed`, `read.seen`, `read.new`, `read.closed`, `read.unread`, `read.cut`, `read.not_checked`.
+What the owner sees: each employer's last read on its page, and the failures under "How the search is doing".</bpmn:documentation>
+      <bpmn:outgoing>S_Read_boards__Read_board_feed</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Read_board_feed" name="Read a followed board's job search" porter:action="jobs.read_board_feed" porter:output="board_feed">
+      <!-- code: backend/app/jobsearch/actions.py:read_board_feed -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The boards were read (or the read of them failed in part: a board that cannot be read never stops this step).
+Rules:
+1. Only when the owner switched the robots-exempt read on (Settings) and a runbook carries it and in the owner's off hours; otherwise nothing at all is requested (docs/PRD.md path 48).
+2. Its postings join the same posting index, under the board's own source, with the company each posting names. When the app's own Chrome is up and signed in to the board it is read there by code (the page's own answers, else the page as drawn, then the whole text of each new posting: dormant: a signed-in session ends after the first results page; a role's page is read by the browser's queue instead, a `listing` item, docs/PRD.md 48.14); otherwise, and for the searches a sign-in page left, as a guest (path 48). Every search is made once. A slow-down is waited out and the search asked again; a search the board cannot answer is skipped (the guest feed's page that asks for a sign-in is only such a search); a refusal (a 401 or 403), a security check (a CAPTCHA or challenge page) or repeated slow-downs end its part of the run, with no notice to the owner, and are never got around. While it runs the browser's queue hands out no item of that board that is not the owner's own (docs/PRD.md 48.14).
+3. It is a step of its own so that a failure in reading the boards cannot skip it, and a failure here cannot undo the boards.
+Outputs: `board_feed.seen`, `board_feed.new`, `board_feed.requests`, `board_feed.backoffs`, `board_feed.searches`, `board_feed.searches_read`, `board_feed.skipped`, `board_feed.unread`, `board_feed.stopped`, `board_feed.mode`, `board_feed.details`.
+What the owner sees: the board's postings among the others, counted in the night's read.</bpmn:documentation>
+      <bpmn:outgoing>S_Read_board_feed__Follow_postings</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Follow_postings" name="Follow job-board roles to the employer's own posting" porter:action="jobs.follow_postings" porter:output="followed">
+      <!-- code: backend/app/jobsearch/employers/follow.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The boards were read, so the posting index is as new as it will be tonight.
+Rules:
+1. A role the app found on a job board (any job site in Where to look) and has not yet followed, before the owner applies, is followed to its employer's own posting. This step reads no page while it holds its transaction, and no site is read that was not read already. The sweep (`sourcing.sweep`, run inside this step) sources the stored roles in code, and the board reads it needs are handed to a background pass the step starts after it commits (`sweep_boards`).
+2. First by the Apply link its posting already carries (the role's own, or its postings' in the index), which is what a job board's Apply button usually leads to: taken when it is a public address on the employer's own domain or on its job system, never a job board's and never another employer's board.
+3. Then by the employer's own listings in the posting index (its own job system's, or its own site's). A listing is the same role when it is the same employer's, its title is the same once abbreviations and a where-tag are folded, and its place agrees (both remote, or the same city). Exactly one confident listing is taken; an unsure one (the place differs or is not stated, or two listings fit) stores nothing, and the analyst looks when it researches the role.
+4. On a match the employer's posting becomes the role's link, read and opened from everywhere; the job board link it was found at is kept beside it. The employer's careers site is kept from its job system's board when it has none and the owner set none.
+Outputs: `followed.looked`, `followed.followed`.
+What the owner sees: the employer's link first on the role's Job description tab, with the job board link beside it, and a line in the role's history.</bpmn:documentation>
+      <bpmn:outgoing>S_Follow_postings__Merge_employers</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Merge_employers" name="Merge duplicate employers" porter:action="jobs.merge_employers" porter:output="duplicates">
+      <!-- code: backend/app/jobsearch/employers/pairs.py, backend/app/jobsearch/employers/match.py, backend/app/jobsearch/employers/records.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The boards were read and the roles followed, so what they showed (an employer's website or careers page, the job system it posts on) is on its record.
+Rules:
+1. Two employer records are one employer, and code merges them, only when the table in employer_match says so: their names read the same once punctuation and endings like "Inc." are set aside; or they share a website (the same registered domain in the website, never a job system's, a job board's or a site anyone can have a page on) and their names are alike; or they share a website that the owner or the employer researcher confirmed for both records; or they post on the same job-system board (the whole address, confirmed as theirs) and their names are alike. The one with fewer roles is merged into the other. A website alone is not enough: the per-role analyst sets one while reading a single posting. Each merge says in Activity which of these decided it.
+2. Code never merges an agency with the client it hired for (a "via" tag names the other: they are two employers), a brand with its parent (a name that holds the other's in brackets while the names are not alike), any record whose name carries a "via" tag (a staffing firm's site and board are shared by the companies it hires for), or a pair the owner or the researcher said to keep separate.
+3. A merge moves every role, posting and site onto the record that stays and keeps every fact (the owner's own word first), the hard pass and the watch of either, and the other name as one the record is also called. It is one step in one transaction: a merge that fails changes nothing, is logged, and is tried again the next night; a pass that cannot finish is logged, and the night's read goes on.
+4. Every other pair is two employers, and nobody is asked: names alike and nothing else (as "Brightwater" and "Brightwater Insurance", or the same words in another order), a website they share that nobody confirmed beside names that are not alike, a careers site they share, a brand and its parent, a "via" tag. Nothing is remembered for them, so it is merged later only if new facts make a rule above hold (a website both records confirmed, a board that is one tenant's). Names that share only words like "Group" or "Inc." are no pair. A question that an older rule left open in Notifications is closed with a note; nothing in it is merged.
+Outputs: `duplicates.merged`.
+What the owner sees: a line in Activity for each merge, saying what was merged and why.</bpmn:documentation>
+      <bpmn:outgoing>S_Merge_employers__Layoff_notices</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Layoff_notices" name="Match state layoff notices" porter:action="jobs.layoff_notices" porter:output="notices">
+      <!-- code: backend/app/jobsearch/employers/signals.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The boards were read.
+Rules:
+1. The recent state layoff notices (WARN, via WARN Feed, CC BY 4.0) are matched to known employers by exact name.
+2. Each match is kept once as a dated layoff event with its headcount, place and source; events the owner set are left alone.
+Outputs: `notices.added`.
+What the owner sees: the layoff on the employer's page, and the fact the gates and modifiers read.</bpmn:documentation>
+      <bpmn:outgoing>S_Layoff_notices__Filter_postings</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Filter_postings" name="Filter the new postings" porter:action="jobs.sift_postings" porter:output="sifted">
+      <!-- code: backend/app/jobsearch/gating/sift.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The index is up to date.
+Rules:
+1. Only postings nobody has filtered are looked at; a posting already a role is linked to it.
+2. The gates that need no judgement: a named or gated employer, a place the owner doesn't take, pay under the floor where shown, an old posting when age is a gate.
+3. A place that says nothing (empty, or only a count such as "26 Locations" or "Multiple Locations") is unknown: it stops nothing and the posting goes on, and the work location it states is read later, from its text. Where the posting's job system names the places on the posting's own page (some job systems; others only for a place their list left out), that page is read first, through the same polite fetcher, up to four at once (each site is still paced to a request a second), and the place is judged on the places themselves; a page that cannot be read, or that does not name every place the list counted, leaves the place unknown. These reads come out of the night's descriptions (the mission's number) and the description the page gives is kept.
+4. The classifier, trained on the owner's own roles, ranks every posting that passed (its probability is kept, to put the likeliest first). It stops none: whatever a posting is rated, it becomes a role. With no history to learn from yet, nothing is ranked.
+5. A posting that is stopped keeps the rule that stopped it (a gate's), the step that stopped it and the version of What to look for in force, shown on the Pipeline's Gated stage; one that passes becomes a role at once (backend/app/jobsearch/pipeline/from_posting.py).
+Outputs: `sifted.candidates`, `sifted.stopped`, `sifted.routes`, `sifted.read`.
+What the owner sees: every stopped posting, with its reason, on the Pipeline's Gated stage.</bpmn:documentation>
+      <bpmn:outgoing>S_Filter_postings__Quiet_roles</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Quiet_roles" name="Move roles that went quiet" porter:action="jobs.quiet_roles" porter:output="quiet">
+      <!-- code: backend/app/jobsearch/pipeline/quiet.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The new postings were filtered, so a posting that came back as a repost is linked to its role.
+Rules:
+1. A role in any status before Applied, or Applied, whose posting the employer took down moves to Gone Quiet, "the posting went". Only the employer's own board counts (its job system, or its own site), and only a read that could have returned the posting closes it (docs/PRD.md 39.5). A role with another listing still open, or one nothing is checking (Not checked), stays. So does a role in Active Discussion, and a role the owner moved by hand after the posting closed.
+2. An Applied role with no word for the owner's number of days (Missions, "Read the employers' boards": "Applied roles go quiet after"; blank: never) moves to Gone Quiet, "no word came back". The days count from the later of the day it became Applied and the last mail matched to it.
+3. Each move is code with no Claude. It is written to the role's history with its evidence and frees the employer's place for the limit of two closely related roles. Nothing is moved back by this step: the owner does that by hand.
+Outputs: `quiet.went`, `quiet.silent`, `quiet.days`.
+What the owner sees: a line in each role's history, the roles in Ended, and a line in the run's report for the Applied roles that heard nothing back.</bpmn:documentation>
+      <bpmn:outgoing>S_Quiet_roles__Read_descriptions</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Read_descriptions" name="Read the text of the postings the gates let through" porter:action="jobs.read_descriptions" porter:output="details">
+      <!-- code: backend/app/jobsearch/postings/index.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The filter ran. It does not wait on what the filter found tonight.
+Rules:
+1. The text of every open posting that passed the code gates and has none is read, by code, from its job system (no Claude), at the polite pace: robots.txt honoured, about one request a second to a host, a refusal is a stop. A posting a code gate stopped keeps its list entry and no text, since the gates need none. A posting stopped on an earlier night by a gate that no longer applies, and one that is a role now, passed the code gates and are read. A posting a change to the owner's settings lets through is read the next time this step runs, whatever night it was first read. A posting of a board the app does not read (Not checked), a closed one, one read in the owner's browser or through a site's own skill, and the posting of a role the scout reported or the tracker held have no page for the app to ask, and are not.
+2. The classifier's likeliest first, then the earliest seen, up to the mission's number a night (-1: every one in this set and no other) less the pages the filter already read for places.
+3. A posting whose page cannot be read is marked as tried and tried again after three days.
+4. When the read's time runs out (3 hours from the start), the descriptions not yet read are left as they are: the next read takes them first.
+Outputs: `details.filled`, `details.left`.
+What the owner sees: the posting's text on the role once it has been read.</bpmn:documentation>
+      <bpmn:outgoing>S_Read_descriptions__End_ready</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_ready" name="Postings ready to become roles">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The candidates are ready.
+What the owner sees: the postings the gates let through, with their text read, are ready to go on and become roles.</bpmn:documentation>
+      <bpmn:incoming>S_Read_descriptions__End_ready</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_read__Keep_current" sourceRef="Start_read" targetRef="Keep_current"/>
+    <bpmn:sequenceFlow id="S_Keep_current__Resolve_links" sourceRef="Keep_current" targetRef="Resolve_links"/>
+    <bpmn:sequenceFlow id="S_Resolve_links__Read_boards" sourceRef="Resolve_links" targetRef="Read_boards"/>
+    <bpmn:sequenceFlow id="S_Read_boards__Read_board_feed" sourceRef="Read_boards" targetRef="Read_board_feed"/>
+    <bpmn:sequenceFlow id="S_Read_board_feed__Follow_postings" sourceRef="Read_board_feed" targetRef="Follow_postings"/>
+    <bpmn:sequenceFlow id="S_Follow_postings__Merge_employers" sourceRef="Follow_postings" targetRef="Merge_employers"/>
+    <bpmn:sequenceFlow id="S_Merge_employers__Layoff_notices" sourceRef="Merge_employers" targetRef="Layoff_notices"/>
+    <bpmn:sequenceFlow id="S_Layoff_notices__Filter_postings" sourceRef="Layoff_notices" targetRef="Filter_postings"/>
+    <bpmn:sequenceFlow id="S_Filter_postings__Quiet_roles" sourceRef="Filter_postings" targetRef="Quiet_roles"/>
+    <bpmn:sequenceFlow id="S_Quiet_roles__Read_descriptions" sourceRef="Quiet_roles" targetRef="Read_descriptions"/>
+    <bpmn:sequenceFlow id="S_Read_descriptions__End_ready" sourceRef="Read_descriptions" targetRef="End_ready"/>
+  </bpmn:process>
+</bpmn:definitions>

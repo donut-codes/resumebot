@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "key": "greenhouse",
+  "name": "Greenhouse",
+  "kind": "job_system",
+  "hosts": [
+    "greenhouse.io"
+  ],
+  "order": 1,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "greenhouse.io",
+      "greenhouse-mail.io"
+    ],
+    "confirms": true
+  },
+  "address": {
+    "board": [
+      {
+        "host": "(?:job-)?boards(?:\\.eu)?\\.greenhouse\\.io",
+        "path": "(?:embed/)*(?-i:job_board|job_app)(?:/(?s:.*))?",
+        "query": {
+          "for": "any"
+        },
+        "capture": {
+          "slug": "query:for"
+        }
+      },
+      {
+        "host": "(?:job-)?boards(?:\\.eu)?\\.greenhouse\\.io",
+        "path": "(?:embed/)*(?!embed(?:/|$))(?!(?-i:job_board|job_app)(?:/|$))(?P<slug>[^/]+)(?:/(?s:.*))?",
+        "capture": {
+          "slug": "group:slug"
+        }
+      },
+      {
+        "host": "boards-api\\.greenhouse\\.io",
+        "path": "[^/]+/[^/]+/(?P<slug>[^/]+)(?:/(?s:.*))?",
+        "capture": {
+          "slug": "group:slug"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "path": "(?:(?!jobs/)[^/]+/)*jobs/(?P<ext_id>\\d+)(?:/(?s:.*))?",
+        "capture": {
+          "ext_id": "group:ext_id"
+        }
+      },
+      {
+        "path": "(?:(?!jobs/)[^/]+/)*[^/]*",
+        "query": {
+          "token": "digits"
+        },
+        "capture": {
+          "ext_id": "query:token"
+        }
+      }
+    ],
+    "board_url": [
+      {
+        "template": "https://job-boards.greenhouse.io/{slug}",
+        "needs": [
+          "slug"
+        ]
+      }
+    ]
+  },
+  "read": {
+    "kind": "request",
+    "url": "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true",
+    "items": "jobs",
+    "fields": {
+      "ext_id": "id",
+      "title": "title",
+      "location": [
+        "location.name",
+        "location"
+      ],
+      "posted": [
+        "first_published",
+        "updated_at"
+      ],
+      "url": "absolute_url",
+      "text": {
+        "html": "content"
+      },
+      "department": "departments.0.name"
+    },
+    "work_mode": {},
+    "comp": {
+      "range": {
+        "path": "pay_input_ranges.0",
+        "min": "min_cents",
+        "max": "max_cents",
+        "currency": "currency_type",
+        "period_is": "year",
+        "unit": 100,
+        "writes_text": true
+      }
+    },
+    "detail": {
+      "url": "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{ext_id}",
+      "fields": {
+        "text": {
+          "html": "content"
+        },
+        "posted": [
+          "first_published",
+          "updated_at"
+        ],
+        "location": [
+          "location.name",
+          "location"
+        ]
+      },
+      "work_mode": {}
+    }
+  },
+  "flags": {
+    "drawn": true,
+    "probe_names": true
+  },
+  "probe": {
+    "url": "https://boards-api.greenhouse.io/v1/boards/{slug}",
+    "name": "name"
+  }
+}

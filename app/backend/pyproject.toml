@@ -1,0 +1,109 @@
+[project]
+name = "resumebot-backend"
+version = "2.5.8"
+description = "resumebot 1.0: a scout-driven job search (the app, its MCP door and its process engine)"
+requires-python = ">=3.12"
+# Dependencies are hash-locked: requirements.lock (run) and requirements-dev.lock (run + test) hold the exact versions,
+# and the native environment (app/scripts/dev.py) installs them with --require-hashes. The locks are
+# universal: one resolution for Linux, Windows and macOS, with a marker on each package only some of them need. After changing a
+# line here, run `py -3 app/scripts/dev.py lock` (--upgrade to move every package to the newest allowed version) and commit the
+# lock files with the change.
+dependencies = [
+    "fastapi>=0.132",  # 0.132 made a JSON body need a JSON Content-Type (strict_content_type, set in main.py): no cross-site form posts
+    "uvicorn>=0.32",
+    # Linux only: the faster event loop (uvloop) and HTTP parser (httptools), and the rest of uvicorn's standard extras. uvloop has
+    # no Windows wheel, so a Windows install runs uvicorn plain (asyncio and h11).
+    "uvicorn[standard]>=0.32; sys_platform == 'linux'",
+    # Windows only: coloured log lines in a console that does not read ANSI itself. uvicorn[standard] used to bring it there; that
+    # extra is Linux-only now. (pywin32, which the MCP SDK needs on Windows, comes with it: the lock names it with its own marker.)
+    "colorama>=0.4; sys_platform == 'win32'",
+    # Windows only: the pseudo-terminal `resumebot signin` runs `claude setup-token` in (it prints nothing to a pipe).
+    "pywinpty>=2.0; sys_platform == 'win32'",
+    # >=2.1: `fit/classifier.py` reads each role's first posting with `.ext(distinct_on(...))`, new in 2.1 (it replaces the
+    # deprecated `.distinct(column)`). The lock files already name 2.1.x.
+    "sqlalchemy[asyncio]>=2.1",
+    "aiosqlite>=0.21,<0.23",  # the database is SQLite (app/db.py)
+    # <0.31: 0.31.0 changed prepared-statement handling for multi-statement DDL strings.
+    "asyncpg>=0.30,<0.31",
+    "alembic>=1.14",  # the schema: backend/migrations (the baseline adopts a create_all database)
+    "pydantic>=2.9",
+    "pydantic-core>=2.23",  # app.jobsearch.profile.documents imports PydanticCustomError from it directly (pydantic pins its exact version)
+    "pydantic-settings>=2.6",
+    "tzdata>=2024.2",
+    "defusedxml>=0.7",
+    "pyyaml>=6.0.2",
+    "httpx>=0.28",  # app.jobsearch.work.wake knocks on the scout; the tests call the app through its ASGI transport
+    "openpyxl>=3.1",  # app.jobsearch.imports.tracker: reads and writes the job-search tracker spreadsheet
+    "python-docx>=1.1",  # app.jobsearch.writing.docs_render: a packet's resume and letter as Word files; resume_text: a Word resume's text
+    # app.jobsearch.writing.docs_render: the same resume and letter as PDF files. Pure Python (no Word, LibreOffice or system library),
+    # so it installs the same on Windows, macOS and Linux; text is real, selectable text.
+    "fpdf2>=2.8",
+    # app.jobsearch.resume.text: the text of a PDF resume (Me, Import your resume). It reads files a person uploads, so it
+    # moves only on purpose: requirements.lock holds the exact version (6.20.0 when the import was built).
+    "pypdf>=6.20,<7",
+    # app.sites.skills: runs the scout's recipe patterns with a timeout (`re` cannot be stopped while it matches).
+    "regex>=2024.11",
+    # 2.x: built against mcp.server.mcpserver.MCPServer (1.x's FastMCP was renamed).
+    "mcp>=2.2,<3",
+    # app.jobsearch.mail.seal: seals the mail login's app password (AES-GCM). Already in the lock as a dependency of the MCP SDK.
+    "cryptography>=43",
+    # process-engine (app/packages/process-engine, imported as process_engine) is a dependency too, but it is installed
+    # from the vendored folder, not from an index.
+]
+
+[project.scripts]
+resumebot = "app.main_cli:main"  # `resumebot COMMAND`: one import line for each command in app/main_cli.py
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-xdist>=3.6",  # the suite runs on parallel workers (app/scripts/dev.py check)
+    "jsonschema>=4.0",  # test_resume_export.py checks the export against the published JSON Resume schema (mcp brings it too)
+    # Exact: the lint is part of the release gate, so a new Ruff release must not fail (or pass) a release by itself.
+    # Move it with the other tools: change it, run `py -3 app/scripts/dev.py lock`, fix what the new rules say.
+    "ruff==0.17.0",
+    # Exact for the same reason: a new release finds new things. basedpyright is pyright with a committed baseline
+    # (.basedpyright/baseline.json): the release gate fails on a NEW finding only.
+    "basedpyright==1.40.2",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.setuptools.package-data]
+"app.jobsearch.writing" = ["fonts/*.ttf"]
+"app.jobsearch.measures" = ["data/*.csv"]
+"app.jobsearch.browser.recipes" = ["*.js"]
+"app.sites" = ["site_terms.json"]
+"app" = ["resumebot.ico"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+
+[tool.basedpyright]
+# Type check (the test image runs `basedpyright`). Basic mode, the app's code only. The findings that existed when it was added
+# are in .basedpyright/baseline.json; `basedpyright --writebaseline` rewrites it after you fix some (never to hide a new one).
+include = ["app"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# RUF100: a `# noqa` that silences nothing is dead weight (and hides which rules the code really meets).
+select = ["E", "F", "I", "B", "UP", "RUF100"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom: Depends(...)/Query(...) as an argument default is how a route declares what
+# it needs, not a mutable default value B008 exists to catch.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]

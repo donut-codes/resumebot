@@ -1,0 +1,275 @@
+/* Search Settings (components/search/): what the screen adds to the shared parts: the groups and sections of its lists,
+ * the scope control, the Saved line with its reason, the history sheet, the panes' forms, About's steps, and the
+ * editors of components/profile/ (the ask, the rows of several statements, the pay method, a rule), the suggestion
+ * band and the measurable dials. Every value comes from focus/tokens.css. */
+
+/* --- the frame: About has no list, so the pane takes its place ---------------------------------------------------- */
+
+.fi-ss.is-wide { grid-template-columns: var(--fi-rail-width) minmax(0, 1fr); }
+.fi-ss .fi-list-head > .fi-switch.is-labelled { justify-self: start; }
+
+/* --- the list: small heads, sections with their switch, the add line --------------------------------------------- */
+
+.fi-ss-group {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fi-s5);
+  padding: var(--fi-s6) var(--fi-s5) var(--fi-s2);
+  font-size: var(--fi-size-xs);
+  font-weight: var(--fi-weight-bold);
+  color: var(--fi-faint);
+  text-transform: none;
+}
+.fi-ss-group .fi-switch { margin-block: calc(-1 * var(--fi-s3)); }
+.fi-ss-section { list-style: none; }
+.fi-ss-section.is-off .fi-ss-sub { opacity: 0.55; }
+.fi-ss-sub { list-style: none; margin: 0; padding: 0; }
+.fi-ss-add { list-style: none; display: flex; flex-wrap: wrap; gap: var(--fi-s2) var(--fi-s6); padding: var(--fi-s3) var(--fi-s5) var(--fi-s5); font-size: var(--fi-size-m); }
+.fi-ss-none { list-style: none; padding: var(--fi-s4) var(--fi-s5); color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-ss-line {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fi-s6);
+  padding: var(--fi-s4) var(--fi-s5);
+  font-weight: var(--fi-weight-semi);
+  color: var(--fi-ink);
+}
+.fi-ss-line small { display: block; margin-block-start: var(--fi-s2); font-weight: normal; font-size: var(--fi-size-m); color: var(--fi-soft); }
+.fi-ss .fi-row-meta { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fi-ss .fi-row-meta > * + *::before { content: "·"; margin-inline: var(--fi-s4); color: var(--fi-faint); }
+.fi-ss .fi-row-title { overflow-wrap: anywhere; }
+.fi-ss-points.is-plus { background: var(--fi-teal-wash); color: var(--fi-teal-text); }
+.fi-fit.fi-ss-yours { background: var(--fi-sun-wash); color: var(--fi-sun-text); }
+.fi-ss-scope { justify-self: start; max-inline-size: 100%; }
+
+/* --- the pane's head: Saved, Undo, a reason ------------------------------------------------------------------------ */
+
+.fi-ss-saved { display: grid; gap: var(--fi-s3); justify-items: end; max-inline-size: 320px; }
+.fi-ss-why { color: var(--fi-soft); font-weight: var(--fi-weight-mid); }
+.fi-ss-reason { display: flex; gap: var(--fi-s3); inline-size: 100%; }
+.fi-ss-reason .fi-input { min-inline-size: 0; }
+.fi-ss-typed { margin: 0; font-size: var(--fi-size-s); color: var(--fi-soft); overflow-wrap: anywhere; text-align: end; }
+
+/* --- the pane's body --------------------------------------------------------------------------------------------- */
+
+.fi-ss-quiet { margin: 0; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-ss-label { font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); color: var(--fi-soft); }
+.fi-ss-fields { display: grid; gap: var(--fi-s7); }
+.fi-ss-pair { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.fi-ss-form { display: grid; gap: var(--fi-s7); margin-block-start: var(--fi-s8); }
+.fi-ss-danger { border-color: var(--fi-red); color: var(--fi-red-text); }
+.fi-ss-more { margin-block-start: var(--fi-s5); }
+.fi-ss-names { margin: 0; line-height: var(--fi-leading); }
+.fi-ss-choices { border: 0; margin: 0; padding: 0; display: grid; gap: var(--fi-s4); }
+.fi-ss-choices legend { padding: 0; margin-block-end: var(--fi-s4); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); color: var(--fi-soft); }
+.fi-ss-choice { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: var(--fi-s4); align-items: start; cursor: pointer; min-block-size: 36px; }
+.fi-ss-choice input { margin: 4px 0 0; accent-color: var(--fi-blue); }
+.fi-ss-choice > label { display: grid; gap: var(--fi-s1); cursor: pointer; }
+.fi-ss-choice > label > span { color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-ss-choices + .fi-ss-quiet { margin-block-start: var(--fi-s5); }
+
+.fi-ss-lines { list-style: none; margin: 0; padding: 0; }
+.fi-ss-lines > li { padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-ss-lines > li:first-child { border-block-start: 0; padding-block-start: 0; }
+.fi-ss-lines > li:last-child { padding-block-end: 0; }
+.fi-ss-role { display: flex; gap: var(--fi-s6); align-items: center; justify-content: space-between; }
+.fi-ss-role > div { min-inline-size: 0; }
+.fi a.fi-ss-role-title, .fi-ss-role-title { color: var(--fi-ink); font-weight: var(--fi-weight-bold); text-decoration: none; overflow-wrap: anywhere; }
+.fi a.fi-ss-role-title:hover { text-decoration: underline; }
+.fi-ss-role .fi-badge-stage { margin: 0; flex: none; }
+.fi-ss-row-actions { display: flex; gap: var(--fi-s3); flex: none; }
+
+.fi-ss-history { list-style: none; margin: 0; padding: 0; }
+.fi-ss-history > li { padding: var(--fi-s5) 0; border-block-start: 1px solid var(--fi-line); }
+.fi-ss-history > li:first-child { border-block-start: 0; padding-block-start: 0; }
+.fi-ss-history-head { display: flex; flex-wrap: wrap; gap: var(--fi-s2) var(--fi-s5); align-items: baseline; }
+.fi-ss-history-head span { color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-ss-history-why { margin: var(--fi-s2) 0 0; color: var(--fi-ink); }
+.fi-ss-history .fi-ss-quiet { margin-block-start: var(--fi-s2); }
+
+/* --- About: the steps ------------------------------------------------------------------------------------------ */
+
+.fi-ss-step {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--fi-r-pill);
+  background: var(--fi-chip);
+  color: var(--fi-soft);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-heavy);
+  flex: none;
+}
+.fi-ss-about { display: grid; gap: var(--fi-s5); max-inline-size: 70ch; }
+.fi-ss-about p { margin: 0; color: var(--fi-text); }
+.fi-ss-about .fi-ss-reads { color: var(--fi-soft); font-size: var(--fi-size-m); padding-block-start: var(--fi-s4); border-block-start: 1px solid var(--fi-line); }
+.fi-ss-where { margin: 0; display: grid; gap: var(--fi-s6); }
+.fi-ss-where dt { font-weight: var(--fi-weight-bold); }
+.fi-ss-where dd { margin: var(--fi-s2) 0 0; color: var(--fi-text); max-inline-size: 70ch; }
+
+/* --- the editors in a sheet: fields, ticks, links, numbers inside a sentence -------------------------------------- */
+
+.fi-ss-draft { display: contents; }
+.fi-ss-note { margin: 0; max-inline-size: 70ch; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-ss-sentence { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s2) var(--fi-s4); margin: 0; color: var(--fi-text); }
+.fi-ss-facts { display: grid; gap: var(--fi-s4); }
+.fi-ss-tick { display: inline-flex; gap: var(--fi-s5); align-items: center; min-block-size: var(--fi-target); color: var(--fi-ink); font-weight: var(--fi-weight-semi); cursor: pointer; }
+.fi-ss-tick input { inline-size: 20px; block-size: 20px; margin: 0; accent-color: var(--fi-blue); flex: none; }
+.fi-link.is-danger { color: var(--fi-red-text); }
+.fi-ss-foot .fi-link, .fi-ss-adds .fi-link, .fi-ss-decider .fi-link, .fi-ss-tiers-wrap .fi-link { display: inline-flex; align-items: center; min-block-size: var(--fi-target); }
+.fi-ss-foot { display: flex; flex-wrap: wrap; gap: 0 var(--fi-s8); align-items: center; }
+.fi-ss-adds { display: flex; flex-wrap: wrap; gap: 0 var(--fi-s8); }
+
+/* A number inside a sentence, and the points beside an ask: whole figures, no spin arrows (the arrow keys still step). */
+.fi-ss-num { inline-size: 5.5rem; text-align: center; font-weight: var(--fi-weight-bold); }
+.fi-ss-pts { inline-size: 5rem; flex: none; text-align: center; font-weight: var(--fi-weight-bold); }
+.fi-ss-num::-webkit-inner-spin-button, .fi-ss-num::-webkit-outer-spin-button, .fi-ss-pts::-webkit-inner-spin-button, .fi-ss-pts::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.fi-ss-num[data-sign="plus"], .fi-ss-pts[data-sign="plus"] { color: var(--fi-teal-text); }
+.fi-ss-num[data-sign="minus"], .fi-ss-pts[data-sign="minus"] { color: var(--fi-red-text); }
+.fi-ss-numbox { display: inline-flex; align-items: center; gap: var(--fi-s2); vertical-align: middle; white-space: nowrap; }
+
+/* --- a rule on Hard pass, the ways of working ---------------------------------------------------------------------- */
+
+.fi-ss-gate { list-style: none; margin: 0; padding: 0; }
+.fi-ss-rule { display: grid; gap: var(--fi-s5); }
+.fi-ss-fact { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s4); }
+.fi-ss-fact .fi-input { inline-size: auto; min-inline-size: 0; flex: 1 1 140px; }
+.fi-ss-fact .fi-ss-fact-pick { flex: 3 1 220px; }
+.fi-ss-ways { display: grid; gap: var(--fi-s6); }
+.fi-ss-way { display: grid; gap: var(--fi-s4); }
+.fi-ss-way + .fi-ss-way { padding-block-start: var(--fi-s6); border-block-start: 1px solid var(--fi-line); }
+
+/* --- an ask on Prioritization, who decides it, the app grading the requirements ----------------------------------- */
+
+.fi-ss-ask { display: grid; gap: var(--fi-s6); }
+.fi-ss-ask-line { display: flex; gap: var(--fi-s5); align-items: start; }
+.fi-ss-verify { display: grid; gap: var(--fi-s3); }
+.fi-ss-verify-label { color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-ss-decider { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--fi-s4); margin: 0; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-ss-grade { display: grid; gap: var(--fi-s5); }
+.fi-ss-grade-line { margin: 0; max-inline-size: 70ch; color: var(--fi-text); }
+.fi-ss-grade-line .fi-ss-num { inline-size: 4.5rem; margin-block: var(--fi-s2); }
+
+/* A first match list and an any-of row, edited whole: its name and line, its statements, its buttons. */
+.fi-ss-set { display: grid; gap: var(--fi-s7); }
+.fi-ss-set-head { display: grid; gap: var(--fi-s3); }
+.fi-ss-set-head.is-points { grid-template-columns: auto minmax(0, 1fr); gap: var(--fi-s5) var(--fi-s6); align-items: start; }
+.fi-ss-set-head-text { min-inline-size: 0; display: grid; gap: var(--fi-s2); }
+.fi-ss-set-title { margin: 0; font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); letter-spacing: var(--fi-tracking-tight); line-height: var(--fi-leading-tight); color: var(--fi-ink); }
+.fi-ss-set-title:focus { outline: none; }
+.fi-ss-set-title:focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 2px; }
+.fi-ss-set-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fi-s7); }
+.fi-ss-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--fi-s5) var(--fi-s6); align-items: start; }
+.fi-ss-row + .fi-ss-row { padding-block-start: var(--fi-s7); border-block-start: 1px solid var(--fi-line); }
+.fi-ss-points-cell { display: flex; min-inline-size: 0; }
+.fi-ss-body { display: grid; gap: var(--fi-s5); min-inline-size: 0; }
+.fi-ss-foot.is-set { padding-block-start: var(--fi-s4); border-block-start: 1px solid var(--fi-line); }
+.fi-ss-set-remove { margin-inline-start: auto; }
+
+/* --- how the ask is worked out: numbered steps with their numbers in the sentence ------------------------------------ */
+
+.fi-ss-method { display: grid; gap: var(--fi-s8); }
+.fi-ss-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fi-s8); counter-reset: fi-ss-step; max-inline-size: 70ch; }
+.fi-ss-steps > li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--fi-s2) var(--fi-s6); align-items: start; counter-increment: fi-ss-step; }
+.fi-ss-steps > li::before {
+  content: counter(fi-ss-step);
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--fi-r-pill);
+  background: var(--fi-chip);
+  color: var(--fi-soft);
+  font-size: var(--fi-size-m);
+  font-weight: var(--fi-weight-heavy);
+}
+.fi-ss-steps > li > * { grid-column: 2; }
+.fi-ss-lead { display: block; color: var(--fi-ink); font-weight: var(--fi-weight-semi); }
+.fi-ss-detail { display: block; color: var(--fi-soft); }
+.fi-ss-detail .fi-ss-numbox { margin-block: var(--fi-s2); }
+.fi-ss-tiers-wrap { max-inline-size: 34rem; margin-block-start: var(--fi-s3); }
+.fi-ss-tiers { inline-size: 100%; border-collapse: collapse; }
+.fi-ss-tiers th { padding: 0 var(--fi-s4) var(--fi-s3) 0; text-align: start; font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); color: var(--fi-soft); }
+.fi-ss-tiers td { padding: var(--fi-s3) var(--fi-s4) var(--fi-s3) 0; border-block-start: 1px solid var(--fi-line); vertical-align: middle; color: var(--fi-text); }
+.fi-ss-tiers .fi-ss-num { inline-size: 4.5rem; }
+.fi-ss-tiers .fi-link { white-space: nowrap; }
+/* "at least" and its number box stay on one line: the words never wrap above the box. */
+.fi-ss-tiers td:first-child { white-space: nowrap; }
+.fi-ss-means { display: flex; flex-wrap: wrap; gap: var(--fi-s5) var(--fi-s8); align-items: end; max-inline-size: 70ch; }
+.fi-ss-means-part { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fi-s3) var(--fi-s5); }
+.fi-ss-means-part.is-assumes { flex: 1 1 20rem; flex-wrap: nowrap; min-inline-size: 0; }
+.fi-ss-means-part.is-assumes .fi-input { flex: 1 1 auto; min-inline-size: 0; }
+.fi-ss-means-label { flex: none; color: var(--fi-soft); font-size: var(--fi-size-s); font-weight: var(--fi-weight-semi); }
+.fi-ss-kind { inline-size: auto; }
+.fi-ss-example { margin: 0; max-inline-size: 70ch; padding: var(--fi-s5) var(--fi-s6); border-radius: var(--fi-r-l); background: var(--fi-blue-wash); color: var(--fi-ink); }
+.fi-ss-example:empty { display: none; }
+.fi-ss-example[data-stale="true"] { color: var(--fi-soft); }
+.fi-ss-example.is-problem { background: var(--fi-red-wash); color: var(--fi-red-text); font-weight: var(--fi-weight-semi); }
+
+/* --- the suggestion band: what an agent left to use or put off --------------------------------------------------- */
+
+.fi-ss-sug-band { display: grid; gap: var(--fi-s10); }
+.fi-ss-sug-block { display: grid; gap: var(--fi-s5); }
+.fi-ss-sug-head { margin: 0; font-size: var(--fi-size-l); font-weight: var(--fi-weight-heavy); letter-spacing: var(--fi-tracking-tight); line-height: var(--fi-leading-tight); }
+.fi-ss-sug-head:focus { outline: none; }
+.fi-ss-sug-head:focus-visible { outline: 3px solid var(--fi-focus); outline-offset: 2px; }
+.fi-ss-sug-lead { margin: 0; max-inline-size: 70ch; color: var(--fi-soft); }
+.fi-ss-sug-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--fi-s6); }
+.fi-ss-sug-card { display: grid; gap: var(--fi-s5); padding: var(--fi-s7) var(--fi-s8); border-radius: var(--fi-r-xl); background: var(--fi-surface); box-shadow: var(--fi-ring); }
+.fi-ss-sug-kind { margin: 0; color: var(--fi-ink); font-weight: var(--fi-weight-bold); }
+.fi-ss-sug-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--fi-s4) var(--fi-s6); align-items: start; }
+.fi-ss-sug-body:has(> .fi-ss-sug-points) { grid-template-columns: auto minmax(0, 1fr); }
+.fi-ss-sug-asks { display: grid; gap: var(--fi-s4); list-style: none; margin: 0; padding: 0; }
+.fi-ss-sug-ask { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--fi-s6); align-items: baseline; }
+.fi-ss-sug-body:has(> .fi-ss-sug-points) .fi-ss-sug-ask { grid-template-columns: minmax(0, 1fr); }
+.fi-ss-sug-says { min-inline-size: 0; overflow-wrap: anywhere; color: var(--fi-text); }
+.fi-ss-sug-points { margin: 0; min-inline-size: 2.6em; padding: 0 var(--fi-s4); border-radius: var(--fi-r-m); background: var(--fi-chip); color: var(--fi-soft); text-align: center; font-size: var(--fi-size-m); font-weight: var(--fi-weight-heavy); line-height: 1.7; white-space: nowrap; }
+.fi-ss-sug-points[data-sign="plus"] { background: var(--fi-teal-wash); color: var(--fi-teal-text); }
+.fi-ss-sug-points[data-sign="minus"] { background: var(--fi-red-wash); color: var(--fi-red-text); }
+.fi-ss-sug-why, .fi-ss-sug-moves { margin: 0; max-inline-size: 70ch; color: var(--fi-soft); }
+.fi-ss-sug-actions { display: flex; flex-wrap: wrap; gap: var(--fi-s4); }
+
+/* --- the measurable dials (docs/PRD.md path 46): one row each, its choice, its band or pick list and its points ------ */
+
+.fi-ss-dial { display: grid; gap: var(--fi-s5); padding: var(--fi-s5) var(--fi-s6); }
+.fi-ss-dial-head { display: flex; align-items: center; justify-content: space-between; gap: var(--fi-s5); }
+.fi-ss-dial-name { font-weight: var(--fi-weight-semi); color: var(--fi-ink); }
+.fi-ss-dial-choice { inline-size: auto; min-inline-size: 10rem; }
+.fi-ss-dial-picks { display: flex; flex-wrap: wrap; gap: 0 var(--fi-s8); border: 0; margin: 0; padding: 0; }
+.fi-ss-dial-pick, .fi-ss-dial-number, .fi-ss-dial-points { display: inline-flex; align-items: center; gap: var(--fi-s4); min-block-size: var(--fi-target); }
+.fi-ss-dial-words { display: grid; gap: var(--fi-s3); color: var(--fi-soft); }
+.fi-ss-dial-pick input { inline-size: 20px; block-size: 20px; margin: 0; accent-color: var(--fi-blue); }
+
+@media (max-width: 760px) {
+  .fi-ss.is-wide { display: block; }
+  .fi-ss-scope { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .fi-ss-scope button { white-space: nowrap; flex: none; }
+  /* On a phone the strip scrolls: the pressed one wears the sun itself instead of the sliding marker. */
+  .fi-ss-scope .fi-seg-thumb { display: none; }
+  .fi-ss-scope button[aria-pressed="true"] { background: var(--fi-sun); box-shadow: var(--fi-raise); }
+  .fi-ss-saved { justify-items: start; max-inline-size: none; }
+  .fi-ss-typed { text-align: start; }
+  .fi-ss-role { flex-wrap: wrap; }
+  .fi-ss-ask-line { flex-direction: column; }
+  .fi-ss-row { grid-template-columns: minmax(0, 1fr); }
+  .fi-ss-set-head.is-points { grid-template-columns: minmax(0, 1fr); }
+  .fi-ss-means-part.is-assumes { flex-wrap: wrap; }
+  .fi-ss-means-part.is-assumes .fi-input { flex-basis: 100%; }
+  .fi-ss-sug-card { padding: var(--fi-s7); }
+  .fi-ss-sug-body:has(> .fi-ss-sug-points) { grid-template-columns: minmax(0, 1fr); }
+  .fi-ss-sug-actions { flex-direction: column; align-items: stretch; }
+  .fi-ss-sug-actions .fi-btn { justify-content: center; }
+  .fi-ss-set-remove { margin-inline-start: 0; }
+  .fi-ss-dial-head { flex-wrap: wrap; }
+  .fi-ss-dial-choice { inline-size: 100%; }
+  /* The tiers table narrows its numbers and its gaps so each row's words and box stay on one line. */
+  .fi-ss-tiers .fi-ss-num { inline-size: 3.75rem; padding-inline: var(--fi-s3); }
+  .fi-ss-tiers th, .fi-ss-tiers td { padding-inline-end: var(--fi-s3); }
+}

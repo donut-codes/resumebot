@@ -1,0 +1,259 @@
+{
+  "schema": 1,
+  "key": "taleo",
+  "name": "Taleo",
+  "kind": "job_system",
+  "hosts": [
+    "taleo.net"
+  ],
+  "order": 12,
+  "starts_off": true,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "taleo.net"
+    ]
+  },
+  "flags": {
+    "needs": [
+      "host",
+      "section"
+    ],
+    "customer_host": true
+  },
+  "address": {
+    "board": [
+      {
+        "host": "(?!tbe\\.).+\\.taleo\\.net",
+        "customer_host": true,
+        "path": "(?-i:careersection)/(?P<section>[^/]+)(?:/(?s:.*))?",
+        "capture": {
+          "host": "host",
+          "section": "group:section"
+        }
+      },
+      {
+        "host": "(?!tbe\\.).+\\.taleo\\.net",
+        "customer_host": true,
+        "capture": {
+          "host": "host"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "path": "(?-i:careersection)/(?:[^/]+/)*jobdetail\\.ftl",
+        "query": {
+          "job": "word"
+        },
+        "capture": {
+          "ext_id": "query:job"
+        }
+      },
+      {
+        "path": "(?-i:careersection)/(?:[^/]+/)*jobapply\\.ftl",
+        "query": {
+          "job": "word"
+        },
+        "capture": {
+          "ext_id": "query:job"
+        },
+        "form": true
+      },
+      {
+        "path": "(?:[^/]+/)*jobdetail\\.ftl(?:/(?s:.*))?",
+        "query": {
+          "job": "any"
+        }
+      }
+    ],
+    "apply_page": [
+      {
+        "host": ".*taleo\\.net\\.?",
+        "path": "(?-i:careersection)/(?P<section>[^/]+)/jobapply\\.ftl",
+        "query": {
+          "job": "any"
+        },
+        "capture": {
+          "section": "group:section",
+          "job": "query:job"
+        },
+        "encoded": [
+          "job"
+        ],
+        "template": "https://{host}/careersection/{section}/jobdetail.ftl?job={job}"
+      }
+    ],
+    "board_url": [
+      {
+        "needs": [
+          "host",
+          "section"
+        ],
+        "template": "https://{host}/careersection/{section}/jobsearch.ftl"
+      }
+    ]
+  },
+  "read": {
+    "kind": "request",
+    "headers": {
+      "Accept-Encoding": "identity"
+    },
+    "steps": [
+      {
+        "get": "https://{host}/careersection/{section}/jobsearch.ftl?lang=en",
+        "capture": {
+          "portal": "portalNo\\s*:\\s*'(\\d+)'"
+        }
+      }
+    ],
+    "url": "https://{host}/careersection/rest/jobboard/searchjobs?lang=en&portal={portal}",
+    "post": {
+      "body": {
+        "multilineEnabled": false,
+        "sortingSelection": {
+          "sortBySelectionParam": "3",
+          "ascendingSortingOrder": "false"
+        },
+        "fieldData": {
+          "fields": {
+            "KEYWORD": "",
+            "LOCATION": ""
+          },
+          "valid": true
+        },
+        "filterSelectionParam": {
+          "searchFilterSelections": [
+            {
+              "id": "POSTING_DATE",
+              "selectedValues": []
+            },
+            {
+              "id": "LOCATION",
+              "selectedValues": []
+            },
+            {
+              "id": "JOB_FIELD",
+              "selectedValues": []
+            },
+            {
+              "id": "JOB_TYPE",
+              "selectedValues": []
+            },
+            {
+              "id": "JOB_SCHEDULE",
+              "selectedValues": []
+            },
+            {
+              "id": "JOB_LEVEL",
+              "selectedValues": []
+            }
+          ]
+        },
+        "advancedSearchFiltersSelectionParam": {
+          "searchFilterSelections": [
+            {
+              "id": "ORGANIZATION",
+              "selectedValues": []
+            },
+            {
+              "id": "LOCATION",
+              "selectedValues": []
+            },
+            {
+              "id": "JOB_FIELD",
+              "selectedValues": []
+            },
+            {
+              "id": "JOB_NUMBER",
+              "selectedValues": []
+            },
+            {
+              "id": "URGENT_JOB",
+              "selectedValues": []
+            },
+            {
+              "id": "EMPLOYEE_STATUS",
+              "selectedValues": []
+            },
+            {
+              "id": "STUDY_LEVEL",
+              "selectedValues": []
+            },
+            {
+              "id": "WILL_TRAVEL",
+              "selectedValues": []
+            },
+            {
+              "id": "JOB_SHIFT",
+              "selectedValues": []
+            }
+          ]
+        }
+      },
+      "numbers": {
+        "pageNo": "page"
+      },
+      "headers": {
+        "tzname": "UTC",
+        "tz": "GMT+00:00"
+      }
+    },
+    "paging": {
+      "param": "page",
+      "size": 25,
+      "total": "pagingData.totalCount",
+      "counts": "kept",
+      "total_required": true
+    },
+    "items": "requisitionList",
+    "unavailable": {
+      "path": "careerSectionUnAvailable",
+      "says": "this {who} career section is unavailable"
+    },
+    "board_parts": {
+      "section": "[A-Za-z0-9_.-]+"
+    },
+    "fields": {
+      "ext_id": [
+        "contestNo",
+        "jobId"
+      ],
+      "title": {
+        "cell": {
+          "of": "column",
+          "at": "linkedColumn"
+        }
+      },
+      "location": {
+        "cells": {
+          "of": "column",
+          "at": "locationsColumns",
+          "dashed_places": true
+        }
+      },
+      "posted": {
+        "date_cell": {
+          "of": "column",
+          "not_at": [
+            "linkedColumn"
+          ],
+          "not_in": [
+            "locationsColumns"
+          ]
+        }
+      },
+      "url": {
+        "template": "https://{host}/careersection/{section}/jobdetail.ftl?job={ext_id}&lang=en"
+      }
+    },
+    "work_mode": {},
+    "detail": {
+      "url": "https://{host}/careersection/{section}/jobdetail.ftl?job={ext_id}&lang=en",
+      "answer": "page_encoded_list",
+      "list_pattern": "fillList\\('requisitionDescriptionInterface',\\s*'descRequisition',\\s*\\[(.*?)\\]\\);",
+      "marker": "!*!",
+      "any_id": true
+    }
+  }
+}

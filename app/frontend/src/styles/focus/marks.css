@@ -1,0 +1,45 @@
+/* The marks on a posting (components/role/, components/focus/MarkedPosting.tsx; docs/PRD.md 20.8): a small chip at the start of a
+ * line that was graded, which opens the analyst's reason and the master lines behind it, and the form that changes the grade.
+ * The marks carry a sign (a tick, a tilde, a cross) so they read without colour. Every value comes from focus/tokens.css. */
+
+.role-description { max-inline-size: 70ch; }
+.posting-block { margin: 0 0 var(--fi-s5); white-space: pre-line; }
+
+.qmark {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 28px;
+  min-block-size: 28px;
+  margin-inline-end: var(--fi-s2);
+  padding: 0 var(--fi-s2);
+  border: 0;
+  border-radius: var(--fi-r-s);
+  background: var(--qmark-wash);
+  color: var(--qmark-ink);
+  font: inherit;
+  font-weight: var(--fi-weight-bold);
+  line-height: 1.2;
+  cursor: pointer;
+}
+.qmark[data-ink="green"] { --qmark-ink: var(--fi-teal-text); --qmark-wash: var(--fi-teal-wash); }
+.qmark[data-ink="saffron"] { --qmark-ink: var(--fi-sun-text); --qmark-wash: var(--fi-sun-wash); }
+.qmark[data-ink="oxblood"] { --qmark-ink: var(--fi-red-text); --qmark-wash: var(--fi-red-wash); }
+.qmark[data-ink="graphite"], .qmark.qmark-none { --qmark-ink: var(--fi-soft); --qmark-wash: var(--fi-chip); }
+.qmark.qmark-none { cursor: default; vertical-align: middle; }
+.qmark[aria-expanded="true"] { outline: 2px solid var(--qmark-ink); outline-offset: 1px; }
+
+/* What the mark opens: the reason, the master lines behind it, and the way to change the grade. */
+.qmark-detail { max-inline-size: 70ch; margin: var(--fi-s2) 0 var(--fi-s5) var(--fi-s4); padding: var(--fi-s4) var(--fi-s6); border-radius: var(--fi-r-l); background: var(--fi-ground); overflow-wrap: anywhere; }
+.qmark-detail p { margin: 0 0 var(--fi-s4); }
+.req-evidence-line { margin: 0 0 var(--fi-s2); padding-inline-start: var(--fi-s5); border-inline-start: 1px solid var(--fi-field); }
+
+.req-edit { display: flex; flex-wrap: wrap; gap: var(--fi-s4); min-inline-size: 0; }
+.req-edit .fi-input { inline-size: auto; flex: 1 1 10rem; }
+
+@media (max-width: 480px) {
+  /* A finger, not a pointer: the mark keeps a touch-sized target at phone width. */
+  .qmark { min-inline-size: var(--fi-target); min-block-size: var(--fi-target); }
+}

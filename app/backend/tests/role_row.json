@@ -1,0 +1,32 @@
+{
+  "id": "6f1c1f0a-3b7e-4d8a-9c55-0a1b2c3d4e5f",
+  "title": "Program Lead",
+  "company": "Fabrikam",
+  "status": "ready_to_launch",
+  "status_label": "Ready to Launch",
+  "fit_pct": 80,
+  "score": 100,
+  "next": "Its facts being checked",
+  "packet": {
+    "id": "0b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d",
+    "version": 1,
+    "status": "writing",
+    "progress": {"step": "checking", "label": "Its facts being checked", "done": 1, "of": 3, "fraction": 0.33}
+  },
+  "opened_at": "2026-10-21T09:10:00+00:00",
+  "new": true,
+  "first_hours_bonus": 20,
+  "favorite": true,
+  "favorited_at": "2026-10-20T12:00:00+00:00",
+  "work": {"mode": "hybrid", "place": "Riverton, ST", "words": "Hybrid · Riverton, ST"},
+  "pay": "$90K–$120K",
+  "ask": 100000,
+  "age": {"days": 2, "words": "2 days", "from": "posted"},
+  "ended_reason": "they_said_no",
+  "ended_words": "They said no",
+  "reason": "pay under the floor",
+  "url": "https://jobs.example.test/1",
+  "apply_url": "https://jobs.example.test/1/apply",
+  "origin": "scout",
+  "employer_id": "7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d"
+}

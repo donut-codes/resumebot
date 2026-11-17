@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "key": "bamboohr",
+  "name": "BambooHR",
+  "kind": "job_system",
+  "hosts": [
+    "bamboohr.com"
+  ],
+  "order": 7,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "bamboohr.com"
+    ]
+  },
+  "address": {
+    "board": [
+      {
+        "host": ".*\\.bamboohr\\.com",
+        "customer_host": true,
+        "capture": {
+          "slug": "host_name"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "path": "careers/(?P<ext_id>\\d+)(?:/(?s:.*))?",
+        "capture": {
+          "ext_id": "group:ext_id"
+        }
+      },
+      {
+        "path": "careers/<id_like>(?:/(?s:.*))?"
+      },
+      {
+        "path": "(?:[^/]+/)*view\\.php",
+        "query": {
+          "id": "any"
+        }
+      }
+    ],
+    "board_url": [
+      {
+        "template": "https://{slug}.bamboohr.com/careers",
+        "needs": [
+          "slug"
+        ]
+      }
+    ]
+  },
+  "read": {
+    "kind": "request",
+    "url": "https://{slug}.bamboohr.com/careers/list",
+    "items": "result",
+    "fields": {
+      "ext_id": "id",
+      "title": "jobOpeningName",
+      "location": [
+        {
+          "join": [
+            [
+              "location.city",
+              "atsLocation.city"
+            ],
+            [
+              "location.state",
+              "atsLocation.state",
+              "atsLocation.province"
+            ]
+          ]
+        },
+        {
+          "text": "Remote",
+          "when": "isRemote"
+        }
+      ],
+      "url": {
+        "template": "https://{slug}.bamboohr.com/careers/{ext_id}"
+      },
+      "department": "departmentLabel"
+    },
+    "work_mode": {
+      "flags": [
+        {
+          "path": "isRemote",
+          "mode": "remote"
+        }
+      ]
+    },
+    "detail": {
+      "url": "https://{slug}.bamboohr.com/careers/{ext_id}/detail",
+      "at": "result.jobOpening",
+      "fields": {
+        "text": {
+          "html": "description"
+        },
+        "posted": "datePosted"
+      },
+      "comp": {
+        "written": "compensation",
+        "parse_written": true
+      }
+    }
+  }
+}

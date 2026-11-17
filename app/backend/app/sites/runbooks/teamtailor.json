@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "key": "teamtailor",
+  "name": "Teamtailor",
+  "kind": "host",
+  "hosts": [
+    "teamtailor.com"
+  ],
+  "shared_host": true,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "teamtailor.com"
+    ]
+  }
+}

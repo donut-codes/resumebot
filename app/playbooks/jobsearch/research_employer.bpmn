@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Research an employer" (docs/PRD.md path 36 and 39.19). The "Research employers" mission puts a batch of
+     employers in front of the researcher each night, one process for each. A small session reads public pages for the
+     employer and reports its facts (each with where it came from), its job board, the employers it may be the same as and
+     the roles that may belong to another company. Code checks the report, finds the job board it can, carries out the
+     researcher's word on pairs and splits through the app's own merge and split, and works the gates and scores of the
+     employer's roles out again on the facts (backend/app/jobsearch/research/employer.py). Nothing is ever applied to or sent. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_research_employer" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_research_employer" name="Research an employer" porter:key="jobsearch_research_employer" isExecutable="true">
+    <bpmn:documentation>One employer researched: its website, careers site, reviews page, industry, sectors, size, ownership, headquarters, offices, founded year and whether it is AI-native, each with its source; its job board; and whether it is the same employer as another record or holds roles of another company. The facts the owner's gates and asks read are the ones that matter most. Code checks every fact, looks for the job board, and merges or splits records only through the app's own feature; the gates and scores of the employer's roles are worked out again on the new facts. Nothing is applied to or sent.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose employer this is."/>
+        <porter:field path="employer" type="string" description="The employer being researched (its id)."/>
+        <porter:field path="brief" type="object" description="Whether the employer is still waiting for research."/>
+        <porter:field path="brief.ready" type="boolean" description="Whether the employer is still waiting for the researcher."/>
+        <porter:field path="brief.candidates" type="number" description="How many pairs code found that include the employer and nobody has decided about."/>
+        <porter:field path="found" type="object" description="What the researcher handed back."/>
+        <porter:field path="found.submitted" type="boolean" description="Whether the report was taken."/>
+        <porter:field path="taken" type="object" description="What came of setting the facts."/>
+        <porter:field path="taken.set" type="number" description="How many facts were set on the employer's record."/>
+        <porter:field path="board" type="object" description="What came of looking for the employer's job board."/>
+        <porter:field path="board.found" type="boolean" description="Whether the employer has a job board now that it had none of before."/>
+        <porter:field path="board.has" type="boolean" description="Whether the employer has a whole job board."/>
+        <porter:field path="pairs" type="object" description="What came of the researcher's word on pairs and splits."/>
+        <porter:field path="pairs.employer" type="string" description="The record that is left (the employer, or the one it was merged into)."/>
+        <porter:field path="pairs.merged" type="number" description="How many records were merged."/>
+        <porter:field path="pairs.kept_separate" type="number" description="How many pairs stayed two employers: the researcher said they are different, or the app did not merge them."/>
+        <porter:field path="pairs.splits" type="number" description="How many splits moved roles to another employer."/>
+        <porter:field path="pairs.problems" type="list" description="What could not be done, in words."/>
+        <porter:field path="settled" type="object" description="What the new facts did to the employer's roles."/>
+        <porter:field path="settled.roles" type="number" description="How many roles the employer has."/>
+        <porter:field path="settled.regated" type="number" description="How many roles a gate now stops or no longer stops."/>
+        <porter:field path="settled.rescored" type="number" description="How many scores changed."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_research_employer">
+      <bpmn:lane id="Lane_employer_app" name="Job search: check, set, find the board, merge and split, gate and score again">
+        <bpmn:flowNodeRef>Start_research_employer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gather_employer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Take_facts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Find_board</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Settle_pairs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Settle_roles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_research_employer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Researcher_researches_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_failed</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_employer_researcher" name="Analyst (the scout agent, as the employer researcher)">
+        <bpmn:flowNodeRef>Researcher_researches</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_research_employer" name="An employer is picked for research">
+      <!-- code: backend/app/jobsearch/research/employer.py, backend/app/jobsearch/missions/core.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The "Research employers" mission picks a batch of employers each night, after the boards are read: first those with a role in play (any status before Applied, Applied, Active Discussion), then those with the most open roles, then the never researched, skipping any researched in the last so many days, up to the owner's number of employers a night (-1: no limit). A gate or ask the owner adds that reads a fact an employer's record lacks sends the employers of the roles it reaches back into the line.
+Rules:
+1. One research at a time per employer. A gated employer is never researched.
+Outputs: A run of this process for the employer.
+What the owner sees: "Researching" on the Agents page while a session has it; the run on the Research employers mission.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_research_employer__Gather_employer</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Gather_employer" name="Check the employer is waiting" porter:action="jobs.employer_gather" porter:output="brief">
+      <bpmn:documentation>Actor: Job search.
+Trigger: An employer was picked.
+Rules:
+1. The researcher's task is read when it calls jobs.employer: the employer's record as the app holds it (each fact with its source, and the fields the owner set), a few of its roles, the pairs code found that include it and why they look the same (docs/PRD.md 36.4), and the employer facts the owner's gates and asks read.
+Outputs: `brief.ready`: whether the employer is still waiting; `brief.candidates`: how many pairs it was handed.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Gather_employer__Researcher_researches</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Researcher_researches" name="The researcher researches the employer" porter:role="analyst" porter:instructions="jobsearch.researcher" porter:template="jobsearch.researcher.report" porter:output="found">
+      <bpmn:documentation>Actor: Analyst (the scout agent, as the employer researcher), through the job-search MCP tools jobs.employer and jobs.employer_report.
+Trigger: The employer is waiting.
+Rules:
+1. The researcher reads public pages only (WebSearch and WebFetch): the employer's own site, its careers page and public search results. It reports the website, the careers site, the employer's reviews page (an https address that a web search result showed; it never opens a reviews page), the industry and sectors, the number of employees, the ownership, the headquarters, the offices, the year founded and whether it is AI-native, each with where it found it. It leaves out what it cannot find and never guesses. The facts the owner's gates and asks read come first.
+2. It reports the address of the employer's job board when it finds one (its own job system's page), for the app to check.
+3. For each pair code found, it says same, different or unsure, with what it found and where (the same headquarters, a parent and its subsidiary, a page that says the two names are one company). A shared website alone never makes two records one employer: that takes real evidence, and code merges only beside names that look alike or a website the owner or the researcher confirmed for both records. Its word alone never merges: the app merges only what its table says is certain (a website beside alike names or confirmed for both records, a board beside alike names) and asks the owner about the rest.
+4. If the employer's roles belong to two companies (an alias that folded a different company in, or roles whose postings sit on two unrelated sites), it names the roles that belong elsewhere and the other company. The app moves the roles whose own postings are on the other company's own job-system account or confirmed website, or on a site or account named for it; the rest stay and nobody is asked.
+5. It never applies, fills a form, solves a CAPTCHA, gets around a block or sends anything.
+Outputs: `found.submitted`.
+What the owner sees: the facts on the employer's page, each with its source; roles moved by a split in Activity.</bpmn:documentation>
+      <bpmn:outgoing>S_Researcher_researches__Gw_Researcher_researches_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Take_facts" name="Check the facts and set them" porter:action="jobs.employer_take" porter:output="taken">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The report was sent.
+Rules:
+1. The code checks run when the researcher sends the report, which tells it at once what was refused; this step sets the facts that passed. Code checks each fact on its own, so a fact that fails is refused with its reason and the rest stands (docs/PRD.md 36.3): an address must be public and not a job board, a careers site must be on the employer's own domain or on a known job system, employees must be a number, ownership one of the allowed words, and every fact needs its source. The researcher is told which were refused and why.
+2. The facts that pass are set on the employer's record, each with its source and the researcher's name, the way the analyst's are: a field the owner set is never changed, and a careers site is kept only where the employer has none.
+Outputs: `taken.set`: how many facts were set.
+What the owner sees: the facts on the employer's page, each with where it came from.</bpmn:documentation>
+      <bpmn:outgoing>S_Take_facts__Find_board</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Find_board" name="Look for its job board" porter:action="jobs.employer_board" porter:output="board">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The facts were set.
+Rules:
+1. The job board the researcher reported is taken when it names a job system the app knows and no other employer holds it. For an employer still without a whole board the app's own detection then looks (docs/PRD.md 28.2): from the links it holds, from the careers page, and from the open job feeds. It never changes a board the owner set.
+Outputs: `board.found`: whether the employer has a job board now that it had none of before.
+What the owner sees: the employer's job system on its page and its board read from the next night.</bpmn:documentation>
+      <bpmn:outgoing>S_Find_board__Settle_pairs</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Settle_pairs" name="Merge and split" porter:action="jobs.employer_pairs" porter:output="pairs">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The job board was looked for.
+Rules:
+1. The researcher's verdicts go through the app's own feature (docs/PRD.md 36.5, 39.19), by the same table as the night's merge of duplicate employers (employer_match). Different: remembered as two employers. Same, when the table says merge (a website beside names that look alike, a website the owner or the researcher confirmed for both records, or a job board beside names that look the same): merged, with the other name kept as one the employer is also called, and every role kept. Same or unsure when the table does not say merge: the pair stays two employers, nothing is remembered and nobody is asked; the night merges it later if new facts make the table say merge. An agency and the client it hired for are remembered as separate. A pair the owner already decided about stays as they decided.
+2. A split the researcher proposes moves the roles whose own postings show the other employer (on its own job-system account or confirmed website, or on a site or account named for it); the rest stay and nobody is asked. Code finds no split by itself.
+3. Then any pair the new facts make certain by the same table (a website this research confirmed, beside one confirmed for the other record or beside names that look alike) is merged, and nobody is asked.
+Outputs: `pairs.employer`: the record that is left; the counts of what was merged and of the splits that moved roles.
+What the owner sees: the merge or the split in Activity.</bpmn:documentation>
+      <bpmn:outgoing>S_Settle_pairs__Settle_roles</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Settle_roles" name="Gate and score its roles again" porter:action="jobs.employer_settle" porter:output="settled">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The pairs and splits were carried out.
+Rules:
+1. The employer is marked researched, with the day: the mission skips it until the owner's number of days has passed.
+2. Which of its offices are the owner's places is worked out again, then every gate runs again on the facts the record holds now (docs/PRD.md 39.18, 39.14): a role a gate now fails goes to Gated out with that gate and the versions, and one only a gate stopped that no longer does is back in play, its history saying why. A role the owner moved by hand, or at Applied or later, is left where it is.
+3. A researched role's score is worked out again from the employer's facts (docs/PRD.md 39.21), and its gates run again on them.
+Outputs: `settled.roles`, `settled.regated`, `settled.rescored`.
+What the owner sees: a line in Activity saying what was set, and the roles that moved with their reasons.</bpmn:documentation>
+      <bpmn:outgoing>S_Settle_roles__End_research_employer</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_research_employer" name="Employer researched">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The employer's roles were gated and scored again.
+What the owner sees: the employer with its facts, each with its source.</bpmn:documentation>
+      <bpmn:incoming>S_Settle_roles__End_research_employer</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gw_Researcher_researches_answered" name="Did the researcher answer?" default="S_Researcher_researches__Take_facts">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The researcher answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `found.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Researcher_researches__Gw_Researcher_researches_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Researcher_researches__Take_facts</bpmn:outgoing>
+      <bpmn:outgoing>F_Researcher_researches_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_failed" name="Closed as failed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: No session finished the research, so the app closes it as failed (`backend/app/jobsearch/research/employer.py:_give_up`, reached when a stuck run is settled or expires). Research has no seat retries. An employer released back to the line is not a failure.
+Rules:
+1. "Closed as failed" is how the app ends a run from outside the engine; the engine never takes this way, because nothing in the engine sets the step's answer to false. The run ends Stopped on the Agents page and the reason is kept in the run's history. Other stops (the time passed, removed, released back to the line, orphaned at start) are not failures and are not drawn.
+Outputs: Nothing; the run is cancelled from outside the engine.
+What the owner sees: the employer's research shows as not done, and the trail says the researcher did not finish.</bpmn:documentation>
+      <bpmn:incoming>F_Researcher_researches_failed</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_research_employer__Gather_employer" sourceRef="Start_research_employer" targetRef="Gather_employer"/>
+    <bpmn:sequenceFlow id="S_Gather_employer__Researcher_researches" sourceRef="Gather_employer" targetRef="Researcher_researches"/>
+    <bpmn:sequenceFlow id="S_Researcher_researches__Gw_Researcher_researches_answered" sourceRef="Researcher_researches" targetRef="Gw_Researcher_researches_answered"/>
+    <bpmn:sequenceFlow id="S_Researcher_researches__Take_facts" name="It answered" sourceRef="Gw_Researcher_researches_answered" targetRef="Take_facts"/>
+    <bpmn:sequenceFlow id="F_Researcher_researches_failed" name="The app closed it as failed" sourceRef="Gw_Researcher_researches_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">found.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Take_facts__Find_board" sourceRef="Take_facts" targetRef="Find_board"/>
+    <bpmn:sequenceFlow id="S_Find_board__Settle_pairs" sourceRef="Find_board" targetRef="Settle_pairs"/>
+    <bpmn:sequenceFlow id="S_Settle_pairs__Settle_roles" sourceRef="Settle_pairs" targetRef="Settle_roles"/>
+    <bpmn:sequenceFlow id="S_Settle_roles__End_research_employer" sourceRef="Settle_roles" targetRef="End_research_employer"/>
+  </bpmn:process>
+</bpmn:definitions>

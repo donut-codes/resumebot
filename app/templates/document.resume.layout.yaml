@@ -1,0 +1,48 @@
+# The resume's layout, written once and read by both the Word and the PDF writer (app/backend/app/jobsearch/docs_render.py),
+# so the two cannot disagree. Changing the look of the resume is an edit here: the order of the blocks below is the order
+# on the page; a block with nothing to show (no summary, no education) is left out. One column, no tables or text boxes.
+#
+# Sizes, spaces and margins are in points (margins in inches). A block's `after` is the space under it; `before` the
+# space over it; `keep: true` holds it on the page with the line after it; `align: center` centres it.
+# The owner's page margin (Writing, page_margin_inches) replaces `side_margin` and `end_margin` when it is set.
+page:
+  font: Calibri          # the Word font; the PDF is set in the font that travels with the app (DejaVu Sans)
+  size: 10.5
+  after: 2
+  side_margin: 0.7
+  end_margin: 0.6
+
+# Every section heading, and the bullet under the sections that have them.
+heading: {size: 11, bold: true, upper: true, before: 8, after: 2, keep: true, rule: {space: 1, width: 0.75, color: "808080"}}
+bullet: {after: 1}
+
+blocks:
+  - {kind: line, field: name, size: 16, bold: true, align: center, after: 0}
+  - {kind: line, field: contact, join: " | ", size: 9.5, align: center}
+  - {kind: line, field: headline, size: 11.5, bold: true, align: center}
+  - {kind: section, heading: Professional Summary, body: text, field: summary}
+  - kind: section
+    heading: Core Competencies
+    body: competencies
+    field: competencies
+    label: {bold: true}
+    label_suffix: ": "
+    items_join: " · "
+  - {kind: section, heading: Selected Achievements, body: bullets, field: achievements}
+  - kind: section
+    heading: Professional Experience
+    body: roles
+    field: roles
+    employer: {bold: true, before: 6, after: 0, keep: true}
+    employer_join: ", "
+    title: {bold: true, keep: true}
+    dates_join: " to "
+    dates_prefix: " | "
+    descriptor: {italic: true}
+    intro: {}
+  - kind: section
+    heading: Education
+    body: education
+    field: education
+    degree: {bold: true}
+    school_prefix: ", "

@@ -1,0 +1,28 @@
+# The cover letter's layout, written once and read by both the Word and the PDF writer
+# (app/backend/app/jobsearch/docs_render.py). The order of the blocks is the order on the page: the letterhead (the
+# resume's name and contact line, then a rule), the date, the recipient, the salutation, the body, the closing and the
+# signature. One column of plain paragraphs: no tables or text boxes. The words of the letter are the writer's, not
+# this file's. Units and keys are as in document.resume.layout.yaml.
+page:
+  font: Calibri
+  size: 10.5
+  after: 2
+  side_margin: 0.7
+  end_margin: 0.6
+
+blocks:
+  - {kind: line, field: name, size: 16, bold: true, align: center, after: 0}
+  - {kind: line, field: contact, join: " | ", always: true, size: 9.5, align: center, after: 14,
+     rule: {space: 4, width: 0.75, color: "808080"}}
+  - {kind: line, field: date, after: 12}
+  # The company, then a "Re:" line for the role. `between` is the space between the two when both are there.
+  - kind: recipient
+    lines:
+      - {field: company}
+      - {field: role_title, format: "Re: {}"}
+    between: 0
+    after: 12
+  - {kind: line, field: greeting, after: 8}
+  - {kind: paragraphs, field: body, after: 8}
+  - {kind: line, field: closing, after: 0, keep: true}
+  - {kind: line, field: signature, before: 30}

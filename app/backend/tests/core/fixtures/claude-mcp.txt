@@ -1,0 +1,53 @@
+### add-new
+$ claude mcp add --scope user --transport http rb-fix http://127.0.0.1:9/mcp/ --header Authorization: Bearer FAKE-TOKEN-0000
+exit 0
+Added HTTP MCP server rb-fix with URL: http://127.0.0.1:9/mcp to user config
+Headers: {
+  "Authorization": "[REDACTED]"
+}
+File modified: <config>/.claude.json
+
+### add-again
+$ claude mcp add --scope user --transport http rb-fix http://127.0.0.1:9/mcp/ --header Authorization: Bearer FAKE-TOKEN-0000
+exit 1
+MCP server rb-fix already exists in user config
+
+### get
+$ claude mcp get rb-fix
+exit 0
+rb-fix:
+  Scope: User config (available in all your projects)
+  Status: ✘ Failed to connect
+  Issue: ECONNREFUSED: Unable to connect. Is the computer able to access the url?
+  Type: http
+  URL: http://127.0.0.1:9/mcp/
+  Headers:
+    Authorization: Bearer FAKE-TOKEN-0000
+
+To remove this server, run: claude mcp remove rb-fix -s user
+
+### list
+$ claude mcp list
+exit 0
+Checking MCP server health…
+
+rb-fix: http://127.0.0.1:9/mcp/ (HTTP) - ✘ Failed to connect — ECONNREFUSED: Unable to connect. Is the computer able to access the url?
+graft: npx -y @nanonets/graft mcp - ⏸ Pending approval (run `claude` to approve)
+resumebot-owner: http://127.0.0.1:8430/mcp-owner/ (HTTP) - ⏸ Pending approval (run `claude` to approve)
+
+### remove
+$ claude mcp remove rb-fix --scope user
+exit 0
+Removed MCP server rb-fix from user config
+File modified: <config>/.claude.json
+
+### remove-missing
+$ claude mcp remove rb-fix --scope user
+exit 1
+No MCP server named "rb-fix" in user scope
+
+### get-missing
+$ claude mcp get rb-fix
+exit 1
+No MCP server named "rb-fix". .mcp.json servers are awaiting approval — run `claude` in this directory to review them.
+

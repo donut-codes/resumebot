@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Research a role" (docs/PRD.md 23.3). A role is researched only once it is Sourced (the owner,
+     2026-10-15): the app holds a link to the original posting, on the employer's careers site or its job system (or the
+     posting where a recruiter's Apply lands, or the board's own posting for an Easy Apply with no link to follow).
+     The step "Source the posting" sources a role in code where it can (backend/app/jobsearch/postings/sourced.py); a role it
+     cannot source stays where it is, is not researched, and is tried again every night (the browser reader works on those
+     too). A Sourced role has the posting's text fetched in code from the source alone, word for word
+     (backend/app/jobsearch/postings/text.py, 39.29). Gates first (the owner, 2026-10-19): a role with the text has the
+     cheap gates decided on the posting's own facts before the analyst is sent it (the step "Read the gate facts",
+     backend/app/jobsearch/gating/gate_facts.py); a role a gate fails there is Gated out, with the quoted line, and is never
+     analysed. A role with the posting's text is researched: the analyst
+     researches the employer and the pay, classes each required item against the master resume, and may re-judge the
+     score. The app rescores with the employer record's facts and runs the gates again on them; a role a gate now fails is
+     Gated out, and the best researched roles go up to Ready to Launch (backend/app/jobsearch/research/analysis.py, backend/app/jobsearch/pipeline/deck.py).
+     Only the roles on deck (Second Impression) are put in front of the analyst, and the ones the owner asks for. A Sourced role whose text the app cannot get is never researched
+     from a summary of the page (the owner, 2026-10-14: a partial result is bad data): it waits for the posting's
+     text (the owner's browser reads it) and is researched when it comes. The analyst never sources a role and never
+     writes a posting's text. A role found on a board that is followed to the employer's own site is ranked on that board's own text (its page, read by the app's code, and its work-mode chip: a
+     job board's copy that is never its description, docs/PRD.md 48.14), and the deck looks up its employer's posting when the role is picked to be read next, not before
+     (the owner, 2026-11-05, docs/PRD.md 32.3): the browser's source item. The role is marked to be read only once it
+     is Sourced, so this process still starts, at the mark, with a Sourced role. Nothing is ever sent or applied to. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_analyse" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_analyse" name="Research a role" porter:key="jobsearch_analyse" isExecutable="true">
+    <bpmn:documentation>One role on deck researched before any packet is built for it: the employer, the pay and the posting's full text, each required item classed against the master resume. The app rescores, runs the gates again on the facts, and moves the role up to Ready to Launch when there is room, or out when a gate fails. Nothing is sent or applied to.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose role this is."/>
+        <porter:field path="role" type="string" description="The role being researched (its id)."/>
+        <porter:field path="brief" type="object" description="Whether the role is still waiting for research."/>
+        <porter:field path="brief.ready" type="boolean" description="Whether the role is still before Ready to Launch."/>
+        <porter:field path="sourced" type="object" description="Whether the role is Sourced."/>
+        <porter:field path="sourced.sourced" type="boolean" description="Whether the app holds a link to the role's original posting."/>
+        <porter:field path="left" type="object" description="Where a role that is not Sourced was left."/>
+        <porter:field path="left.state" type="string" description="The role's research state: not sourced, it stays where it is."/>
+        <porter:field path="fetched" type="object" description="What the app fetched of the posting's text."/>
+        <porter:field path="fetched.held" type="boolean" description="Whether the role holds the posting's text now."/>
+        <porter:field path="fetched.how" type="string" description="Where the role's text came from: held (already on the role or a posting of it) or fetched (read in code now); empty when none."/>
+        <porter:field path="facts" type="object" description="What the gate facts of the posting decided."/>
+        <porter:field path="facts.stage" type="string" description="The role's stage after its gate facts were read: gated_out when a cheap gate failed on the posting's own facts, else its status."/>
+        <porter:field path="found" type="object" description="What the analyst handed back."/>
+        <porter:field path="found.submitted" type="boolean" description="Whether the findings were taken."/>
+        <porter:field path="waiting" type="object" description="Where a role with no text was left."/>
+        <porter:field path="waiting.state" type="string" description="The role's research state: no_text, until the posting's text comes."/>
+        <porter:field path="settled" type="object" description="Where the role went."/>
+        <porter:field path="settled.stage" type="string" description="The role's stage after research: gated_out, ready_to_launch or the status it was in."/>
+        <porter:field path="favorite" type="object" description="Whether a favorite's packet was asked."/>
+        <porter:field path="favorite.asked" type="boolean" description="Whether the read role is a favorite whose packet was asked now."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_analyse">
+      <bpmn:lane id="Lane_analyse_app" name="Job search: brief, fetch, rescore, gate, move">
+        <bpmn:flowNodeRef>Start_analyse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gather_role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Source_posting</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_sourced</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Leave_in_found</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_not_sourced</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fetch_text</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_text</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_facts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_facts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_gated_facts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Wait_for_text</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_waiting</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Settle_role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Favorite_packet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_where</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_gated</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_drafting</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_found</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_analyse_analyst" name="Analyst (the scout agent)">
+        <bpmn:flowNodeRef>Analyst_researches</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_analyse" name="A role is picked for research">
+      <!-- code: backend/app/jobsearch/research/analysis.py, backend/app/jobsearch/missions/core.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The "Analyse the finds" mission picks the roles on deck (Second Impression) that were never researched, the ones the owner moved by hand first and then the best ranked (the deck's order), or the owner sends one on by hand, or the catch-up after a tracker import hands one in (every role it brought in that is still in play, one at a time: backend/app/jobsearch/missions/catch_up.py), or the owner asks research of a chosen role at any stage, Ended and Gated out included (`ask`, POST /api/v1/roles/{id}/research: it goes ahead of every role that was not asked for), or the owner adds a job by pasting its link (`add_link.add`, POST /api/v1/roles: a role in Landing Zone with only the link, put in line through `ask`; the analyst names it from the posting).
+Rules:
+1. One research at a time per role; a role is researched once by itself. A role the owner asks for that is researched already is researched again, and the new research replaces the old, the owner's own corrections of a required item's class with it.
+Outputs: A run of this process for the role.
+What the owner sees: Nothing on the role's row.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_analyse__Gather_role</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Gather_role" name="Check the role is waiting" porter:action="jobs.analysis_gather" porter:output="brief">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A role was picked.
+Rules:
+1. The analyst's brief is read when it calls jobs.analysis: the role, its employer record, the owner's scoring and gates, then the master resume.
+Outputs: `brief.ready`: whether the role is still before Ready to Launch.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Gather_role__Source_posting</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Source_posting" name="Source the posting" porter:action="jobs.analysis_source" porter:output="sourced">
+      <!-- code: backend/app/jobsearch/postings/sourced.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role is in the analyst's line and is in play.
+Rules:
+1. A role is Sourced when the app knows the company and holds a link to the ORIGINAL posting: on the employer's careers site or its own job system (any job system the app lists); or, for a recruiter's posting, where the Apply button lands when it is the same posting; or, for an Easy Apply with no link to follow, the board's own posting.
+2. A role already Sourced goes straight on. Otherwise the app sources it in code where it already holds what it takes: a posting of the role on the employer's own job system or site, a link of the role that is one posting on the employer's job system or domain, or, for a link on a job system's board, the one listing there that is the same title and place.
+3. Every accepted link is ONE posting, never a careers home page, a board's front page, a search or listing page or a sign-in page.
+4. The analyst never sources a role. The browser reader sources the rest. A role in Followup needed is sourced by the app's code, never a session, and a role the code cannot source is closed as noise (a role from a followed board in Followup needed has its page read by the app's code first, and leaves Followup needed on that text: docs/PRD.md 48.14, 32.6). For a role from a followed board in First Impression, the browser reader sources it when the deck has picked it for its lookup (docs/PRD.md 32.3), which comes before it is marked to be read.
+Outputs: `sourced.sourced`: whether the role is Sourced now.
+What the owner sees: the role's green check, once it is Sourced.</bpmn:documentation>
+      <bpmn:incoming>S_Gather_role__Source_posting</bpmn:incoming>
+      <bpmn:outgoing>S_Source_posting__Gw_sourced</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_sourced" name="Is the role Sourced?" default="F_not_sourced">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The app tried to source the role in code.
+Rules:
+1. A Sourced role has the posting's text fetched from its source and goes on to research.
+2. A role that is not Sourced is never researched: it stays where it is, and its sourcing is tried again every night.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Source_posting__Gw_sourced</bpmn:incoming>
+      <bpmn:outgoing>F_sourced</bpmn:outgoing>
+      <bpmn:outgoing>F_not_sourced</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Leave_in_found" name="Leave it where it is" porter:action="jobs.analysis_not_sourced" porter:output="left">
+      <!-- code: backend/app/jobsearch/research/analysis.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role is not Sourced.
+Rules:
+1. The role is not researched and not scored. It leaves the analyst's line and keeps its stage.
+2. Its sourcing is tried again every night, by the app's code (a role in Followup needed: after three tries the role is closed as noise) and by the browser reader (a role from a followed board in First Impression, when the deck picks it for its lookup); once it is Sourced it goes in the analyst's line like any other.
+Outputs: `left.state`.
+What the owner sees: the role without the green check; its history says it is not sourced yet.</bpmn:documentation>
+      <bpmn:incoming>F_not_sourced</bpmn:incoming>
+      <bpmn:outgoing>S_Leave_in_found__End_not_sourced</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_not_sourced" name="Not sourced yet">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role is not Sourced.
+What the owner sees: the role in its stage, without the green check.</bpmn:documentation>
+      <bpmn:incoming>S_Leave_in_found__End_not_sourced</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Fetch_text" name="Fetch the posting's text" porter:action="jobs.analysis_fetch_text" porter:output="fetched">
+      <!-- code: backend/app/jobsearch/postings/text.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role is Sourced.
+Rules:
+1. The text the role holds comes first: its own description, else the text of a posting at its source, put on the role as it is.
+2. Where the role holds none, the app reads the posting itself, in code, from the role's source and from no other link: from the job system's own page for the posting (any job system the app lists), else the source page itself, its embedded job posting first. Reads are polite: robots.txt honoured, about one request a second to a host, an honest user agent, a refusal is a stop.
+3. It never reads a job board here, and never solves a CAPTCHA or gets round a block. A board's own posting (Easy Apply) is given whole by the browser reader, never fetched here. The text of a followed board's posting's own page, where the app holds one, is a job board's copy that ranks the role and feeds its gates: it is never the posting's text in this step, and the employer's text takes its place at the gates when it comes.
+4. The text is kept whole and word for word as the source writes it: no summary, no cut. A page that gives only a fragment (a snippet, a preview, a text cut off at "see more", a sign-in wall) is no text at all. A read that fails, is refused or takes too long leaves the role as it was.
+Outputs: `fetched.held`: whether the role holds the posting's text now; `fetched.how`: held or fetched.
+What the owner sees: the posting's text on the role's Job description tab.</bpmn:documentation>
+      <bpmn:incoming>F_sourced</bpmn:incoming>
+      <bpmn:outgoing>S_Fetch_text__Gw_text</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_text" name="Does the role hold the posting's text?" default="F_no_text">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The app fetched what it could.
+Rules:
+1. A role that holds the posting's text goes to the analyst for its research.
+2. A role that holds none is never researched: it waits for the posting's text.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Fetch_text__Gw_text</bpmn:incoming>
+      <bpmn:outgoing>F_has_text</bpmn:outgoing>
+      <bpmn:outgoing>F_no_text</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Gate_facts" name="Read the gate facts" porter:action="jobs.analysis_gate_facts" porter:output="facts">
+      <!-- code: backend/app/jobsearch/gating/gate_facts.py, backend/app/jobsearch/gating/posting_facts.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role holds the posting's text.
+Rules:
+1. Gates first (the owner, 2026-10-19): before anyone is paid to analyse the role, the app reads the facts the cheap gates decide on, in code, from the posting: its place, its way of working, the pay it posts, its travel line and the employer it names; for an owner whose profile holds a line on that dial, whether the role leads business development; and, when the owner's Main work list holds a word, whether that word is the role's main work. They come from the schema.org JobPosting a page embeds and from the posting's own label lines and sentences, each kept with the line of the posting it rests on.
+2. The gates the app has always decided from those facts (the work location, the lowest pay, an employer the owner never works for) are decided on them. A gate that fails sends the role to Gated out with the reason and the quoted line on its history, and the process ends here: the role never reaches the analyst. A gate that cannot be decided passes. A place that fails in every way of working the posting could have also fails, since no missing fact can rescue it. A way of working nobody states is taken as on site.
+3. What code cannot settle (the way of working, a pay line it cannot read, the owner's sentence rules) is read by one short Haiku session from just the posting's header and condition lines, each answer with a quote that must be in the posting. Until it answers, for a few hours at most, the role is held back from the analyst's line.
+4. A role the owner moved by hand, or one a session has taken, is never moved here.
+Outputs: `facts.stage`: gated_out when a cheap gate failed, else the role's stage.
+What the owner sees: a role stopped here under Gated out, with the gate's sentence and the line of the posting it failed on; every other role goes on.</bpmn:documentation>
+      <bpmn:incoming>F_has_text</bpmn:incoming>
+      <bpmn:outgoing>S_Gate_facts__Gw_facts</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_facts" name="Did a gate fail on the posting's facts?" default="F_facts_go">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The gate facts were read.
+Rules:
+1. A role a cheap gate stopped is Gated out and goes no further.
+2. Every other role goes to the analyst.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Gate_facts__Gw_facts</bpmn:incoming>
+      <bpmn:outgoing>F_facts_gated</bpmn:outgoing>
+      <bpmn:outgoing>F_facts_go</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_gated_facts" name="Gated out before analysis">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A cheap gate failed on the posting's own facts.
+What the owner sees: the role under Gated out, with the gate's sentence and the line of the posting it failed on; it was not analysed.</bpmn:documentation>
+      <bpmn:incoming>F_facts_gated</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Analyst_researches" name="The analyst researches the role" porter:role="analyst" porter:instructions="jobsearch.analyst" porter:template="jobsearch.analysis" porter:output="found">
+      <bpmn:documentation>Actor: Analyst (the scout agent), through the job-search MCP tools jobs.analysis and jobs.analysis_submit.
+Trigger: The role is waiting.
+Rules:
+0. Only a Sourced role that holds the posting's text is researched. A role without it waits (below) until the owner's browser, or the app, brings the text.
+1. The analyst is sent the posting's text whole, as the app fetched it (`posting_text_kept`), and researches the employer (size, founded, industry, ownership, where it works, layoffs and other events) and the pay (the posted band, or market pay to model one, and the employer's other posted bands), saying where each fact came from.
+2. It classes each item of the posting's required section Proven, Transferable or Unproven against the master resume.
+3. It may re-judge the owner's asks with the whole posting, by the ask's id; its answers join any already on the role (each kept under the ask's id and wording). The app then works the score out, last, by code: it adds up the answers and decides the asks it can from the employer record, the requirements' classes and the pay ask. The role has no score before this.
+4. It never applies, fills a form or sends anything.
+5. The posting's text is the app's to fetch from the role's source, or the owner's browser's, never the analyst's: it is sent the text and does not read the page again for it. The analyst never sources a role (the step "Source the posting" and the browser reader do). The employer's careers page it reports is kept only when the employer has none.
+6. It answers the owner's sentence rules (gates in words, such as a travel limit) that the role holds no answer to in their present words, each pass, fail or unknown with a line from the posting or its research (a fail with no line is kept as unknown); an answer the role already holds is never put over. It also sends the work location and way of working when the role has none.
+7. A role the analyst has not matched yet is matched to one of the owner's target roles, while the owner has one, in the same findings (the task lists them; a role matches one or none, never a blend), and the analyst answers the asks and rules of that role; its answer is final over an earlier match (`analysis.to_match`). A job the owner added by its link has no target role until then. The app then applies that role's own gates, pay floor and asks, as for a find of the scout's; a job that matches none keeps the gates and asks for every role, and its history says so.
+Outputs: `found.submitted`.
+What the owner sees: The employer's link and the job board's on its Job description tab; nothing on the role's row while the analyst has it.</bpmn:documentation>
+      <bpmn:outgoing>S_Analyst_researches__Settle_role</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Wait_for_text" name="Wait for the posting's text" porter:action="jobs.analysis_wait_for_text" porter:output="waiting">
+      <!-- code: backend/app/jobsearch/research/analysis.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role is Sourced but holds no text of the posting, and the app could not read its source.
+Rules:
+1. The role is not researched, and nothing is scored: its asks stay unanswered, which scores as none of them met. Its research state is "waiting for the posting's text".
+2. The text comes from the owner's browser (it opens the role's source and copies the whole description: `browser.texts`), or from the app's own fetch. When it comes, the role is put in the analyst's line again and researched (`analysis.resume_waiting`); until then it is on the browser's list to read in full.
+Outputs: `waiting.state`.
+What the owner sees: A line in the role's history that it is waiting for the posting's text; nothing on its row.</bpmn:documentation>
+      <bpmn:incoming>F_no_text</bpmn:incoming>
+      <bpmn:outgoing>S_Wait_for_text__End_waiting</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_waiting" name="Waiting for the posting's text">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role is Sourced but has no text of the posting.
+What the owner sees: the role in its stage, and a line in its history that it is waiting for the posting's text; nothing on its row.</bpmn:documentation>
+      <bpmn:incoming>S_Wait_for_text__End_waiting</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Settle_role" name="Gate again and move the role" porter:action="jobs.analysis_settle" porter:output="settled">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The findings were taken.
+Rules:
+1. The app works the ask out from the findings, then the score, then runs every gate again on the facts; a gate that now fails sends the role to Gated out with that gate as the reason.
+2. Otherwise the role stays where it is, researched. A role is never closed on its score. This step only signals the pipeline after the commit (`schedule.signal_after_commit`); the loop's next turn then moves the best researched roles up to Ready to Launch, when it holds fewer than the owner's daily number, and fills the deck again (`deck.rebalance`).
+3. A role the owner asked research of at any stage keeps its status, with the research recorded on it. A role in Ready to Launch has its gates run again too: one that now fails goes to Gated out with its reason, unless the owner moved it by hand. A role at Applied, Active Discussion, Rejected, Gone Quiet, Withdrew or Gated out keeps its stage, and a Gated out role its reason: no gate runs on it here.
+4. The gates include the sentence rules the analyst answered (a gate sentence the role held no answer to) and the work location it filled in.
+Outputs: `settled.stage`.
+What the owner sees: the role in its new stage, and the research on its page.</bpmn:documentation>
+      <bpmn:outgoing>S_Settle_role__Favorite_packet</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Favorite_packet" name="Ask a favorite's packet" porter:action="jobs.analysis_favorite_packet" porter:output="favorite">
+      <!-- code: backend/app/jobsearch/pipeline/favorites.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role was settled after its read.
+Rules:
+1. A favorite (a role the owner starred) that is still before the application, and has no packet written, being written or held, has its packet asked now, by the app on the owner's star, and goes up to Ready to Launch now that it is read (a star runs First and Second Impression first, docs/PRD.md path 51): the last gate check runs before the writer drafts, as for every packet the app asks.
+2. A packet that cannot be asked (no master resume, an employer nobody has named, a gate the last check now fails) is a line in the role's history; the role keeps its place, and a role a gate stops keeps its reason.
+3. Every other role passes through: nothing is asked for it.
+Outputs: `favorite.asked`.
+What the owner sees: on a favorite, "asked for a packet" in its history and the packet being written.</bpmn:documentation>
+      <bpmn:incoming>S_Settle_role__Favorite_packet</bpmn:incoming>
+      <bpmn:outgoing>S_Favorite_packet__Gw_where</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_where" name="Where does it go?" default="F_found">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role was settled, and a favorite's packet asked.
+Rules:
+1. The way out follows the stage the role is in now. Ready to Launch is reached here only by a role already there, or a favorite sent up by its packet.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_gated</bpmn:outgoing>
+      <bpmn:outgoing>F_drafting</bpmn:outgoing>
+      <bpmn:outgoing>F_found</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_gated" name="Gated out">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A gate failed on the researched facts.
+What the owner sees: the role under Gated out, with the gate's sentence and the fact it failed on.</bpmn:documentation>
+      <bpmn:incoming>F_gated</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_drafting" name="To Ready to Launch">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role was already in Ready to Launch, or is a favorite whose packet was just asked, and stays there.
+What the owner sees: the role in Ready to Launch.</bpmn:documentation>
+      <bpmn:incoming>F_drafting</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_found" name="Stays where it is">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The role was researched and waits where it is (on deck for room in Ready to Launch), or it was past Ready to Launch and stays there (a role that a gate now fails goes out at "Gated out").
+What the owner sees: the role researched, in its own status; the owner can move it on by hand.</bpmn:documentation>
+      <bpmn:incoming>F_found</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_analyse__Gather_role" sourceRef="Start_analyse" targetRef="Gather_role"/>
+    <bpmn:sequenceFlow id="S_Gather_role__Source_posting" sourceRef="Gather_role" targetRef="Source_posting"/>
+    <bpmn:sequenceFlow id="S_Source_posting__Gw_sourced" sourceRef="Source_posting" targetRef="Gw_sourced"/>
+    <bpmn:sequenceFlow id="F_sourced" name="It is Sourced" sourceRef="Gw_sourced" targetRef="Fetch_text">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">sourced.sourced = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_not_sourced" name="Not sourced" sourceRef="Gw_sourced" targetRef="Leave_in_found"/>
+    <bpmn:sequenceFlow id="S_Leave_in_found__End_not_sourced" sourceRef="Leave_in_found" targetRef="End_not_sourced"/>
+    <bpmn:sequenceFlow id="S_Fetch_text__Gw_text" sourceRef="Fetch_text" targetRef="Gw_text"/>
+    <bpmn:sequenceFlow id="F_has_text" name="It holds the text" sourceRef="Gw_text" targetRef="Gate_facts">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">fetched.held = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Gate_facts__Gw_facts" sourceRef="Gate_facts" targetRef="Gw_facts"/>
+    <bpmn:sequenceFlow id="F_facts_gated" name="A gate failed" sourceRef="Gw_facts" targetRef="End_gated_facts">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">facts.stage = "gated_out"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_facts_go" name="On to the analyst" sourceRef="Gw_facts" targetRef="Analyst_researches"/>
+    <bpmn:sequenceFlow id="F_no_text" name="No text" sourceRef="Gw_text" targetRef="Wait_for_text"/>
+    <bpmn:sequenceFlow id="S_Wait_for_text__End_waiting" sourceRef="Wait_for_text" targetRef="End_waiting"/>
+    <bpmn:sequenceFlow id="S_Analyst_researches__Settle_role" sourceRef="Analyst_researches" targetRef="Settle_role"/>
+    <bpmn:sequenceFlow id="S_Settle_role__Favorite_packet" sourceRef="Settle_role" targetRef="Favorite_packet"/>
+    <bpmn:sequenceFlow id="S_Favorite_packet__Gw_where" sourceRef="Favorite_packet" targetRef="Gw_where"/>
+    <bpmn:sequenceFlow id="F_gated" name="A gate failed" sourceRef="Gw_where" targetRef="End_gated">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">settled.stage = "gated_out"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_drafting" name="Ready to Launch" sourceRef="Gw_where" targetRef="End_drafting">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">settled.stage = "ready_to_launch"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_found" name="Stays" sourceRef="Gw_where" targetRef="End_found"/>
+  </bpmn:process>
+</bpmn:definitions>

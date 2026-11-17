@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Screen one role", called once for each new role from the search round (playbooks/jobsearch/search_round.bpmn).
+     The owner's hard gates are the conditions on the decisions below, compared with the gates the owner sets in their
+     profile (backend/app/jobsearch/profile/views.py, engine_gates): change one there and the next search uses it. A gate the
+     owner hasn't turned on lets every role through. Order is cheapest first: an excluded
+     employer, then work location, then pay, then staleness. A role is kept or dropped with
+     its reason, the gate's own sentence; nothing here asks a model anything. A gate passes until it is proven failed:
+     a place that isn't stated and pay that isn't posted are kept. The facts the conditions compare (age in days,
+     whether the place is acceptable, the figure the pay gives) are worked out by
+     backend/app/jobsearch/measures/pay_place.py:role_facts. No gate reads a role's fit: Prioritization ranks roles and never stops
+     one (docs/PRD.md 30.4). -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_screen_role" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_screen_role" name="Screen one role" porter:key="jobsearch_screen_role" isExecutable="true">
+    <bpmn:documentation>One new role, run through the owner's hard gates. It is kept, or dropped for one stated reason. A dropped role is still stored, with that reason, so the owner can see a gate that misfires.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="gates" type="object" description="The owner's hard gates."/>
+        <porter:field path="gates.stale_days" type="number" description="A posting older than this many days is gated out by the posting-age gate."/>
+        <porter:field path="gates.comp_floor" type="number" description="The amount a year the pay must reach to be kept; 0 when the pay gate is off."/>
+        <porter:field path="gates.says" type="object" description="The sentence of each gate that is on (location, compensation, age): the reason a dropped role is given."/>
+        <porter:field path="role" type="object" description="The role, as the gates read it."/>
+        <porter:field path="role.key" type="string" description="The role's match key (lowercased company|title)."/>
+        <porter:field path="role.fit" type="number" description="The fit the report's answers add up to. No gate reads it: the verdict carries it to the stored role."/>
+        <porter:field path="role.age_days" type="number" description="Days since the posting's own date; empty when it isn't known."/>
+        <porter:field path="role.stale_days" type="number" description="The posting age, in days, over which this role's posting is stale: the owner's posting-age gate (All's), or the lower of it and the posting-age gate of the role's own Hard pass tab."/>
+        <porter:field path="role.excluded" type="boolean" description="The employer is one the owner never works for."/>
+        <porter:field path="role.location_ok" type="boolean" description="The place is acceptable; empty when the posting doesn't say."/>
+        <porter:field path="role.location" type="string" description="The place as the board gave it, or as the report gave it from the posting when the board gave none or only a count of places (the report's place wins when it sends one); empty when neither says."/>
+        <porter:field path="role.comp_max" type="number" description="The top of the posted pay, a year; empty when unposted."/>
+        <porter:field path="role.ask" type="number" description="The estimated ask before research (the middle of the posted band); empty when unposted or the band is too wide."/>
+        <porter:field path="role.comp_judged" type="number" description="The figure the pay gate compares with its amount (the posted minimum, the posted maximum or the estimated ask, as the owner chose); empty when there is nothing to judge."/>
+        <porter:field path="role.comp_floor" type="number" description="The amount a year that figure is compared with: the owner's lowest pay (All's), or the amount of the role's own Hard pass tab when that is the gate that judged it. A posting must clear both."/>
+        <porter:field path="role.says" type="object" description="The sentences of the gates that are the role's own, where they are the ones that decide (location, compensation, age); empty when All's gates decide, and then gates.says holds the reason."/>
+        <porter:field path="role.comp_from" type="string" description="What that figure is: posted minimum, posted maximum or estimated ask."/>
+        <porter:field path="verdict" type="object" description="What the gates decided."/>
+        <porter:field path="verdict.key" type="string" description="The role's match key."/>
+        <porter:field path="verdict.keep" type="boolean" description="True when the role is kept."/>
+        <porter:field path="verdict.reason" type="string" description="Why it was dropped; empty when kept."/>
+        <porter:field path="verdict.fit" type="number" description="The fit the role is stored with."/>
+        <porter:field path="verdict.note" type="string" description="A note stored with a kept role (a place to check)."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="Start_screen" name="A new role">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The search round calls this once for each role that is new to the owner.
+Rules:
+1. Called, never started on its own.
+Outputs: A run of this process with the role.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_screen__Gw_excluded</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gw_excluded" name="Is it an employer the owner never works for?" default="F_not_excluded">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A new role.
+Rules:
+1. The employer matches one on the owner's exclusion list (any entity or role), by whole words.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_excluded</bpmn:outgoing>
+      <bpmn:outgoing>F_not_excluded</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Drop_excluded" name="Drop: excluded employer" porter:action="screen.drop_excluded" porter:output="verdict">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The employer is excluded.
+Rules:
+1. Dropped with the reason "excluded employer".
+Outputs: `verdict`.
+What the owner sees: the role under "Gated out", with that reason.</bpmn:documentation>
+      <bpmn:outgoing>S_Drop_excluded__End_out</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_location" name="Is the place unacceptable?" default="F_place_ok">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The employer isn't excluded.
+Rules:
+1. The place is unacceptable when the way of working (remote, hybrid or in person) is one the owner has off, or it is hybrid or in person somewhere that isn't among the places listed for it, or it names a place the owner never works on site. Remote passes when remote is on and, with countries named, is in one of them.
+2. A posting that doesn't say where is held, not dropped: it stays, with a note to check the place. A place that says nothing (empty, or only a count such as "26 Locations") is such a place; with it the work location the report gave from the posting stands in, so a place the report gives and the owner doesn't take drops the role.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_place_bad</bpmn:outgoing>
+      <bpmn:outgoing>F_place_ok</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Drop_location" name="Drop: location" porter:action="screen.drop_location" porter:output="verdict">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The place is unacceptable.
+Rules:
+1. Dropped with the gate's sentence, and the place as posted.
+Outputs: `verdict`.
+What the owner sees: the role under "Gated out", with that reason.</bpmn:documentation>
+      <bpmn:outgoing>S_Drop_location__End_out</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_comp" name="Is the pay under the amount?" default="F_comp_ok">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The place is fine.
+Rules:
+1. Under the amount when the figure the owner chose to compare (the posted minimum, the posted maximum or the estimated ask) is under it. With no posted pay the estimated ask is used; before research that is the middle of the posted band. Pay that isn't posted, or a band too wide to judge, is kept. The posted pay is the board's, or the one the report gave from the posting where the board gave none (or where the text states different pay).
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_comp_low</bpmn:outgoing>
+      <bpmn:outgoing>F_comp_ok</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Drop_comp" name="Drop: pay under the amount" porter:action="screen.drop_comp" porter:output="verdict">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The pay is under the amount.
+Rules:
+1. Dropped with the gate's sentence, and the figure it was judged on.
+Outputs: `verdict`.
+What the owner sees: the role under "Gated out", with that reason.</bpmn:documentation>
+      <bpmn:outgoing>S_Drop_comp__End_out</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_stale" name="Is the posting stale?" default="F_fresh">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The pay is fine.
+Rules:
+1. Stale when the posting's own date is more than the posting-age gate's days ago. An unknown date is never stale. With no posting-age gate nothing is stale: how old a posting is can count in the fit, through an ask about age, where the fit is added up.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_stale_reject</bpmn:outgoing>
+      <bpmn:outgoing>F_fresh</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Drop_stale" name="Drop: stale posting" porter:action="screen.drop_stale" porter:output="verdict">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The posting is older than the posting-age gate allows.
+Rules:
+1. Dropped with the gate's sentence, and the age.
+Outputs: `verdict`.
+What the owner sees: the role under "Gated out", with that reason.</bpmn:documentation>
+      <bpmn:outgoing>S_Drop_stale__End_out</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Keep" name="Keep the role" porter:action="screen.keep" porter:output="verdict">
+      <bpmn:documentation>Actor: Job search.
+Trigger: Every gate passed.
+Rules:
+1. Kept, with its fit and a note when the place needs checking.
+Outputs: `verdict`.
+What the owner sees: the role on the page, in queue order.</bpmn:documentation>
+      <bpmn:outgoing>S_Keep__End_kept</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_kept" name="Kept"/>
+    <bpmn:endEvent id="End_out" name="Gated out"/>
+    <bpmn:sequenceFlow id="S_Start_screen__Gw_excluded" sourceRef="Start_screen" targetRef="Gw_excluded"/>
+    <bpmn:sequenceFlow id="F_excluded" name="Excluded" sourceRef="Gw_excluded" targetRef="Drop_excluded">
+      <bpmn:documentation>The employer is on the owner's exclusion list.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">role.excluded = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_not_excluded" name="Not excluded" sourceRef="Gw_excluded" targetRef="Gw_location">
+      <bpmn:documentation>Any other employer.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Drop_excluded__End_out" sourceRef="Drop_excluded" targetRef="End_out"/>
+    <bpmn:sequenceFlow id="F_place_bad" name="Unacceptable place" sourceRef="Gw_location" targetRef="Drop_location">
+      <bpmn:documentation>The posting names a place the owner can't work from, or isn't remote.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">role.location_ok = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_place_ok" name="Fine, or not stated" sourceRef="Gw_location" targetRef="Gw_comp">
+      <bpmn:documentation>The place is acceptable, or the posting doesn't say (held for a check).</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Drop_location__End_out" sourceRef="Drop_location" targetRef="End_out"/>
+    <bpmn:sequenceFlow id="F_comp_low" name="Under the amount" sourceRef="Gw_comp" targetRef="Drop_comp">
+      <bpmn:documentation>The figure the pay gate compares is under its amount.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">role.comp_judged &lt; role.comp_floor</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_comp_ok" name="Clears it, or not posted" sourceRef="Gw_comp" targetRef="Gw_stale">
+      <bpmn:documentation>The pay clears the floor, isn't posted, or is too wide a band to judge.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Drop_comp__End_out" sourceRef="Drop_comp" targetRef="End_out"/>
+    <bpmn:sequenceFlow id="F_stale_reject" name="Stale, dropped" sourceRef="Gw_stale" targetRef="Drop_stale">
+      <bpmn:documentation>The posting is older than the posting-age gate's days.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">role.age_days &gt; role.stale_days</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_fresh" name="Fresh, or age unknown" sourceRef="Gw_stale" targetRef="Keep">
+      <bpmn:documentation>Not older than the gate's days, or the posting's date isn't known.</bpmn:documentation>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Drop_stale__End_out" sourceRef="Drop_stale" targetRef="End_out"/>
+    <bpmn:sequenceFlow id="S_Keep__End_kept" sourceRef="Keep" targetRef="End_kept"/>
+  </bpmn:process>
+</bpmn:definitions>

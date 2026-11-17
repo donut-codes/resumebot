@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Build the story library" (docs/PRD.md path 43, the packet committee spec). The library every
+     packet is put together from: short, rule-clean resume lines for the master's entries, a scope line for each role,
+     and polished cover-letter blocks for the candidate's stories, each citing the master lines it rests on. Built when
+     the master resume or the writing rules change, writing again only what changed; checked when it is built (code
+     checks, then a facts read by meaning), fixed once, and a line still failing is held out, so a packet never needs a
+     rule repair. Each agent step is a seat: one model turn (backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/library.py). The
+     owner reads the library on My Resume; nothing is sent or applied to. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_library" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_library" name="Build the story library" porter:key="jobsearch_library" isExecutable="true">
+    <bpmn:documentation>The owner's story library, built from the master resume and the writing rules: resume lines and scope lines by role, achievements, and letter blocks by story, each citing its master lines and checked when it is built. Only what changed is written again. Packets choose from it; nothing is sent or applied to.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose library this is."/>
+        <porter:field path="library" type="string" description="The draft library version being built (its id)."/>
+        <porter:field path="plan" type="object" description="What the build writes."/>
+        <porter:field path="plan.work" type="boolean" description="Whether there is anything to write or check."/>
+        <porter:field path="plan.parts" type="list" description="The parts written side by side: the resume lines with the owner's rules, and the letter blocks."/>
+        <porter:field path="coded" type="object" description="The code checks."/>
+        <porter:field path="coded.failing" type="number" description="How many items fail them."/>
+        <porter:field path="checked" type="object" description="The facts read."/>
+        <porter:field path="checked.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="checked.failing" type="number" description="How many items fail, code and facts."/>
+        <porter:field path="fixed" type="object" description="The fix."/>
+        <porter:field path="fixed.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="fixed.fixed" type="number" description="How many items it changed."/>
+        <porter:field path="recoded" type="object" description="The code checks again."/>
+        <porter:field path="recoded.failing" type="number" description="How many items still fail them."/>
+        <porter:field path="rechecked" type="object" description="The second facts read."/>
+        <porter:field path="rechecked.submitted" type="boolean" description="False only when the app closes the step without an answer. It does that by stopping the run, so the engine never sets it."/>
+        <porter:field path="rechecked.failing" type="number" description="How many items still fail."/>
+        <porter:field path="saved" type="object" description="How the build ended."/>
+        <porter:field path="saved.status" type="string" description="The library's status."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_library">
+      <bpmn:lane id="Lane_library_app" name="Job search: plan, check, save">
+        <bpmn:flowNodeRef>Start_library</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gather_library</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_work</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Code_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_failing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Code_2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Save_library</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_library</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Check_1_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Fix_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Check_2_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_failed</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_library_writer" name="Writer (seats: library writer, library checker)">
+        <bpmn:flowNodeRef>Write_parts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Check_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fix</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Check_2</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_library" name="The story library is out of date">
+      <!-- code: backend/app/jobsearch/writing/library.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The owner saved a new master resume or new writing rules, or a packet was asked for while the newest library was built from older ones.
+Rules:
+1. One build at a time; a build that never finished in six hours is closed as failed, so a new one can start.
+Outputs: A run of this process and its draft library version.
+What the owner sees: "Building" on the story library, on My Resume.</bpmn:documentation>
+      <bpmn:outgoing>S_Start__Gather_library</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Gather_library" name="Work out what changed" porter:action="jobs.library_gather" porter:output="plan">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A build started.
+Rules:
+1. Only what changed is written again: the master entries whose words or note changed or are new, the scope lines of roles whose printed facts changed, and the stories whose blocks cite a changed line. Everything else is kept from the newest library.
+2. When the writing rules changed, every line is checked again under them.
+3. The work is cut into two parts written side by side: the resume lines (with the owner's rules), and the letter blocks when there are stories to write.
+Outputs: `plan.work`, `plan.parts`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Start__Gather_library</bpmn:incoming>
+      <bpmn:outgoing>S_Gather_library__Gw_work</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_work" name="Is there anything to write?" default="F_work">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The plan is made.
+Rules:
+1. With nothing to write or check, the library is saved as it is for the master and rules in force.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Gather_library__Gw_work</bpmn:incoming>
+      <bpmn:outgoing>F_work</bpmn:outgoing>
+      <bpmn:outgoing>F_no_work</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:callActivity id="Write_parts" name="The writer writes each part" calledElement="jobsearch_library_part" porter:in="owner=owner,library=library">
+      <bpmn:documentation>Actor: Job search.
+Trigger: There is something to write or check.
+Rules:
+1. Each part is written by its own run of "Write one part of the story library", both at once: the resume lines with the owner's rules read for code (one turn, from the whole master), and the letter blocks.
+Outputs: Every part's lines, blocks or rules, on the draft library.
+What the owner sees: "Building" on the story library.</bpmn:documentation>
+      <bpmn:incoming>F_work</bpmn:incoming>
+      <bpmn:outgoing>S_Write_parts__Code_1</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false" porter:collection="plan.parts" porter:elementVariable="part"/>
+    </bpmn:callActivity>
+    <bpmn:serviceTask id="Code_1" name="Run the code checks" porter:action="jobs.library_code_checks" porter:output="coded">
+      <bpmn:documentation>Actor: Job search.
+Trigger: Every part came back.
+Rules:
+1. Every line cites master lines that exist; no name the client rule keeps out; no first person in a resume line; a bullet is at most 30 words (an achievement 18, a scope line 35) and at least 10 unless it is a wording the owner approved; a bullet opens with a past-tense verb; a scope line names neither the employer nor its descriptor; nothing the owner bans; the style rules that are on; a block whose sentences mostly open with "I".
+2. Scope inflation is a flag for the facts read, never a refusal on its own.
+Outputs: `coded.failing`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Write_parts__Code_1</bpmn:incoming>
+      <bpmn:outgoing>S_Code_1__Check_1</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Check_1" name="The facts read checks the new lines" porter:role="writer" porter:instructions="jobsearch.library.check" porter:template="jobsearch.library.check" porter:output="checked">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/library.py -->
+      <bpmn:documentation>Actor: Library checker (Sonnet), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The code checks ran.
+Rules:
+1. Each new line and block is judged against the master lines it cites, by meaning: it fails only when it says more or something different, drops the master's hedge, renames what the master names, extends an approved wording or breaks a line note. It never comments on style.
+Outputs: `checked.failing`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Code_1__Check_1</bpmn:incoming>
+      <bpmn:outgoing>S_Check_1__Gw_Check_1_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gw_failing" name="Does anything fail?" default="F_none_failing">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The facts read answered.
+Rules:
+1. What failed goes to one fix.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Check_1__Gw_failing</bpmn:incoming>
+      <bpmn:outgoing>F_none_failing</bpmn:outgoing>
+      <bpmn:outgoing>F_failing</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Fix" name="The writer fixes what failed" porter:role="writer" porter:instructions="jobsearch.library.fix" porter:template="jobsearch.library.fix" porter:output="fixed">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/library.py -->
+      <bpmn:documentation>Actor: Library writer (Opus, low effort), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: Something failed.
+Rules:
+1. It changes only the named lines and blocks, as little as the fix needs.
+Outputs: `fixed.fixed`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>F_failing</bpmn:incoming>
+      <bpmn:outgoing>S_Fix__Gw_Fix_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Code_2" name="Run the code checks again" porter:action="jobs.library_recheck" porter:output="recoded">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The fix came back.
+Rules:
+1. The same checks, on what the fix changed. What the fix left alone still fails.
+Outputs: `recoded.failing`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Fix__Code_2</bpmn:incoming>
+      <bpmn:outgoing>S_Code_2__Check_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Check_2" name="The facts read checks the fixes" porter:role="writer" porter:instructions="jobsearch.library.check" porter:template="jobsearch.library.check" porter:output="rechecked">
+      <!-- code: backend/app/jobsearch/writing/seats.py, backend/app/jobsearch/writing/library.py -->
+      <bpmn:documentation>Actor: Library checker (Sonnet), a seat of the writer's kind: one model turn the runner starts with the step's instruction file and reply shape as its whole system prompt, no tools and no prompt cache.
+Trigger: The code checks ran again.
+Rules:
+1. The same read, on what the fix changed.
+Outputs: `rechecked.failing`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Code_2__Check_2</bpmn:incoming>
+      <bpmn:outgoing>S_Check_2__Gw_Check_2_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Save_library" name="Save the library" porter:action="jobs.library_save" porter:output="saved">
+      <bpmn:documentation>Actor: Job search.
+Trigger: Nothing failed, or the fix was checked.
+Rules:
+1. A line or block still failing is held out of the library with why, so no packet uses it.
+2. The version is kept as the newest ready one; a packet waiting for it is composed next.
+Outputs: `saved.status`.
+What the owner sees: the story library on My Resume, and "Your story library was built" in Activity.</bpmn:documentation>
+      <bpmn:incoming>F_no_work</bpmn:incoming>
+      <bpmn:incoming>F_none_failing</bpmn:incoming>
+      <bpmn:incoming>S_Check_2__Save_library</bpmn:incoming>
+      <bpmn:outgoing>S_Save_library__End_library</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_library" name="The library is ready">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The library was saved.
+What the owner sees: the story library on My Resume.</bpmn:documentation>
+      <bpmn:incoming>S_Save_library__End_library</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gw_Check_1_answered" name="Did the facts read answer?" default="S_Check_1__Gw_failing">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The facts read answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `checked.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Check_1__Gw_Check_1_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Check_1__Gw_failing</bpmn:outgoing>
+      <bpmn:outgoing>F_Check_1_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Fix_answered" name="Did the fix come back?" default="S_Fix__Code_2">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The fix answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `fixed.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Fix__Gw_Fix_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Fix__Code_2</bpmn:outgoing>
+      <bpmn:outgoing>F_Fix_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_Check_2_answered" name="Did the second facts read answer?" default="S_Check_2__Save_library">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The second facts read answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `rechecked.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Check_2__Gw_Check_2_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Check_2__Save_library</bpmn:outgoing>
+      <bpmn:outgoing>F_Check_2_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_failed" name="Closed as failed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A seat failed every try (three), in this file or in one of its parts (`build_library_part`, not drawn here, so a part that fails has no drawn way of its own), and the whole build is closed as failed through `engine().cancel` (`library.fail`). No notification is raised.
+Rules:
+1. "Closed as failed" is how the app ends a run from outside the engine; the engine never takes this way, because nothing in the engine sets the step's answer to false. The run ends Stopped on the Agents page and the reason is kept in the run's history. Other stops (the time passed, removed, released back to the line, orphaned at start) are not failures and are not drawn.
+Outputs: Nothing; the run is cancelled from outside the engine.
+What the owner sees: the last ready library stays in use.</bpmn:documentation>
+      <bpmn:incoming>F_Check_1_failed</bpmn:incoming>
+      <bpmn:incoming>F_Fix_failed</bpmn:incoming>
+      <bpmn:incoming>F_Check_2_failed</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start__Gather_library" sourceRef="Start_library" targetRef="Gather_library"/>
+    <bpmn:sequenceFlow id="S_Gather_library__Gw_work" sourceRef="Gather_library" targetRef="Gw_work"/>
+    <bpmn:sequenceFlow id="F_work" name="Something to write" sourceRef="Gw_work" targetRef="Write_parts"/>
+    <bpmn:sequenceFlow id="F_no_work" name="Nothing changed" sourceRef="Gw_work" targetRef="Save_library">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">plan.work = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Write_parts__Code_1" sourceRef="Write_parts" targetRef="Code_1"/>
+    <bpmn:sequenceFlow id="S_Code_1__Check_1" sourceRef="Code_1" targetRef="Check_1"/>
+    <bpmn:sequenceFlow id="S_Check_1__Gw_Check_1_answered" sourceRef="Check_1" targetRef="Gw_Check_1_answered"/>
+    <bpmn:sequenceFlow id="S_Check_1__Gw_failing" name="It answered" sourceRef="Gw_Check_1_answered" targetRef="Gw_failing"/>
+    <bpmn:sequenceFlow id="F_Check_1_failed" name="The app closed it as failed" sourceRef="Gw_Check_1_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">checked.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_none_failing" name="Nothing fails" sourceRef="Gw_failing" targetRef="Save_library"/>
+    <bpmn:sequenceFlow id="F_failing" name="Something fails" sourceRef="Gw_failing" targetRef="Fix">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">checked.failing &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Fix__Gw_Fix_answered" sourceRef="Fix" targetRef="Gw_Fix_answered"/>
+    <bpmn:sequenceFlow id="S_Fix__Code_2" name="It answered" sourceRef="Gw_Fix_answered" targetRef="Code_2"/>
+    <bpmn:sequenceFlow id="F_Fix_failed" name="The app closed it as failed" sourceRef="Gw_Fix_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">fixed.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Code_2__Check_2" sourceRef="Code_2" targetRef="Check_2"/>
+    <bpmn:sequenceFlow id="S_Check_2__Gw_Check_2_answered" sourceRef="Check_2" targetRef="Gw_Check_2_answered"/>
+    <bpmn:sequenceFlow id="S_Check_2__Save_library" name="It answered" sourceRef="Gw_Check_2_answered" targetRef="Save_library"/>
+    <bpmn:sequenceFlow id="F_Check_2_failed" name="The app closed it as failed" sourceRef="Gw_Check_2_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">rechecked.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Save_library__End_library" sourceRef="Save_library" targetRef="End_library"/>
+  </bpmn:process>
+</bpmn:definitions>

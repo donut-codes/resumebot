@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "key": "ashby",
+  "name": "Ashby",
+  "kind": "job_system",
+  "hosts": [
+    "ashbyhq.com"
+  ],
+  "order": 3,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "ashbyhq.com"
+    ]
+  },
+  "address": {
+    "board": [
+      {
+        "host": "jobs\\.ashbyhq\\.com",
+        "path": "(?P<slug>[^/]+)(?:/(?s:.*))?",
+        "capture": {
+          "slug": "group:slug"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "host": "jobs\\.ashbyhq\\.com",
+        "path": "[^/]+/(?P<ext_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/(?s:.*))?",
+        "capture": {
+          "ext_id": "group:ext_id"
+        }
+      }
+    ],
+    "board_url": [
+      {
+        "template": "https://jobs.ashbyhq.com/{slug}",
+        "needs": [
+          "slug"
+        ]
+      }
+    ]
+  },
+  "read": {
+    "kind": "request",
+    "url": "https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true",
+    "items": "jobs",
+    "fields": {
+      "ext_id": "id",
+      "title": "title",
+      "location": "location",
+      "posted": "publishedAt",
+      "url": "jobUrl",
+      "apply_url": "applyUrl",
+      "text": [
+        "descriptionPlain",
+        {
+          "html": "descriptionHtml"
+        }
+      ],
+      "department": [
+        "department",
+        "team"
+      ]
+    },
+    "skip": [
+      {
+        "path": "isListed",
+        "equals": false
+      }
+    ],
+    "work_mode": {
+      "written": "workplaceType",
+      "flags": [
+        {
+          "path": "isRemote",
+          "mode": "remote"
+        }
+      ]
+    },
+    "comp": {
+      "written": [
+        "compensation.compensationTierSummary",
+        "compensation.scrapeableCompensationSalarySummary"
+      ],
+      "range": {
+        "path": "compensation.summaryComponents",
+        "pick": {
+          "compensationType": "Salary"
+        },
+        "min": "minValue",
+        "max": "maxValue",
+        "currency": "currencyCode",
+        "period": "interval",
+        "yearly_only": true,
+        "currencies": [
+          "USD"
+        ]
+      }
+    },
+    "detail": {
+      "from_list": true,
+      "take": [
+        "text",
+        "posted",
+        "location",
+        "work_mode"
+      ]
+    }
+  },
+  "flags": {
+    "drawn": true,
+    "probe_names": false
+  },
+  "probe": {
+    "url": "https://api.ashbyhq.com/posting-api/job-board/{slug}",
+    "present": "jobs"
+  }
+}

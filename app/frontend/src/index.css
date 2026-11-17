@@ -1,0 +1,25 @@
+/* The face first: Archivo, one family with a width axis (a newspaper grotesk), self-hosted by the npm package. An @import
+ * has to come before any rule. */
+@import "@fontsource-variable/archivo/wdth.css";
+
+/* Every stylesheet in one place. The order is the cascade: later files win over earlier ones at equal specificity, so keep
+ * it, and add a new feature's rules in its own file at the end. Every colour, font size, spacing value, radius, shadow and
+ * duration comes from focus/tokens.css (the Focus Inbox design, daylight and night); nothing here is hard-coded. The
+ * process-view package brings its own stylesheet; styles/focus/process-view.css is this app's look for it. */
+
+@import "./styles/focus/tokens.css";
+@import "./styles/focus/base.css";
+@import "./styles/focus/focus.css";
+@import "./styles/focus/parts.css";
+@import "./styles/focus/marks.css";
+@import "./styles/focus/employers.css";
+@import "./styles/focus/search.css";
+@import "./styles/focus/me.css";
+@import "./styles/focus/shell.css";
+@import "./styles/focus/states.css";
+@import "./styles/focus/agents.css";
+@import "./styles/focus/trail.css";
+@import "./styles/focus/interviews.css";
+@import "./styles/focus/how-they-work.css";
+@import "./styles/focus/missions.css";
+@import "./styles/focus/process-view.css";

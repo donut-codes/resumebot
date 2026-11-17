@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "key": "paylocity",
+  "name": "Paylocity",
+  "kind": "job_system",
+  "hosts": [
+    "paylocity.com"
+  ],
+  "order": 11,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "paylocity.com"
+    ]
+  },
+  "address": {
+    "board": [
+      {
+        "host": ".*recruiting.*paylocity\\.com",
+        "path": "recruiting(?:/(?!(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/|$))[^/]+)*/(?P<guid>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/(?s:.*))?",
+        "capture": {
+          "host": "host",
+          "guid": "group:guid"
+        },
+        "lower": [
+          "guid"
+        ]
+      },
+      {
+        "host": ".*recruiting.*paylocity\\.com",
+        "path": "recruiting(?:/(?s:.*))?",
+        "capture": {
+          "host": "host"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "path": "(?:(?!(?:details|apply)/)[^/]+/)*details/(?P<ext_id>\\d+)(?:/(?s:.*))?",
+        "capture": {
+          "ext_id": "group:ext_id"
+        }
+      },
+      {
+        "path": "(?:(?!(?:details|apply)/)[^/]+/)*apply/(?P<ext_id>\\d+)(?:/(?s:.*))?",
+        "capture": {
+          "ext_id": "group:ext_id"
+        },
+        "form": true
+      },
+      {
+        "path": "(?:(?!details/)[^/]+/)*details/\\d+(?:/(?s:.*))?"
+      }
+    ],
+    "apply_page": [
+      {
+        "host": ".*paylocity\\.com\\.*",
+        "path": "recruiting/jobs/apply/(?P<id>\\d+)(?:/(?s:.*))?",
+        "capture": {
+          "id": "group:id"
+        },
+        "template": "https://{host}/Recruiting/Jobs/Details/{id}"
+      }
+    ],
+    "board_url": [
+      {
+        "template": "https://{host}/recruiting/jobs/All/{guid}",
+        "needs": [
+          "host",
+          "guid"
+        ]
+      }
+    ]
+  },
+  "read": {
+    "kind": "embedded",
+    "url": "https://{host}/recruiting/jobs/All/{guid}",
+    "blob": "var:pageData",
+    "items": "Jobs",
+    "board_parts": {
+      "guid": "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+    },
+    "fields": {
+      "ext_id": "JobId",
+      "title": "JobTitle",
+      "location": [
+        {
+          "join": [
+            "JobLocation.City",
+            "JobLocation.State"
+          ]
+        },
+        "LocationName"
+      ],
+      "posted": "PublishedDate",
+      "url": {
+        "template": "https://{host}/Recruiting/Jobs/Details/{ext_id}"
+      },
+      "apply_url": {
+        "template": "https://{host}/Recruiting/Jobs/Apply/{ext_id}"
+      },
+      "department": "HiringDepartment"
+    },
+    "skip": [
+      {
+        "path": "IsInternal",
+        "equals": true
+      }
+    ],
+    "work_mode": {
+      "flags": [
+        {
+          "path": "IsRemote",
+          "mode": "remote"
+        }
+      ]
+    },
+    "detail": {
+      "url": "https://{host}/Recruiting/Jobs/Details/{ext_id}",
+      "answer": "page_job_posting"
+    }
+  },
+  "flags": {
+    "places": true,
+    "needs": [
+      "host",
+      "guid"
+    ]
+  }
+}

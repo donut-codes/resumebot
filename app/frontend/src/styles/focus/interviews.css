@@ -1,0 +1,48 @@
+/* The Interviews part of a role's pane and the Coach's report (docs/PRD.md 15.2). One column: it reads on a phone. */
+
+.fi-iv-list { display: grid; gap: var(--fi-s5); margin-block-end: var(--fi-s5); }
+.fi-iv-card { display: grid; gap: var(--fi-s4); min-inline-size: 0; }
+.fi-iv-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--fi-s3) var(--fi-s6); align-items: baseline; }
+.fi-iv-head h4 { margin: 0; font-size: var(--fi-size-m); font-weight: var(--fi-weight-heavy); color: var(--fi-ink); }
+.fi-iv-label, .fi-iv-when { margin: 0; color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-iv-people-list { margin: 0; padding-inline-start: var(--fi-s7); font-size: var(--fi-size-m); }
+.fi-iv-notes { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fi-size-m); color: var(--fi-text); }
+.fi-iv-status { font-weight: var(--fi-weight-semi); color: var(--fi-teal-text); font-size: var(--fi-size-m); }
+.fi-iv-status.is-bad { color: var(--fi-red-text); }
+.fi-iv-changed { color: var(--fi-sun-text); font-size: var(--fi-size-m); }
+.fi-iv-actions, .fi-iv-confirm { display: flex; flex-wrap: wrap; gap: var(--fi-s4); align-items: center; }
+.fi-iv-confirm p { flex: 1 1 100%; }
+
+.fi-iv-form { display: grid; gap: var(--fi-s6); min-inline-size: 0; margin-block-end: var(--fi-s5); }
+.fi-iv-fields { display: grid; gap: var(--fi-s5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.fi-iv-field { display: grid; gap: var(--fi-s2); min-inline-size: 0; }
+.fi-iv-field label, .fi-iv-people legend { font-weight: var(--fi-weight-semi); color: var(--fi-soft); font-size: var(--fi-size-m); }
+.fi-iv-field input, .fi-iv-field select, .fi-iv-field textarea {
+  inline-size: 100%; min-inline-size: 0; box-sizing: border-box; border: 1px solid var(--fi-field); border-radius: var(--fi-r-l);
+  background: var(--fi-surface); color: var(--fi-ink); font: inherit; padding: var(--fi-s4) var(--fi-s5); caret-color: var(--fi-blue);
+}
+.fi-iv-field textarea { resize: vertical; }
+.fi-iv-field input:focus, .fi-iv-field select:focus, .fi-iv-field textarea:focus { outline: none; border-color: var(--fi-blue); box-shadow: 0 0 0 3px var(--fi-focus-halo); }
+.fi-iv-people { display: grid; gap: var(--fi-s5); border: 0; padding: 0; margin: 0; min-inline-size: 0; justify-items: start; }
+.fi-iv-person { display: grid; gap: var(--fi-s4); inline-size: 100%; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; }
+
+.fi-rep { display: grid; gap: var(--fi-s4); margin-block-start: var(--fi-s4); min-inline-size: 0; }
+.fi-rep-index { display: flex; flex-wrap: wrap; gap: var(--fi-s3); align-items: center; }
+.fi-rep-sec { background: var(--fi-surface); border-radius: var(--fi-r-xl); box-shadow: var(--fi-ring); padding: var(--fi-s5) var(--fi-s7); font-size: var(--fi-size-m); min-inline-size: 0; }
+.fi-rep-sec summary { cursor: pointer; min-block-size: 28px; }
+.fi-rep-sec summary h4 { display: inline; margin: 0; font-size: var(--fi-size-m); font-weight: var(--fi-weight-heavy); color: var(--fi-ink); }
+.fi-rep-body { display: grid; gap: var(--fi-s4); margin-block-start: var(--fi-s4); overflow-wrap: anywhere; }
+.fi-rep-body p, .fi-rep-body ul { margin: 0; }
+.fi-rep-body h5 { margin: var(--fi-s5) 0 0; font-size: var(--fi-size-s); font-weight: var(--fi-weight-heavy); letter-spacing: 0.04em; text-transform: uppercase; color: var(--fi-ink); }
+.fi-rep-card { display: grid; gap: var(--fi-s3); padding: var(--fi-s5) var(--fi-s6); border-radius: var(--fi-r-l); background: var(--fi-ground); }
+.fi-rep-line b { color: var(--fi-ink); }
+.fi-rep-quiet { color: var(--fi-faint); }
+.fi-rep-cites { font-size: var(--fi-size-s); color: var(--fi-faint); }
+.fi-rep-ask { color: var(--fi-sun-text); font-weight: var(--fi-weight-semi); }
+.fi-rep-answer { display: grid; gap: var(--fi-s2); }
+.fi-rep-source a { color: var(--fi-blue-text); }
+
+@media (max-width: 760px) {
+  .fi-iv-person { grid-template-columns: minmax(0, 1fr); }
+  .fi-rep-sec { padding-inline: var(--fi-s5); }
+}

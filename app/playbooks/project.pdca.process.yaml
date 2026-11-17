@@ -1,0 +1,54 @@
+# The site project loop (docs/PRD.md path 29), see app/PROVENANCE.md for its origin.
+# The harness reads it (backend/app/harness/loader.py, settings.process_path). Phases and roles are the loop's own:
+# the BPMN files in playbooks/sites/ are what runs. Roles: scout (the agent) and code (resumebot's checks and
+# bookkeeping); the owner is never asked about a plan.
+process: project.pdca
+steps:
+  - id: plan.write
+    phase: plan
+    title: Write the plan
+    role: scout
+    instructions: instructions/projects.plan.write.instructions.md
+    template: templates/projects.plan.response.template.md
+    your_job: "Write plan vN from what the owner asked for the site and what the last round found."
+    next: [do.item]
+  - id: do.item
+    phase: do
+    title: Do one item
+    role: scout
+    instructions: instructions/projects.do.item.instructions.md
+    template: templates/projects.do.item.response.template.md
+    your_job: "Carry out one item as its kind says (build the site's skill and try one real read), then report done or off plan."
+    next: [do.item, check.item]
+  - id: check.item
+    phase: check
+    title: Check one item
+    role: code
+    your_job: "Fetch the site and count what came back (site.check), then record on plan or off plan with the difference."
+    next: [check.item, check.report]
+  - id: check.report
+    phase: check
+    title: Report the round
+    role: code
+    your_job: "Group the results by cause and show the owner one summary."
+    next: [act.learn]
+  - id: act.learn
+    phase: act
+    title: Learn from the round
+    role: scout
+    instructions: instructions/projects.act.learn.instructions.md
+    template: templates/projects.act.response.template.md
+    your_job: "Write lessons (when, do, evidence, what it changes) and keep the site's skill. Judge the round against the project's own outcome."
+    next: [loop.decide]
+  - id: loop.decide
+    phase: act
+    title: Next round or finish
+    role: code
+    your_job: "If anything is still off plan or open, start the next round; otherwise finish."
+    next: [plan.write, finish]
+  - id: finish
+    phase: act
+    title: Project finished
+    role: code
+    your_job: "Close the project."
+    next: []

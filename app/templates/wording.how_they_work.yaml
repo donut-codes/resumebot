@@ -1,0 +1,34 @@
+# What each part of the scout's hand-out is, in plain words (the fields `jobs.profile` returns), as the How
+# they work page shows it. Filled by app/agents/how_they_work.py (CONTEXT_MEANS). No placeholders.
+ok: >-
+  Whether the call was accepted.
+task: >-
+  The open search: its focus, how many roles the scout has reported so far, and the shape to report in. Absent when no
+  search is open.
+note: >-
+  When no search is open, the one line telling the scout to stop.
+roles_already_known: >-
+  How many roles you already have, from your tracker and earlier searches.
+profile: >-
+  Your profile: what you look for (the company, and each target role with its titles, description, responsibilities, qualifications,
+  preferred and compensation), your hard gates (and who checks each), and the asks that score fit (by the part of a posting).
+packet: >-
+  Which packet version this is, so the writer sends it back to the right one.
+role: >-
+  The role: the employer, the title, the posting's link, where and how it is worked, pay as posted, and why it fits.
+change_asked_for: >-
+  What you asked to change, when this is a new version of a packet.
+previous_version: >-
+  The version before, when you asked for changes to it.
+owner: >-
+  Your name and contact details, for the resume's header.
+positioning: >-
+  How you present yourself, from your profile.
+rules: >-
+  Your settings' rules for packets.
+read_next: >-
+  The other parts to read: your master resume, its projects and awards, and your writing rules.
+instructions: >-
+  How to write a packet (the writer's instruction file).
+response_template: >-
+  The shape to send the packet back in.

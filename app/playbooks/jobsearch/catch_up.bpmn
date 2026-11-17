@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Catch up after an import" (docs/PRD.md 2.9). Researching a few roles a night is right for what a search
+     finds and slow for what a tracker import brings: those roles have no score and no research, and the app is not fully
+     working until they have. So an import that leaves roles to research starts this process: every role the tracker
+     brought in that is still in play and was never researched is matched to a target role and then researched, a few at
+     a time (one after another unless the install has more researchers), by the analyst the nightly mission uses
+     (analyse_role.bpmn), without that mission's number for a night. Claude's peak hours (when the owner avoids them) and its usage limit still hold it, and a run
+     that meets the usage limit picks up again when it lifts. Afterwards the employers' job systems are looked for, with
+     the app's own detection. Nothing is applied to or sent. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_catch_up" targetNamespace="http://porter.local/bpmn">
+  <bpmn:message id="Message_roles_matched" name="catch_up.matched"/>
+  <bpmn:message id="Message_claude_free" name="catch_up.free"/>
+  <bpmn:message id="Message_analyst_done" name="catch_up.researched"/>
+  <bpmn:message id="Message_next_pass" name="catch_up.pass"/>
+  <bpmn:process id="Process_jobsearch_catch_up" name="Catch up after an import" porter:key="jobsearch_catch_up" isExecutable="true">
+    <bpmn:documentation>What your tracker brought in, researched at once: each role still in play that was never researched is matched to one of your target roles and then researched by the analyst, a few at a time (one after another unless the install has more researchers), applications first, without the nightly number. Claude's peak hours, when you avoid them, and Claude's usage limit still hold it; a run that meets the usage limit picks up again when it lifts. Then the employers' job systems are looked for. Nothing is sent or applied to.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose roles these are."/>
+        <porter:field path="run" type="string" description="The run in Analyse the finds' history that shows this catch-up (its id)."/>
+        <porter:field path="picked" type="object" description="The roles to research."/>
+        <porter:field path="picked.count" type="number" description="How many roles are to be researched."/>
+        <porter:field path="picked.brought" type="number" description="How many roles the tracker has brought in, in any stage."/>
+        <porter:field path="picked.left_out" type="number" description="How many of those are closed, rejected, screened out, already researched or another catch-up's."/>
+        <porter:field path="matched" type="object" description="Whether roles are being matched to a target role."/>
+        <porter:field path="matched.open" type="boolean" description="Whether the one-off matching was started and roles are waiting for it."/>
+        <porter:field path="matched.count" type="number" description="How many roles had no target role."/>
+        <porter:field path="handed" type="object" description="What was done with the next role."/>
+        <porter:field path="handed.state" type="string" enum="asked,held,none" description="asked: a role is with the analyst; held: Claude can't be used now; none: no role is left."/>
+        <porter:field path="handed.role" type="string" description="The role with the analyst (its id)."/>
+        <porter:field path="handed.left" type="number" description="How many roles are still to be handed out."/>
+        <porter:field path="handed.why" type="string" enum="paused,usage,peak" description="Why nothing is handed out: the scout is paused, Claude's usage limit, or Claude's peak hours."/>
+        <porter:field path="handed.until" type="string" description="When the hold ends, when it is known."/>
+        <porter:field path="recorded" type="object" description="How the last research ended."/>
+        <porter:field path="recorded.outcome" type="string" enum="done,failed,withdrawn,waiting,none" description="Researched; failed (put back to be tried again); taken back at Claude's usage limit; still with the analyst; or no role was with it."/>
+        <porter:field path="boards" type="object" description="The look for the employers' job systems."/>
+        <porter:field path="boards.left" type="number" description="How many of the tracker's employers with no job system are still to be looked at."/>
+        <porter:field path="boards.looked" type="number" description="How many have been looked at."/>
+        <porter:field path="boards.found" type="number" description="How many of the tracker's employers now have a job system that had none."/>
+        <porter:field path="wrapped" type="object" description="The run's account."/>
+        <porter:field path="wrapped.text" type="string" description="What the run did, in plain words."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_catch_up">
+      <bpmn:lane id="Lane_catch_up_app" name="Job search: pick, match, hand out, look for job systems">
+        <bpmn:flowNodeRef>Start_catch_up</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Pick_roles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_any</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Match_roles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_matching</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Matching</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Hand_out</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_handed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Researching</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Record_outcome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Holding</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boards_wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Find_boards</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_boards</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Wrap_up</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_catch_up</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_catch_up" name="An import left roles to research">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py, cli.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: A tracker import (the import-tracker command) was saved and the tracker holds roles still in play that were never researched, or employers with no job system.
+Rules:
+1. One run for each import that leaves something to do. The roles are the ones the tracker brought in by any import: running the import again picks up what an earlier run left, and the roles whose stage it brought up to date. An import that leaves nothing starts nothing.
+2. The run is a line in Analyse the finds' history on Missions, labelled as the catch-up after an import. It does not wait for that mission's schedule and it does not hold that mission's night: the two go on side by side, each with its own roles.
+3. The import is saved only if this run could start; if it could not, nothing is saved and the command says why.
+Outputs: A run of this process.
+What the owner sees: the catch-up in Analyse the finds' history on Missions, with how many roles it has researched.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_catch_up__Pick_roles</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Pick_roles" name="Pick the roles to research" porter:action="jobs.catch_up_pick" porter:output="picked">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py:action_pick -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The import was saved.
+Rules:
+1. Of the roles the tracker brought in, the ones still in play are picked: every status before Applied, Applied and Active Discussion. Rejected, Gone Quiet, Withdrew and Gated out are left out, and so is a role already researched, with the analyst now, or in another catch-up. A role whose research failed is picked again.
+2. In this order: Applied and Active Discussion first, the most recent application first (read from the latest date in the role's notes, else the day it was found); then Ready to Launch; then every other role, the youngest posting first and one with no date last (getting in in the first 24 hours is worth much; a posting's age is the later of the hours since the app first saw it and the days its date says). After the applications, and among postings of an age, the likeliest first (the classifier's probability that it is your kind of job, once it has enough of your history; else fit, then the fresher posting). No number for a night applies.
+3. The employers of every role the tracker brought in (those left out too) are noted for the look for job systems.
+Outputs: `picked.count`, `picked.brought`, `picked.left_out`.
+What the owner sees: "Matching N roles to your target roles" in the run's line, or that none is left to research.</bpmn:documentation>
+      <bpmn:outgoing>S_Pick_roles__Gw_any</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_any" name="Is anything to be researched?" default="F_none">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The roles were picked.
+Rules:
+1. With roles to research, they are matched to a target role first. With none, only the employers' job systems are looked for.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_some</bpmn:outgoing>
+      <bpmn:outgoing>F_none</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Match_roles" name="Match the roles to your target roles" porter:action="jobs.catch_up_match" porter:output="matched">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py:action_match, backend/app/jobsearch/work/tagging.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: There are roles to research.
+Rules:
+1. The analyst researches a role against the asks of its own target role. The roles an import brings in have none, so the one-off matching is started for them: a small title session gives each role the target role it matches, or none (the same job What to look for offers).
+2. With no target role set yet, or when every picked role has one, nothing is started.
+Outputs: `matched.open`: whether roles are waiting to be matched.
+What the owner sees: "Matching N roles to your target roles" in the run's line.</bpmn:documentation>
+      <bpmn:outgoing>S_Match_roles__Gw_matching</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_matching" name="Are the roles being matched?" default="F_matched">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The matching was started, or not needed.
+Rules:
+1. While roles wait to be matched, the run waits for them; otherwise it goes on to the research.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>F_matching</bpmn:outgoing>
+      <bpmn:outgoing>F_matched</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Matching" name="Wait for the roles to be matched">
+      <bpmn:documentation>Actor: Title session (a small Haiku session).
+Trigger: The matching job is open.
+Rules:
+1. The wait ends when none of this run's roles is left for the job to hand out: each has its target role, was answered none, or was handed out twice with no answer.
+2. Like every Claude session it waits out Claude's peak hours when the owner avoids them, and Claude's usage limit.
+Outputs: None.
+What the owner sees: "Matching N roles to your target roles" in the run's line.</bpmn:documentation>
+      <bpmn:incoming>F_matching</bpmn:incoming>
+      <bpmn:outgoing>S_Matching__Hand_out</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_roles_matched"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Hand_out" name="Give the analyst the next role" porter:action="jobs.catch_up_hand_out" porter:output="handed">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py:action_hand_out, backend/app/jobsearch/research/analysis.py:start -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The roles were matched, or the research of the last role ended, or Claude can be used again.
+Rules:
+1. As many roles as the install has researchers at a time (one unless the install says more), best first, the next as each is done: they are never all handed out at once, since a role is with the analyst only when a session can take it, and never two on one site (the owner's rule: research does not fetch one site in parallel; a role on the site of one the analyst has waits in its place, the next on another site is handed out first). The analyst's research of a role is its own process (Research a role); a role further along is researched and keeps its stage.
+2. Nothing is handed out in Claude's peak hours when the owner avoids them, while Claude's usage limit holds, or while the scout is paused: the run holds, and says why and until when.
+3. A role researched meanwhile, or moved out of play, is skipped. A role that is not Sourced yet is also left out of this run, not counted as one that could not be researched; the night tries again once it is Sourced. A role that failed (the sweep, or a session that ended) was put back at the end of the line and is handed out again, three times in all.
+Outputs: `handed.state` (asked, held or none), `handed.left`.
+What the owner sees: On Missions, how many roles are researched, or why the run is paused and until when; nothing on the role's row.</bpmn:documentation>
+      <bpmn:incoming>F_matched</bpmn:incoming>
+      <bpmn:incoming>S_Matching__Hand_out</bpmn:incoming>
+      <bpmn:incoming>S_Record_outcome__Hand_out</bpmn:incoming>
+      <bpmn:incoming>S_Holding__Hand_out</bpmn:incoming>
+      <bpmn:outgoing>S_Hand_out__Gw_handed</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_handed" name="Is a role with the analyst?" default="F_nothing_left">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The next role was handed out, or could not be.
+Rules:
+1. With a role handed out, the run waits for the analyst to finish it. When Claude can't be used, it waits until it can. With no role left, it goes on to the employers' job systems.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Hand_out__Gw_handed</bpmn:incoming>
+      <bpmn:outgoing>F_asked</bpmn:outgoing>
+      <bpmn:outgoing>F_held</bpmn:outgoing>
+      <bpmn:outgoing>F_nothing_left</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Researching" name="Wait for the analyst to finish the role">
+      <bpmn:documentation>Actor: Analyst (the scout agent), in its own process, Research a role (analyse_role.bpmn).
+Trigger: A role was handed out.
+Rules:
+1. The wait ends when any of the roles with the analyst is no longer with it: researched, failed, or taken back because Claude's usage limit was met (all of them are taken back then).
+2. A research that meets Claude's usage limit is taken back at once (or the sweep would fail it before the limit lifts) and is first in line again when the limit lifts, in the next window, not the next night.
+Outputs: None.
+What the owner sees: Nothing on the role's row.</bpmn:documentation>
+      <bpmn:incoming>F_asked</bpmn:incoming>
+      <bpmn:outgoing>S_Researching__Record_outcome</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_analyst_done"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Record_outcome" name="Note how the research ended" porter:action="jobs.catch_up_record" porter:output="recorded">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py:action_record -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The analyst finished with a role.
+Rules:
+1. Researched: counted from the roles themselves. Failed: put back at the end of the line to be tried again, until it has been tried three times, and then said to be one that could not be researched. Taken back at Claude's usage limit: first in line again, and the try does not count.
+Outputs: `recorded.outcome`.
+What the owner sees: how many roles are researched, and how many could not be.</bpmn:documentation>
+      <bpmn:incoming>S_Researching__Record_outcome</bpmn:incoming>
+      <bpmn:outgoing>S_Record_outcome__Hand_out</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="Holding" name="Wait until Claude can be used">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py:advance -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: Claude can't be used now: the peak hours the owner avoids, its usage limit, or the scout paused.
+Rules:
+1. The wait ends at the first look (every few minutes, and whenever the runner asks for work) after the hold has ended. For the usage limit that is the time Claude gave, or half an hour after the session that met it when it gave none; if it has not lifted, the next session meets it again and the wait goes on.
+2. While Claude's usage limit holds, no Claude work of any kind is started.
+Outputs: None.
+What the owner sees: "Paused: Claude's usage limit, until 3:00 PM" in the run's line.</bpmn:documentation>
+      <bpmn:incoming>F_held</bpmn:incoming>
+      <bpmn:outgoing>S_Holding__Hand_out</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_claude_free"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Boards_wait" name="Wait for the next pass">
+      <!-- code: backend/app/jobsearch/loops/schedule.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: No role is left to research, or the last few employers were looked at.
+Rules:
+1. Looking for a job system reads other sites, politely, so it is done a few employers at a time in the schedule's own pass (every few minutes), never while the runner is waiting for its next role.
+Outputs: None.
+What the owner sees: "Found the job system of N employers" in the run's line.</bpmn:documentation>
+      <bpmn:incoming>F_none</bpmn:incoming>
+      <bpmn:incoming>F_nothing_left</bpmn:incoming>
+      <bpmn:incoming>F_more_boards</bpmn:incoming>
+      <bpmn:outgoing>S_Boards_wait__Find_boards</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_next_pass"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Find_boards" name="Look for the employers' job systems" porter:action="jobs.catch_up_boards" porter:output="boards">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py:action_boards, backend/app/jobsearch/employers/resolve.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The next pass of the schedule.
+Rules:
+1. The app's own detection of an employer's job system (docs/PRD.md 28.2), no Claude and no new finder: from the links the app holds (each role's, and the careers page the research found for its employer), then from the careers page itself, the rest of a partial board address, and the open job feeds asked by the employer's name.
+2. Twenty employers with no job system at a time; each is looked at once. What the owner set is never changed, a gated employer is never asked about, and every request is polite (robots.txt, about one a second to a host, a refusal is a stop).
+3. An employer it cannot place is left to the scout, which is asked to find the boards the app does not know in each search (jobs.boards); an employer's board is read nightly once the owner has switched its site on.
+Outputs: `boards.left`, `boards.looked`, `boards.found`.
+What the owner sees: the job system on each employer's page, and "Found the job system of N employers" in the run's line.</bpmn:documentation>
+      <bpmn:incoming>S_Boards_wait__Find_boards</bpmn:incoming>
+      <bpmn:outgoing>S_Find_boards__Gw_boards</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_boards" name="Are more employers to be looked at?" default="F_boards_done">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A few employers were looked at.
+Rules:
+1. While employers with no job system have not been looked at, the next few wait for the next pass; then the run is done.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Find_boards__Gw_boards</bpmn:incoming>
+      <bpmn:outgoing>F_more_boards</bpmn:outgoing>
+      <bpmn:outgoing>F_boards_done</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Wrap_up" name="Write the run's account" porter:action="jobs.catch_up_wrap" porter:output="wrapped">
+      <!-- code: backend/app/jobsearch/missions/catch_up.py:action_wrap -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: Every role was researched or said to be one that could not be, and every employer was looked at.
+Rules:
+1. The run ends done; it ends failed only when roles were to be researched and none could be.
+Outputs: `wrapped.text`.
+What the owner sees: the run's line on Missions: roles researched of those picked, those that could not be, and the job systems found.</bpmn:documentation>
+      <bpmn:incoming>F_boards_done</bpmn:incoming>
+      <bpmn:outgoing>S_Wrap_up__End_catch_up</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_catch_up" name="The catch-up is done">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The account was written.
+What the owner sees: the run closed on Missions.</bpmn:documentation>
+      <bpmn:incoming>S_Wrap_up__End_catch_up</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_catch_up__Pick_roles" sourceRef="Start_catch_up" targetRef="Pick_roles"/>
+    <bpmn:sequenceFlow id="S_Pick_roles__Gw_any" sourceRef="Pick_roles" targetRef="Gw_any"/>
+    <bpmn:sequenceFlow id="F_some" name="Roles to research" sourceRef="Gw_any" targetRef="Match_roles">
+      <bpmn:documentation>There is at least one role to research.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">picked.count &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_none" name="None to research" sourceRef="Gw_any" targetRef="Boards_wait"/>
+    <bpmn:sequenceFlow id="S_Match_roles__Gw_matching" sourceRef="Match_roles" targetRef="Gw_matching"/>
+    <bpmn:sequenceFlow id="F_matching" name="Roles are being matched" sourceRef="Gw_matching" targetRef="Matching">
+      <bpmn:documentation>The one-off matching was started and roles of this run are waiting for it.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">matched.open = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_matched" name="Nothing to match" sourceRef="Gw_matching" targetRef="Hand_out"/>
+    <bpmn:sequenceFlow id="S_Matching__Hand_out" sourceRef="Matching" targetRef="Hand_out"/>
+    <bpmn:sequenceFlow id="S_Hand_out__Gw_handed" sourceRef="Hand_out" targetRef="Gw_handed"/>
+    <bpmn:sequenceFlow id="F_asked" name="A role is with the analyst" sourceRef="Gw_handed" targetRef="Researching">
+      <bpmn:documentation>The next role was handed out.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">handed.state = "asked"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_held" name="Claude can't be used now" sourceRef="Gw_handed" targetRef="Holding">
+      <bpmn:documentation>The peak hours the owner avoids, Claude's usage limit, or the scout paused.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">handed.state = "held"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_nothing_left" name="No role is left" sourceRef="Gw_handed" targetRef="Boards_wait"/>
+    <bpmn:sequenceFlow id="S_Researching__Record_outcome" sourceRef="Researching" targetRef="Record_outcome"/>
+    <bpmn:sequenceFlow id="S_Record_outcome__Hand_out" sourceRef="Record_outcome" targetRef="Hand_out"/>
+    <bpmn:sequenceFlow id="S_Holding__Hand_out" sourceRef="Holding" targetRef="Hand_out"/>
+    <bpmn:sequenceFlow id="S_Boards_wait__Find_boards" sourceRef="Boards_wait" targetRef="Find_boards"/>
+    <bpmn:sequenceFlow id="S_Find_boards__Gw_boards" sourceRef="Find_boards" targetRef="Gw_boards"/>
+    <bpmn:sequenceFlow id="F_more_boards" name="More to look at" sourceRef="Gw_boards" targetRef="Boards_wait">
+      <bpmn:documentation>Employers with no job system have not all been looked at.</bpmn:documentation>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">boards.left &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_boards_done" name="All looked at" sourceRef="Gw_boards" targetRef="Wrap_up"/>
+    <bpmn:sequenceFlow id="S_Wrap_up__End_catch_up" sourceRef="Wrap_up" targetRef="End_catch_up"/>
+  </bpmn:process>
+</bpmn:definitions>

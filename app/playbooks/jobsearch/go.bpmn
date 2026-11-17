@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Launch in Browser" (Go, docs/PRD.md path 18). The day's Ready to Launch roles checked, their packets
+     built one after another, and each role opened as a tab in the app's own Chrome, which is then handed to the owner.
+     Nothing is clicked, filled in or submitted. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_go" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_go" name="Launch in Browser" porter:key="jobsearch_go" isExecutable="true">
+    <bpmn:documentation>One press of Launch in Browser: the day's Ready to Launch roles are checked (the owner's mail for an application already sent, the posting for whether it is still open), the roles whose packet is finished open at once, and the rest are built one after another, each opening as its packet is done. When a role drops out while the writers work, the day's list is rebalanced and the roles that moved up are taken by the same run, up to 20 laps. Every Ready role that is not Applied or closed gets a tab on every Go (the owner, 2026-10-22); a role Go opened keeps its Ready place and its seat until it is Applied or closes (docs/PRD.md 24.20). Each role's packet is its own process, `jobsearch_packet`: it is asked for, the Launch writer session writes it, the reviewer reads it, and only then is the next asked. Nothing is clicked, filled in or submitted.
+Rules:
+1. The number of laps in the gateway after the refill is the one in force; the code's `MAX_ROUNDS` is only the shipped default, and a test keeps the two equal.
+2. If the owner's saved version of this process drops Hand_over or Finish, the run follows the saved version; the safety net in the code only covers a step that fails.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose run this is."/>
+        <porter:field path="poll" type="number" description="Seconds between looks at the packets being written."/>
+        <porter:field path="wait" type="number" description="The longest wait, in seconds, for one packet (written and read)."/>
+        <porter:field path="built" type="object" description="What the building step answered."/>
+        <porter:field path="built.fill" type="boolean" description="Whether a role dropped out while the writers worked, so the day's list is refilled."/>
+        <porter:field path="refill" type="object" description="What the refill answered."/>
+        <porter:field path="refill.again" type="boolean" description="Whether the refill found a role to open or build."/>
+        <porter:field path="refill.round" type="number" description="The lap just made, counting from 1."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_go">
+      <bpmn:lane id="Lane_go_app" name="Job search: check, open, build, hand over (code)">
+        <bpmn:flowNodeRef>Start_go</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Begin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Turn_first</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Check_roles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Open_built</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Build_rest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Refill</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Hand_over</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Finish</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_dropped</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_more</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_go</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_go" name="Launch in Browser is pressed">
+      <!-- code: backend/app/jobsearch/browser/go.py -->
+      <bpmn:documentation>Actor: The owner.
+Trigger: The owner pressed Launch in Browser on Ready to Launch (or the app began a run the page had asked for when it stopped).
+Rules:
+1. One run at a time: a second press while a run goes starts nothing.
+2. A run begun later ends one left open by an app that stopped.
+Outputs: A run of this process.
+What the owner sees: the progress bar, starting.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_go__Begin</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Begin" name="Begin the run" porter:action="jobs.go_begin">
+      <!-- code: backend/app/jobsearch/browser/go.py, backend/app/jobsearch/browser/go_status.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The owner pressed Launch in Browser, or the app began a run the page had asked for.
+Rules:
+1. The run's status starts fresh (nothing opened, built or skipped) and is kept on the run's row at once, so the page shows it.
+2. A run going in this program is not begun twice.
+Outputs: Nothing.
+What the owner sees: the progress bar, starting.</bpmn:documentation>
+      <bpmn:incoming>S_Start_go__Begin</bpmn:incoming>
+      <bpmn:outgoing>S_Begin__Turn_first</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Turn_first" name="Rebalance the day's list" porter:action="jobs.go_turn">
+      <!-- code: backend/app/jobsearch/browser/go.py, backend/app/jobsearch/loops/schedule.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The run began.
+Rules:
+1. A turn of the pipeline is run by its own loop and waited for, so Launch sees the day's list rebalanced. Launch never runs the turn itself: two turns at once fought over the same rows.
+Outputs: Nothing.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Begin__Turn_first</bpmn:incoming>
+      <bpmn:outgoing>S_Turn_first__Check_roles</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Check_roles" name="Check the day's roles" porter:action="jobs.go_check">
+      <!-- code: backend/app/jobsearch/browser/go.py, backend/app/jobsearch/browser/go_checks.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The day's list was rebalanced.
+Rules:
+1. Before anything is built, Go's checks run: the owner's mail for an application already sent (the role moves to Applied), and the posting for whether it is still open (closed: Gone Quiet).
+2. Every Ready role that is not Applied or closed gets a tab on every Go (the owner, 2026-10-22), so a role Go opened earlier is opened again.
+3. A role with no web address is skipped, and the reason is kept on its card and said. Roles whose packet is finished open at once; the rest are built.
+4. A Go with nothing in Ready to Launch to open says so, never a silent done.
+Outputs: The day's roles, sorted into those to open now and those to build; the notes the checks made.
+What the owner sees: the progress bar: the roles checked, the total to open, the notes.</bpmn:documentation>
+      <bpmn:incoming>S_Turn_first__Check_roles</bpmn:incoming>
+      <bpmn:outgoing>S_Check_roles__Open_built</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Open_built" name="Open what is built" porter:action="jobs.go_open">
+      <!-- code: backend/app/jobsearch/browser/go.py, backend/app/jobsearch/browser/code.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The roles were checked, or a lap pulled more roles forward.
+Rules:
+1. A role whose packet already passed its checks opens at once as a tab in the one window of the app's own Chrome, before anything is written, and counts as built.
+2. As the tab loads the app reads it: a changed posting is flagged on its history and stays open; a closed posting's role ends (Gone Quiet) and its tab is closed.
+3. A role Go opened keeps its Ready place and its seat until it is Applied or closes (docs/PRD.md 24.20).
+4. On the first lap the checks' own skips count as skipped before the lap; on later laps, those so far. The lap number starts at 1.
+Outputs: The tabs opened.
+What the owner sees: the tabs opening, one after another, and the progress bar.</bpmn:documentation>
+      <bpmn:incoming>S_Check_roles__Open_built</bpmn:incoming>
+      <bpmn:incoming>F_more</bpmn:incoming>
+      <bpmn:outgoing>S_Open_built__Build_rest</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Build_rest" name="Build the rest, one after another" porter:action="jobs.go_build" porter:output="built">
+      <!-- code: backend/app/jobsearch/browser/go.py, backend/app/jobsearch/writing/packets.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: What was built has been opened.
+Rules:
+1. A packet is asked for each role that has none (`packets.start`, marked Launch's), up to the number of sessions the owner allows in Agent Settings. The Launch writer session writes it (the process `jobsearch_packet`), the reviewer reads it, and only then is the next asked. Trouble goes to the supervisor once; a second trouble for the same role is final.
+2. A role whose packet is done opens at once. A packet not done in the longest wait stops the run's building: the roles not reached are skipped and said.
+3. `built.fill` is true when the writers did not stop and a role dropped out (skipped or closed) while they worked; then the day's list is rebalanced and the roles that moved up are taken by the same run.
+Outputs: `built.fill`.
+What the owner sees: the progress bar: the role being written, what it waits for, and a stall said in a sentence.</bpmn:documentation>
+      <bpmn:incoming>S_Open_built__Build_rest</bpmn:incoming>
+      <bpmn:outgoing>S_Build_rest__Gw_dropped</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Refill" name="Pull forward the roles that moved up" porter:action="jobs.go_refill" porter:output="refill">
+      <!-- code: backend/app/jobsearch/browser/go.py, backend/app/jobsearch/browser/go_checks.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: A role dropped out while the writers worked.
+Rules:
+1. The day's list is rebalanced, the roles that moved up into Ready to Launch are checked as before, and each one is named: "Pulled forward: ...", with the role it took the place of.
+2. The run's own skip reasons stay on their cards.
+3. `refill.round` is the lap just made, counting from 1. `refill.again` is true when there is something to open or build.
+Outputs: `refill.again`, `refill.round`.
+What the owner sees: the progress bar: the notes naming the roles pulled forward, and the total.</bpmn:documentation>
+      <bpmn:incoming>F_dropped</bpmn:incoming>
+      <bpmn:outgoing>S_Refill__Gw_more</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Hand_over" name="Hand the tabs to the owner" porter:action="jobs.go_hand_over">
+      <!-- code: backend/app/jobsearch/browser/go.py, backend/app/jobsearch/browser/code.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: Nothing more is to be opened or built, or a step after the checks failed.
+Rules:
+1. A role whose tab the app's Chrome confirmed open stays in Ready to Launch, marked opened with the time, and keeps its place in the day's list; it becomes Applied when the owner's mail confirms the application or when the owner marks it.
+2. Every tab is handed to the owner: the app never navigates, closes or minimizes them again. If the app's Chrome cannot be started, the pages open in a new window of the owner's own Chrome and the reply says why; those roles are not marked opened.
+3. A turn of the pipeline follows, so the list is rebalanced after the hand-over.
+Outputs: The tabs, handed over.
+What the owner sees: the tabs in one window, and the progress bar.</bpmn:documentation>
+      <bpmn:incoming>F_not_dropped</bpmn:incoming>
+      <bpmn:incoming>F_done</bpmn:incoming>
+      <bpmn:outgoing>S_Hand_over__Finish</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Finish" name="Say how it ended" porter:action="jobs.go_finish">
+      <!-- code: backend/app/jobsearch/browser/go.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The tabs were handed over.
+Rules:
+1. A run that opened nothing and has nothing to say why says so, and where to look, never a silent done.
+Outputs: The run, done.
+What the owner sees: the progress bar, done.</bpmn:documentation>
+      <bpmn:incoming>S_Hand_over__Finish</bpmn:incoming>
+      <bpmn:outgoing>S_Finish__End_go</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_dropped" name="Did a role drop out while the writers kept working?" default="F_not_dropped">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The rest were built.
+Rules:
+1. A role skipped or closed while the writers worked leaves a place in the day's list: the list is refilled. When the writers stopped waiting, or nothing dropped out, the run hands over.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Build_rest__Gw_dropped</bpmn:incoming>
+      <bpmn:outgoing>F_dropped</bpmn:outgoing>
+      <bpmn:outgoing>F_not_dropped</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gw_more" name="Is there more to open or build, and are there laps left?" default="F_done">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The day's list was refilled.
+Rules:
+1. Another lap is made while the refill found something to open or build and fewer than 20 laps have been made; the 20th lap still refills and names the roles pulled forward, and no 21st lap follows.
+2. The 20 is the number in the condition on the way back to Open what is built.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Refill__Gw_more</bpmn:incoming>
+      <bpmn:outgoing>F_more</bpmn:outgoing>
+      <bpmn:outgoing>F_done</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_go" name="Launch in Browser is done">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The run was finished.
+Outputs: Nothing.
+What the owner sees: the progress bar, done, with what opened and what was skipped and why.</bpmn:documentation>
+      <bpmn:incoming>S_Finish__End_go</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_go__Begin" sourceRef="Start_go" targetRef="Begin"/>
+    <bpmn:sequenceFlow id="S_Begin__Turn_first" sourceRef="Begin" targetRef="Turn_first"/>
+    <bpmn:sequenceFlow id="S_Turn_first__Check_roles" sourceRef="Turn_first" targetRef="Check_roles"/>
+    <bpmn:sequenceFlow id="S_Check_roles__Open_built" sourceRef="Check_roles" targetRef="Open_built"/>
+    <bpmn:sequenceFlow id="S_Open_built__Build_rest" sourceRef="Open_built" targetRef="Build_rest"/>
+    <bpmn:sequenceFlow id="S_Build_rest__Gw_dropped" sourceRef="Build_rest" targetRef="Gw_dropped"/>
+    <bpmn:sequenceFlow id="S_Refill__Gw_more" sourceRef="Refill" targetRef="Gw_more"/>
+    <bpmn:sequenceFlow id="S_Hand_over__Finish" sourceRef="Hand_over" targetRef="Finish"/>
+    <bpmn:sequenceFlow id="S_Finish__End_go" sourceRef="Finish" targetRef="End_go"/>
+    <bpmn:sequenceFlow id="F_dropped" name="A role dropped out" sourceRef="Gw_dropped" targetRef="Refill">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">built.fill = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_not_dropped" name="None dropped out" sourceRef="Gw_dropped" targetRef="Hand_over"/>
+    <bpmn:sequenceFlow id="F_more" name="More to open or build" sourceRef="Gw_more" targetRef="Open_built">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">refill.again = true and refill.round &lt; 20</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_done" name="Nothing more, or the laps are used" sourceRef="Gw_more" targetRef="Hand_over"/>
+  </bpmn:process>
+</bpmn:definitions>

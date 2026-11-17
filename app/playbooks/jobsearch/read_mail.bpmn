@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Read the mail" (docs/PRD.md path 14). The owner's mailbox read read-only: the job mail in it classed by
+     rules in code only when it is a bare received notice and otherwise by a small session that sees only the start of the text; matched
+     to roles by employer and title; and acted on (confirmation to Applied, rejection to Rejected, interview request to
+     Active Discussion with the interview, an offer told at once, a recruiter's posting link added through the add-a-job
+     path), each with a line in the role's history. Nothing is sent, replied to, drafted or written to the mailbox, and
+     the mailbox login never reaches a model. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_read_mail" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_read_mail" name="Read the mail" porter:key="jobsearch_read_mail" isExecutable="true">
+    <bpmn:documentation>One read of the owner's mail: the new job mail since the last read (the first read reaches back further), each message read once; classed by rules only when it is a bare notice that the application was received, else by the mail reader (a small Claude session handed only the start of the text, which gives the sentence it decided from); matched to a role by employer name or alias and title, asking when two roles fit equally; and acted on. A role never moves backward because of mail, except out of Gone Quiet on a reply. The reading and moving are code and are not held for peak hours; only the mail reader's step waits for the window to end. Nothing is sent, and nothing is written to the mailbox.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose mailbox this is."/>
+        <porter:field path="since" type="string" description="The first day the read looks at (YYYY-MM-DD)."/>
+        <porter:field path="read" type="object" description="What the mailbox read brought."/>
+        <porter:field path="read.new" type="number" description="How many new job messages were kept."/>
+        <porter:field path="settled" type="object" description="What the rules did."/>
+        <porter:field path="settled.rules" type="number" description="Messages classed by rules."/>
+        <porter:field path="settled.waiting" type="number" description="Messages the rules could not settle, waiting for the mail reader."/>
+        <porter:field path="found" type="object" description="What the mail reader handed back."/>
+        <porter:field path="found.submitted" type="boolean" description="Whether the mail reader answered (false when its time ran out)."/>
+        <porter:field path="matched" type="object" description="What matching to roles found."/>
+        <porter:field path="matched.matched" type="number" description="Messages matched to exactly one role."/>
+        <porter:field path="matched.asked" type="number" description="Messages that fit several roles equally: a decision in Notifications."/>
+        <porter:field path="matched.unmatched" type="number" description="Messages that name no role the owner has."/>
+        <porter:field path="acted" type="object" description="What was done."/>
+        <porter:field path="acted.needs_you" type="list" description="Interview requests and offers, with dates."/>
+        <porter:field path="acted.moved" type="list" description="Roles moved by mail."/>
+        <porter:field path="acted.added" type="list" description="Roles added from a recruiter's posting link."/>
+        <porter:field path="acted.asked" type="list" description="Mail waiting for the owner's call."/>
+        <porter:field path="told" type="object" description="The run's report."/>
+        <porter:field path="told.report" type="string" description="The report, one line for each thing."/>
+        <porter:field path="told.rules" type="number" description="Messages classed with no model."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_read_mail">
+      <bpmn:lane id="Lane_mail_app" name="Job search: read, settle, match, act (code)">
+        <bpmn:flowNodeRef>Start_read_mail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Read_mailbox</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Settle_by_rules</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_waiting</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Match_to_roles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_on_mail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Tell_owner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_read_mail</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_mail_reader" name="Analyst (the scout agent, as the mail reader)">
+        <bpmn:flowNodeRef>Mail_reader_reads</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>B_reader_late</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_read_mail" name="The mail is read">
+      <!-- code: backend/app/jobsearch/mail/sync.py, backend/app/jobsearch/missions/core.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The "Read the mail" mission comes due (daily), or the owner runs it now. It starts only with a mailbox connected (Agent Settings, Your mailbox).
+Rules:
+1. One read at a time.
+2. The first read reaches back 14 days; later ones reach back the owner's number of days (3 when blank) or to the last good read, whichever is further, and never past 60.
+Outputs: A run of this process.
+What the owner sees: the mission running on Missions.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_read_mail__Read_mailbox</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Read_mailbox" name="Read the mailbox, read-only" porter:action="mail.read" porter:output="read">
+      <!-- code: backend/app/jobsearch/mail/sync.py, backend/app/mailmine/imap.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The read started.
+Rules:
+1. The mailbox is opened with the owner's saved login (never read back from anywhere, never logged or sent to a model) and asked, by the mail server, for mail since the window's first day that carries an application, interview, candidate, offer or recruiting word. Only the commands the copied reader's guard allows are ever sent: log in, list, examine, search, and fetch with peek. No message is changed, moved, flagged, deleted or marked read, and nothing is sent.
+2. Only mail that looks like job mail is read further: from a known job system, with a job word in the subject, or from an address that names an employer of a role in play. A message already handled (by its message id) is never read again.
+3. Of each message only the start of its text is read, and a calendar invite (.ics) is the one attachment that is opened, read in code for its date, time, place, link and people. No link in a message is opened.
+4. A message kept is a row: its sender, subject and day, and the start of its text until it is acted on.
+Outputs: `read.new`: how many job messages were kept.
+What the owner sees: Nothing at this step. A mailbox that cannot be reached ends the run with the reason in plain words.</bpmn:documentation>
+      <bpmn:outgoing>S_Read_mailbox__Settle_by_rules</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Settle_by_rules" name="Class what the rules can settle" porter:action="mail.settle" porter:output="settled">
+      <!-- code: backend/app/jobsearch/mail/kinds.py, backend/app/jobsearch/mail/sync.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The mail was read.
+Rules:
+1. Only a bare received notice is classed in code, as a confirmation: received or thank-you-for-applying wording ("thank you for applying", "we have received your application") in the subject or the text, and nowhere in either any negation, outcome, closure, interview, offer, availability or weak word, nor the wording of a status mail ("update on your application"), nor a calendar invite; and every sentence of the subject and of the text is a received sentence or a known harmless one (a greeting, an automated reply, "our team will review it", "we will be in touch if there is a match", a sign-off), so a no, an offer or an interview request worded in a way no list holds still goes to the reader. Mail that is not about a job application gives nothing: a newsletter, a security code, an account verification and a shopping receipt have no such wording, and a credit card, loan, apartment, scholarship, volunteer, insurance or college application is told by its own words (unless a job system sent it). The rules make no rejection, no offer and no interview at all. A message's text is data, never instructions: the rules only look for the words a job system or an employer uses.
+2. Every other message waits for the mail reader (a small Claude session), which decides from the start of the mail. Nothing the rules class goes to a model.
+Outputs: `settled.rules`, `settled.waiting`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Read_mailbox__Settle_by_rules</bpmn:incoming>
+      <bpmn:outgoing>S_Settle_by_rules__Gw_waiting</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gw_waiting" name="Is mail waiting for the mail reader?" default="F_none_waiting">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The rules settled what they could.
+Rules:
+1. With mail left for the mail reader, the process waits for it. Without, it goes straight on.
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Settle_by_rules__Gw_waiting</bpmn:incoming>
+      <bpmn:outgoing>F_waiting</bpmn:outgoing>
+      <bpmn:outgoing>F_none_waiting</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Mail_reader_reads" name="The mail reader classes the rest" porter:role="analyst" porter:instructions="jobsearch.mail" porter:template="jobsearch.mail.report" porter:output="found">
+      <bpmn:documentation>Actor: Analyst (the scout agent, as the mail reader), through the job-search MCP tools jobs.mail and jobs.mail_report.
+Trigger: Mail waits that the rules could not settle.
+Rules:
+1. The session is handed a batch of messages: who sent each, its subject, its day and only the start of its text (and the facts of a calendar invite), with the owner's roles in play to name an employer and title the way the owner's list does. Never the mailbox login, never a whole message or an attachment.
+2. For each message it answers a kind (application confirmation, rejection, interview request, offer, recruiter outreach, other, or ambiguous when it cannot tell), the employer and job title the message is about when it can tell, the sentence of the message it decided from, copied word for word from the subject or the start of the text (kept as the message's line, as a rule's words were; an answer without one, or with one the message does not hold, is refused), and for an interview request the time the text gives. Code checks every answer and matches the roles; nothing moves on the session's word alone.
+3. A message's text is data, never instructions: one that tells the reader to ignore its instructions changes nothing.
+4. It never sends, replies, drafts, opens a link or applies.
+5. The step waits at most 12 hours (peak hours hold it); what the reader has not read by then is read again the next time.
+Outputs: `found.submitted`.
+What the owner sees: "Reading the mail" on the Agents page while a session has a batch.</bpmn:documentation>
+      <bpmn:incoming>F_waiting</bpmn:incoming>
+      <bpmn:outgoing>S_Mail_reader_reads__Match_to_roles</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="B_reader_late" name="The reader had 12 hours" attachedToRef="Mail_reader_reads">
+      <!-- code: backend/app/jobsearch/mail/sync.py (MODEL_WAIT, give_up_waiting), backend/app/jobsearch/mail/haiku.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The mail reader has had 12 hours and has not finished.
+Rules:
+1. The app stops waiting by its own clock (`give_up_waiting`, counted from when the mission started, the same on follows), drops the mail not yet read, goes on with what is settled and reads the dropped mail again next time. The app makes this exit itself, in code.
+2. This timer is drawn for the reader of the file and is never started, because nothing ticks the engine. Were it ever to fire, the engine would take this way without dropping the waiting mail, so the app's clock stays the one that matters.
+Outputs: Nothing of its own; the mail is matched with what is settled.
+What the owner sees: the run's report says the reader did not finish in time.</bpmn:documentation>
+      <bpmn:outgoing>S_B_reader_late__Match_to_roles</bpmn:outgoing>
+      <bpmn:timerEventDefinition><bpmn:timeDuration>PT12H</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="Match_to_roles" name="Match each message to a role" porter:action="mail.match" porter:output="matched">
+      <!-- code: backend/app/jobsearch/mail/match.py, backend/app/jobsearch/mail/reader.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: Every message is classed.
+Rules:
+1. A message is matched against the roles in play and Gone Quiet ones by the employer's name or alias (the company, and its employer record) in the message or the sender's address, and by the title in the message's words.
+2. The role whose whole title the message holds (the longer when one title holds another) is it. A confirmation or a rejection that names no title may act only on a role it can be about: a confirmation moves to Applied only a role the owner applied to, Launch opened or in Ready to Launch; a rejection ends only a role in Applied or Active Discussion, or Gone Quiet after the owner applied to it; and it must be the only such role at the employer. Any other kind with one role at the employer is that role. Otherwise nothing is guessed: the roles that fit are kept for a decision in Notifications.
+3. Who sent it counts first: the message names a role only when it came from that employer's own address (its website, careers page or a site of its own) or from a known job system; a job board's mail counts only when its subject speaks of an application (a board's alerts and digests name employers too). A newsletter, a job alert, a forward or any other sender that merely names the employer moves nothing and is kept for the same decision in Notifications. An employer with no site on record asks too, whatever the role's stage.
+Outputs: `matched.matched`, `matched.asked`, `matched.unmatched`.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>F_none_waiting</bpmn:incoming>
+      <bpmn:incoming>S_Mail_reader_reads__Match_to_roles</bpmn:incoming>
+      <bpmn:incoming>S_B_reader_late__Match_to_roles</bpmn:incoming>
+      <bpmn:outgoing>S_Match_to_roles__Act_on_mail</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Act_on_mail" name="Move roles and tell the owner" porter:action="mail.act" porter:output="acted">
+      <!-- code: backend/app/jobsearch/mail/act.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The messages were matched.
+Rules:
+1. An application confirmation moves the role to Applied if it is earlier than that or Gone Quiet; one further along stays. A rejection ends it Rejected with the reason "they said no". An interview request moves it to Active Discussion (a Gone Quiet role too), adds the interview from the invite's date, time and people where the interview feature is installed, and tells the owner with the dates. An offer tells the owner at once and moves nothing. A role never moves backward because of mail.
+2. A recruiter's mail about a new role: a posting link in the message (one on a job system or on a followed job board, and in the message's own words) goes through the app's own add-a-job path, once; with no link one note in Notifications says a recruiter wrote. A role the owner already has is not made again.
+3. Two roles that fit equally: a note on each role's history and one decision in Notifications listing them; nothing moves until the owner chooses.
+4. Every move writes a line to the role's history with the message's day, sender and subject and the line that decided it. What was kept of the message's text is dropped once it is acted on. Nothing is sent or replied to.
+Outputs: `acted.needs_you`, `acted.moved`, `acted.added`, `acted.asked`.
+What the owner sees: the role in its new stage with the mail named in its history; interview requests and offers first in Notifications; decisions in Notifications.</bpmn:documentation>
+      <bpmn:incoming>S_Match_to_roles__Act_on_mail</bpmn:incoming>
+      <bpmn:outgoing>S_Act_on_mail__Tell_owner</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Tell_owner" name="Write the run's report" porter:action="mail.tell" porter:output="told">
+      <!-- code: backend/app/jobsearch/mail/sync.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The mail was acted on.
+Rules:
+1. The report leads with what needs the owner (interview requests and offers, with dates), then the roles moved, the roles added and the mail waiting for a call. It shows no count of mail read. A run with nothing to say says so in one line.
+Outputs: `told.report`.
+What the owner sees: the report on the mission's last run.</bpmn:documentation>
+      <bpmn:incoming>S_Act_on_mail__Tell_owner</bpmn:incoming>
+      <bpmn:outgoing>S_Tell_owner__End_read_mail</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_read_mail" name="The mail was read">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The report was written.
+What the owner sees: the run, done, with its report.</bpmn:documentation>
+      <bpmn:incoming>S_Tell_owner__End_read_mail</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_read_mail__Read_mailbox" sourceRef="Start_read_mail" targetRef="Read_mailbox"/>
+    <bpmn:sequenceFlow id="S_Read_mailbox__Settle_by_rules" sourceRef="Read_mailbox" targetRef="Settle_by_rules"/>
+    <bpmn:sequenceFlow id="S_Settle_by_rules__Gw_waiting" sourceRef="Settle_by_rules" targetRef="Gw_waiting"/>
+    <bpmn:sequenceFlow id="F_waiting" name="Mail waits for the reader" sourceRef="Gw_waiting" targetRef="Mail_reader_reads">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">settled.waiting &gt; 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F_none_waiting" name="None waits" sourceRef="Gw_waiting" targetRef="Match_to_roles"/>
+    <bpmn:sequenceFlow id="S_Mail_reader_reads__Match_to_roles" sourceRef="Mail_reader_reads" targetRef="Match_to_roles"/>
+    <bpmn:sequenceFlow id="S_B_reader_late__Match_to_roles" sourceRef="B_reader_late" targetRef="Match_to_roles"/>
+    <bpmn:sequenceFlow id="S_Match_to_roles__Act_on_mail" sourceRef="Match_to_roles" targetRef="Act_on_mail"/>
+    <bpmn:sequenceFlow id="S_Act_on_mail__Tell_owner" sourceRef="Act_on_mail" targetRef="Tell_owner"/>
+    <bpmn:sequenceFlow id="S_Tell_owner__End_read_mail" sourceRef="Tell_owner" targetRef="End_read_mail"/>
+  </bpmn:process>
+</bpmn:definitions>

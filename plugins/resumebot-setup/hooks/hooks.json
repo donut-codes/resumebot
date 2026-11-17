@@ -1,0 +1,16 @@
+{
+  "description": "Tells Claude where resumebot onboarding stands at the start of every session, so it always knows the next step. Runs in Git Bash on Windows (Git for Windows is needed there) and in sh on macOS and Linux; it never fails the session.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rb=$(command -v resumebot 2>/dev/null); if [ -z \"$rb\" ]; then for c in \"$LOCALAPPDATA/Programs/resumebot/app/backend/.venv/Scripts/resumebot.exe\" \"$LOCALAPPDATA/resumebot-app/app/backend/.venv/Scripts/resumebot.exe\" \"$HOME/.local/share/resumebot-app/app/backend/.venv/bin/resumebot\"; do if [ -x \"$c\" ]; then rb=\"$c\"; break; fi; done; fi; if [ -n \"$rb\" ]; then \"$rb\" status --for-claude 2>&1 || echo 'resumebot did not answer. Run: resumebot doctor'; else echo 'resumebot is not installed on this computer yet. If the user wants it, run the resumebot-setup:install-resumebot skill.'; fi; exit 0",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

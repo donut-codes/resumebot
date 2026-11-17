@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "key": "smartrecruiters",
+  "name": "SmartRecruiters",
+  "kind": "job_system",
+  "hosts": [
+    "smartrecruiters.com"
+  ],
+  "order": 5,
+  "mail": {
+    "kind": "system",
+    "senders": [
+      "smartrecruiters.com"
+    ]
+  },
+  "address": {
+    "board": [
+      {
+        "host": "(?:jobs|careers)\\.smartrecruiters\\.com",
+        "path": "oneclick-ui(?:/(?s:.*))?"
+      },
+      {
+        "host": "(?:jobs|careers)\\.smartrecruiters\\.com",
+        "path": "(?P<slug>[^/]+)(?:/(?s:.*))?",
+        "capture": {
+          "slug": "group:slug"
+        }
+      }
+    ],
+    "one_posting": [
+      {
+        "path": "[^/]+/(?P<ext_id>\\d{6,})[^/]*(?:/(?s:.*))?",
+        "capture": {
+          "ext_id": "group:ext_id"
+        }
+      },
+      {
+        "path": "(?:(?!publication/)[^/]+/)*publication/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:/(?s:.*))?"
+      },
+      {
+        "path": "[^/]+/\\d[^/]*(?:/(?s:.*))?"
+      }
+    ],
+    "board_url": [
+      {
+        "template": "https://jobs.smartrecruiters.com/{slug}",
+        "needs": [
+          "slug"
+        ]
+      }
+    ]
+  },
+  "read": {
+    "kind": "request",
+    "url": "https://api.smartrecruiters.com/v1/companies/{slug}/postings?limit=100&offset={offset}",
+    "items": "content",
+    "paging": {
+      "param": "offset",
+      "size": 100,
+      "total": "totalFound"
+    },
+    "fields": {
+      "ext_id": "id",
+      "title": "name",
+      "location": [
+        "location.fullLocation",
+        {
+          "join": [
+            "location.city",
+            "location.region",
+            {
+              "path": "location.country",
+              "upper": true
+            }
+          ]
+        }
+      ],
+      "posted": "releasedDate",
+      "url": {
+        "template": "https://jobs.smartrecruiters.com/{slug}/{ext_id}"
+      },
+      "department": "department.label"
+    },
+    "work_mode": {
+      "flags": [
+        {
+          "path": "location.remote",
+          "mode": "remote"
+        },
+        {
+          "path": "location.hybrid",
+          "mode": "hybrid"
+        }
+      ]
+    },
+    "detail": {
+      "url": "https://api.smartrecruiters.com/v1/companies/{slug}/postings/{ext_id}",
+      "objects": [
+        "jobAd.sections"
+      ],
+      "fields": {
+        "text": {
+          "blocks": [
+            {
+              "at": "jobAd.sections.companyDescription",
+              "heading": "title",
+              "body": "text"
+            },
+            {
+              "at": "jobAd.sections.jobDescription",
+              "heading": "title",
+              "body": "text"
+            },
+            {
+              "at": "jobAd.sections.qualifications",
+              "heading": "title",
+              "body": "text"
+            },
+            {
+              "at": "jobAd.sections.additionalInformation",
+              "heading": "title",
+              "body": "text"
+            }
+          ]
+        },
+        "posted": "releasedDate",
+        "apply_url": "applyUrl"
+      }
+    }
+  },
+  "flags": {
+    "probe_names": true
+  },
+  "probe": {
+    "url": "https://api.smartrecruiters.com/v1/companies/{slug}/postings?limit=1",
+    "present": "content",
+    "name": "content.0.company.name"
+  }
+}

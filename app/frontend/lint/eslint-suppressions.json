@@ -1,0 +1,199 @@
+{
+  "src/components/agents/AgentKinds.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/agents/AgentsScreen.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/agents/CostNights.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/agents/DecisionWays.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 1
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 1
+    }
+  },
+  "src/components/agents/HowTheyWork.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/agents/InstructionFile.test.tsx": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/agents/InstructionFile.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/agents/MailLogin.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/agents/ProcessEditor.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/agents/ProcessTab.tsx": {
+    "react-hooks/preserve-manual-memoization": {
+      "count": 1
+    }
+  },
+  "src/components/agents/ProcessVersions.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/agents/SentBlock.tsx": {
+    "jsx-a11y/click-events-have-key-events": {
+      "count": 2
+    },
+    "jsx-a11y/no-static-element-interactions": {
+      "count": 2
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/me/FindGaps.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/me/GapFeedback.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/me/GapRun.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/me/ImportPanel.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/me/ItemList.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/me/MeScreen.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/me/ResumeTab.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    },
+    "react-hooks/refs": {
+      "count": 11
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/me/SectionedRulesTab.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    },
+    "react-hooks/refs": {
+      "count": 10
+    }
+  },
+  "src/components/me/StoryLibraryTab.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/me/WritingTab.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    },
+    "react-hooks/refs": {
+      "count": 10
+    }
+  },
+  "src/components/me/useMeDoc.ts": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "src/components/missions/MissionsScreen.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/primitives/History.tsx": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/components/profile/GateLine.tsx": {
+    "jsx-a11y/no-autofocus": {
+      "count": 1
+    }
+  },
+  "src/components/trail/Trail.tsx": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/lib/appContext.tsx": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/lib/postingSections.ts": {
+    "no-control-regex": {
+      "count": 1
+    }
+  },
+  "src/lib/useAction.test.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/lib/useAction.ts": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "src/lib/useDraftPage.ts": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "src/lib/useJobPoll.ts": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/lib/useResource.ts": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    },
+    "react-hooks/refs": {
+      "count": 2
+    }
+  }
+}

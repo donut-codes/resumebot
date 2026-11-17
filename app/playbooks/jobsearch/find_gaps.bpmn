@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Find gaps" (docs/PRD.md path 38). The owner asks, on My Resume, what the postings for one role want that
+     the master resume does not yet show. The app draws the sample (stored postings, one from each employer) or, for a
+     title that is not a target role, leaves the finding to the agent on the public web; the agent groups the asks into
+     themes and grades each against the whole master resume; the app counts, sorts, hides what the owner set aside and
+     keeps the role's latest run. Nothing is written to the resume, a packet or the Pipeline, and nothing is sent or
+     applied to. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_find_gaps" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_find_gaps" name="Find gaps" porter:key="jobsearch_find_gaps" isExecutable="true">
+    <bpmn:documentation>What the postings for one role ask that the master resume does not yet show: a sample of stored postings (one from each employer), the asks grouped into themes, and each theme graded Proven, Transferable or Unproven against the whole master resume. The owner reads the themes and adds what is true. Nothing is written to the resume unless the owner clicks Add to resume; nothing is sent or applied to.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose run this is."/>
+        <porter:field path="run" type="string" description="The run being made (its id)."/>
+        <porter:field path="brief" type="object" description="Whether the run is still waiting and how many postings it holds."/>
+        <porter:field path="brief.ready" type="boolean" description="Whether the run is still waiting for the agent."/>
+        <porter:field path="brief.postings" type="number" description="How many stored postings the sample holds (none for a title searched on the web)."/>
+        <porter:field path="found" type="object" description="What the agent handed back."/>
+        <porter:field path="found.submitted" type="boolean" description="Whether the themes were taken."/>
+        <porter:field path="settled" type="object" description="What the run was kept as."/>
+        <porter:field path="settled.themes" type="number" description="How many themes the run holds."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_find_gaps">
+      <bpmn:lane id="Lane_gaps_app" name="Job search: sample, count, sort, keep">
+        <bpmn:flowNodeRef>Start_gaps</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gather_sample</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Settle_run</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_gaps</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_Analyst_finds_answered</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_failed</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_gaps_analyst" name="Analyst (the scout agent)">
+        <bpmn:flowNodeRef>Analyst_finds</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_gaps" name="The owner asks for Find gaps">
+      <!-- code: backend/app/jobsearch/gaps/runs.py, backend/app/jobsearch/gaps/routes.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The owner clicks Find gaps for a target role, for a title they typed, Check again, or New sample, on My Resume under Find Gaps.
+Rules:
+1. Only when an agent can take the work now: the same rule, and the same one-line reason, as Import your resume (Claude's peak hours, no agent checked in, the agent busy or paused).
+2. One run at a time.
+3. For a target role the app draws the sample before the run starts: 10 stored postings for the role, at most one from each employer, at least 5. With fewer than 10 employers it reads the ones there are and says so; with fewer than 5 it does not run and says why.
+Outputs: A run of this process.
+What the owner sees: the run's progress on the page ("3 of 10 read"), with no notification.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_gaps__Gather_sample</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Gather_sample" name="Check the sample is waiting" porter:action="jobs.gaps_gather" porter:output="brief">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A run was asked for.
+Rules:
+1. The sample is the postings as stored when the run was asked for (a Check again reads the same ones as the run before it; a New sample prefers employers it did not read last time), each cut to the size an agent is handed. The agent is handed them with jobs.gaps (part postings), the master resume with part resume.
+Outputs: `brief.ready`: whether the run is still waiting; `brief.postings`: how many postings it holds.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Gather_sample__Analyst_finds</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Analyst_finds" name="The analyst finds the themes" porter:role="analyst" porter:instructions="jobsearch.gaps" porter:template="jobsearch.gaps.report" porter:output="found">
+      <bpmn:documentation>Actor: Analyst (the scout agent), through the job-search MCP tools jobs.gaps, jobs.gaps_progress and jobs.gaps_report.
+Trigger: The run is waiting.
+Rules:
+1. The agent reads each posting and groups the asks that are the same ask in other words, over three kinds: required qualifications, preferred qualifications and responsibilities. It names each theme, says which kind it is and which postings ask it.
+2. It grades each theme Proven, Transferable or Unproven against the whole master resume (the experience lines, and each role's evidence and tools), by the analyst's own rules (docs/PRD.md 26.3): Proven needs a master line that shows it, Transferable needs a named bridge, years of experience within about a quarter short round up to Proven and about half short is Unproven. A Proven or Transferable grade cites the master lines behind it; an Unproven grade cites none.
+3. For a title that is not a target role it first looks on the public web, read-only (WebSearch and WebFetch), for about 10 postings, one from each employer, and reports their links.
+4. It says how many postings it has read as it goes, so the page can show the count rising.
+5. Where a theme is the same ask as one the owner already answered (hidden as not relevant, or marked a real gap), it uses that theme's wording so the answer carries over.
+6. It never applies, fills a form, solves a CAPTCHA, gets around a block or sends anything, and it changes nothing in the owner's documents.
+Outputs: `found.submitted`.
+What the owner sees: the count on the page while it works.</bpmn:documentation>
+      <bpmn:outgoing>S_Analyst_finds__Gw_Analyst_finds_answered</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Settle_run" name="Count, sort and keep the run" porter:action="jobs.gaps_settle" porter:output="settled">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The themes were taken.
+Rules:
+1. Each theme is counted by the postings that asked it, and the themes are sorted by that count, most first.
+2. The run becomes the role's latest run and replaces the one before it. Themes the owner set aside as not relevant are hidden when the page shows the run, never by the agent.
+3. The version of the master resume the run was graded against, and the version of the instructions it used, are noted when the agent takes the run; this step only keeps them with it, so the page can say when the resume has changed since.
+Outputs: `settled.themes`.
+What the owner sees: the themes, sorted, on the page.</bpmn:documentation>
+      <bpmn:outgoing>S_Settle_run__End_gaps</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_gaps" name="Run kept">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The run was kept.
+What the owner sees: the run's themes under the role's name, with when it was checked.</bpmn:documentation>
+      <bpmn:incoming>S_Settle_run__End_gaps</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gw_Analyst_finds_answered" name="Did the analyst answer?" default="S_Analyst_finds__Settle_run">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The analyst answered, or the app closed the step without an answer.
+Rules:
+1. Drawn for the reader of the file: the app closes a step that gets no answer by stopping the whole run from outside the engine, so the engine never sets `found.submitted` to false and never takes the failed way. The run ends Stopped (see "Closed as failed").
+Outputs: The way out taken.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:incoming>S_Analyst_finds__Gw_Analyst_finds_answered</bpmn:incoming>
+      <bpmn:outgoing>S_Analyst_finds__Settle_run</bpmn:outgoing>
+      <bpmn:outgoing>F_Analyst_finds_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_failed" name="Closed as failed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: No session finished the run, so the app closes it as failed (`backend/app/jobsearch/gaps/runs.py:fail`, reached when a stuck run is settled or expires). Find Gaps has no seat retries.
+Rules:
+1. "Closed as failed" is how the app ends a run from outside the engine; the engine never takes this way, because nothing in the engine sets the step's answer to false. The run ends Stopped on the Agents page and the reason is kept in the run's history. Other stops (the time passed, removed, released back to the line, orphaned at start) are not failures and are not drawn.
+Outputs: Nothing; the run is cancelled from outside the engine.
+What the owner sees: the run says it failed, with one plain sentence.</bpmn:documentation>
+      <bpmn:incoming>F_Analyst_finds_failed</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_gaps__Gather_sample" sourceRef="Start_gaps" targetRef="Gather_sample"/>
+    <bpmn:sequenceFlow id="S_Gather_sample__Analyst_finds" sourceRef="Gather_sample" targetRef="Analyst_finds"/>
+    <bpmn:sequenceFlow id="S_Analyst_finds__Gw_Analyst_finds_answered" sourceRef="Analyst_finds" targetRef="Gw_Analyst_finds_answered"/>
+    <bpmn:sequenceFlow id="S_Analyst_finds__Settle_run" name="It answered" sourceRef="Gw_Analyst_finds_answered" targetRef="Settle_run"/>
+    <bpmn:sequenceFlow id="F_Analyst_finds_failed" name="The app closed it as failed" sourceRef="Gw_Analyst_finds_answered" targetRef="End_failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">found.submitted = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="S_Settle_run__End_gaps" sourceRef="Settle_run" targetRef="End_gaps"/>
+  </bpmn:process>
+</bpmn:definitions>

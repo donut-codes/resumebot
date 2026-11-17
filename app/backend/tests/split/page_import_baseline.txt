@@ -1,0 +1,6 @@
+# The engine modules the page program reaches when it starts, one pair to a line:
+#     <module whose import statement reaches it> -> <a module of forbidden.FORBIDDEN>  # cleared by: <lane key>
+# A line only ever leaves this file. test_page_has_no_engine.py fails on a pair the page reaches that is not listed, and
+# on a listed pair the page no longer reaches (delete that line). Fix a new pair at its source: make the import local to
+# the function that needs it, or call the engine through engine_calls. Never add a line to get a page through.
+# The file holds no pair now, and test_the_baseline_holds_no_pair keeps it so.

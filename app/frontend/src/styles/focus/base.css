@@ -1,0 +1,112 @@
+/* The ground every page stands on: the reset, the page's type, the browser's own surfaces (selection, caret, focus ring,
+ * scrollbar, the tick of a box) themed from the palette, and the robot's pixels. Every value comes from focus/tokens.css.
+ * It comes first: the screens' own stylesheets win over it at equal specificity. */
+
+* {
+  box-sizing: border-box;
+  scrollbar-color: var(--fi-quiet) transparent;
+}
+
+html,
+body,
+#root {
+  block-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fi-ground);
+  color: var(--fi-text);
+  font-family: var(--fi-font);
+  font-size: var(--fi-size-base);
+  line-height: var(--fi-leading);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, p, ul, ol, dl {
+  margin: 0;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* A link is blue and underlined: the colour says it can be followed, the line says so without it. */
+a {
+  color: var(--fi-blue-text);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--fi-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--fi-select);
+  color: var(--fi-ink);
+}
+
+/* The browser's own ticks, picks, carets and sliders take the screen's blue. */
+html {
+  accent-color: var(--fi-blue);
+  caret-color: var(--fi-blue-text);
+}
+
+/* A select keeps room on the right for its drawn chevron. */
+select.fi-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-inline-end: calc(var(--fi-s7) + 22px);
+  background-image: var(--fi-chevron);
+  background-position: right var(--fi-s6) center;
+  background-size: 12px 8px;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- the robot (components/primitives/BotMark.tsx): crisp pixels, a lamp that blinks while it works ---------------------- */
+
+.bot-mark {
+  display: block;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+.bot-lamp {
+  fill: var(--fi-lamp);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bot-mark.is-active .bot-lamp {
+    animation: bot-lamp-blink 1s steps(1, end) infinite;
+  }
+}
+
+@keyframes bot-lamp-blink {
+  50% {
+    fill: var(--fi-lamp-dim);
+  }
+}
+
+/* An agent that is not working keeps its disguise; its lamp glows dim and it fades a little. */
+.bot-asleep {
+  opacity: 0.7;
+}
+
+.bot-asleep .bot-lamp {
+  fill: var(--fi-lamp-dim);
+}

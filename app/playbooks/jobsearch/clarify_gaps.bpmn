@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Job search: "Work through the gaps" (docs/PRD.md 38.13 to 38.19). On a Find Gaps run started from a job the owner asks the
+     Coach for questions about the themes the master resume does not fully show; the owner answers each card in their own
+     words (or skips it, or says it is not true), asks the Coach to propose master lines from the answers, and accepts, edits
+     or rejects each one. This process is one Coach job, of either kind: the order across the jobs (ask, the owner's
+     answers, propose, the owner's decisions) is the owner's, and is described below. Nothing is written to the master resume
+     unless the owner accepts a proposal; nothing is sent or applied to (backend/app/jobsearch/gaps/coach.py, backend/app/jobsearch/gaps/proposals.py). -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:porter="http://porter.local/bpmn/ext"
+                  id="Definitions_jobsearch_clarify_gaps" targetNamespace="http://porter.local/bpmn">
+  <bpmn:process id="Process_jobsearch_clarify_gaps" name="Work through the gaps" porter:key="jobsearch_clarify_gaps" isExecutable="true">
+    <bpmn:documentation>One job for the Coach on a Find Gaps run started from a job. In order across the jobs: (1) the Coach writes one or two specific questions for each Transferable or Unproven theme, as cards; (2) the owner answers each in their own words, skips it, or says it is not true (a theme said to be not true is never asked again for the role); (3) the Coach proposes master lines from the answers, in the owner's own words cut only at their ends, each citing its answer and saying where it goes; (4) the owner accepts, edits or rejects each proposal, and an accept saves a new master version through the resume's own save. This process runs (1) and (3), one job each; (2) and (4) are the owner's. Nothing is written to the master unless the owner accepts.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <porter:dataModel>
+        <porter:field path="owner" type="string" description="Whose job this is."/>
+        <porter:field path="job" type="string" description="The Coach's job being done (its id)."/>
+        <porter:field path="brief" type="object" description="Whether the job is still open and what it holds."/>
+        <porter:field path="brief.ready" type="boolean" description="Whether the job is still open for the Coach."/>
+        <porter:field path="brief.items" type="number" description="How many themes (questions) or answers (proposals) the job holds."/>
+        <porter:field path="found" type="object" description="What the Coach handed back."/>
+        <porter:field path="found.submitted" type="boolean" description="Whether the questions or proposals were taken."/>
+        <porter:field path="filed" type="object" description="What came of filing them."/>
+        <porter:field path="filed.state" type="string" description="The job's state once filed."/>
+      </porter:dataModel>
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_jobsearch_clarify_gaps">
+      <bpmn:lane id="Lane_clarify_app" name="Job search: check the job is open, check what the Coach sent, file it">
+        <bpmn:flowNodeRef>Start_clarify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gather_clarify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>File_clarify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_clarify</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_clarify_coach" name="Coach (a session of the coach kind)">
+        <bpmn:flowNodeRef>Coach_clarifies</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_clarify" name="The owner asks for questions, or for lines">
+      <!-- code: backend/app/jobsearch/gaps/coach.py, backend/app/jobsearch/gaps/routes.py -->
+      <bpmn:documentation>Actor: Job search.
+Trigger: The owner clicks Work through the gaps (questions) or Suggest lines (proposals) on a finished Find Gaps run started from a job.
+Rules:
+1. Only when an agent can take the work now: the same rule, and the same one-line reason, as Import your resume (Claude's peak hours, no agent checked in, the agent paused). A busy agent queues it.
+2. One job for a run at a time.
+3. Questions are asked only for Transferable and Unproven themes that the owner has not hidden as not relevant, has not said are not true, and that have no card yet. Lines are proposed only from answers no suggestion has been made from yet.
+Outputs: A run of this process.
+What the owner sees: "Waiting for an agent", or that the job is queued behind the agent's other work, on the run.</bpmn:documentation>
+      <bpmn:outgoing>S_Start_clarify__Gather_clarify</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Gather_clarify" name="Check the job is open" porter:action="jobs.clarify_gather" porter:output="brief">
+      <bpmn:documentation>Actor: Job search.
+Trigger: A job was asked for.
+Rules:
+1. The Coach's task is read when it calls jobs.coach: for questions, the themes to ask about with the master lines that back them; for proposals, the owner's answers, each with its question and the card's id. The role's own posting and the master resume with each line's id are the parts it reads next.
+Outputs: `brief.ready`: whether the job is still open; `brief.items`: how many themes or answers it holds.
+What the owner sees: Nothing at this step.</bpmn:documentation>
+      <bpmn:outgoing>S_Gather_clarify__Coach_clarifies</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Coach_clarifies" name="The Coach asks, or proposes" porter:role="coach" porter:instructions="jobsearch.coach.clarify" porter:template="jobsearch.coach.clarify" porter:output="found">
+      <bpmn:documentation>Actor: Coach (the scout agent, in a coach session), through the job-search MCP tools jobs.coach and jobs.coach_submit.
+Trigger: The job is waiting.
+Rules:
+1. To ask, the Coach writes one or two specific questions for each theme it was given: a question names the ask and, for a Transferable theme, the master line that bridges it, and asks for what the owner did, in their own words. It asks nothing for a theme it was not given.
+2. To propose, it reads the owner's answers and proposes master lines in the owner's own words, minimally trimmed: a line is the answer cut at its ends and nothing else, never reworded and never joined, and cites the answer it came from. It says where each goes: a new line under a named job, or evidence on one of that job's existing lines.
+3. Code checks what it sends when it is sent and sends it back with every problem named until it passes (three refusals fail the job). It checks that each question is about a theme it was given and each theme has one or two; that each proposal's words are found whole inside its answer, that its job is in the master and that evidence goes on one of that job's lines.
+4. It uses no web tools, and never applies, fills a form, solves a CAPTCHA, gets around a block or sends anything. It changes nothing in the owner's documents.
+Outputs: `found.submitted`.
+What the owner sees: the cards, or the proposals, on the run.</bpmn:documentation>
+      <bpmn:outgoing>S_Coach_clarifies__File_clarify</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="File_clarify" name="File the questions or proposals" porter:action="jobs.clarify_file" porter:output="filed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The Coach's questions or proposals were taken.
+Rules:
+1. The cards are made and the proposals deduplicated when the Coach's submit is taken; this step marks the job filed (done). Questions become cards, grouped by theme. Proposals are kept with the answer each cites and the place it goes; one whose words, place and job were suggested before, accepted or rejected, is dropped and counted. The answers the Coach was handed are marked as suggested from, so they are not handed over again.
+2. A rejected proposal is kept and is never proposed again. Nothing is written to the master resume here.
+Outputs: `filed.state`.
+What the owner sees: the cards to answer, or the proposals to accept, edit or reject.</bpmn:documentation>
+      <bpmn:outgoing>S_File_clarify__End_clarify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_clarify" name="Job filed">
+      <bpmn:documentation>Actor: Job search.
+Trigger: The job was filed.
+What the owner sees: the Coach's cards or proposals under the run. An accept is the owner's own act, and saves a new master version.</bpmn:documentation>
+      <bpmn:incoming>S_File_clarify__End_clarify</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="S_Start_clarify__Gather_clarify" sourceRef="Start_clarify" targetRef="Gather_clarify"/>
+    <bpmn:sequenceFlow id="S_Gather_clarify__Coach_clarifies" sourceRef="Gather_clarify" targetRef="Coach_clarifies"/>
+    <bpmn:sequenceFlow id="S_Coach_clarifies__File_clarify" sourceRef="Coach_clarifies" targetRef="File_clarify"/>
+    <bpmn:sequenceFlow id="S_File_clarify__End_clarify" sourceRef="File_clarify" targetRef="End_clarify"/>
+  </bpmn:process>
+</bpmn:definitions>

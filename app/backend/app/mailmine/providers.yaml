@@ -1,0 +1,63 @@
+# Where to point the app at an inbox, by mail provider. Data, not code: core never names a provider.
+# The owner connects their inbox with a mail address and an app password (a password the provider makes for this one
+# use, never the account's own password). The inbox is found by the mail address's domain (`match`), or by an address
+# that starts `imap.` or ends in port 993. A known `host` on the wrong port (imap.gmail.com:80) gets a plain hint to
+# use the port named here.
+#
+# `host` is the provider's IMAP address with its port. `steps` is plain help, one line each, for making the app
+# password. Providers change their screens; the lines say what to look for, and the owner can always search the
+# provider's help for "app password".
+#
+# `search: x_gm_raw` (optional) says the server answers its own search language (`X-GM-RAW`), so the app asks it, in
+# one search, for the mail that carries one of the words and reads only its all-mail folder. Any other server is asked
+# the general IMAP way (SUBJECT and BODY terms, in each folder).
+#
+# Not checked against a live account in this build: every host and step below is from the providers' public help
+# pages and may have moved. Microsoft accounts in particular have moved basic (username and password) mail access
+# away from many consumer accounts; if that is the case for yours, use the exported file instead.
+
+providers:
+  - name: Gmail
+    match: [gmail.com, googlemail.com]
+    host: imap.gmail.com:993
+    search: x_gm_raw    # the server matches Gmail's own search words (X-GM-RAW), so the app asks it for the mail that matters
+    strip_spaces: true   # the app password is shown in groups of four; the server wants it without spaces
+    steps:
+      - Turn on 2-Step Verification for the account, if it isn't already.
+      - In the account's security settings, search for "App passwords" and make one called resumebot.
+      - Paste the 16 letters it shows as the password, with no spaces.
+      - Gmail's own "All Mail" folder is read as well as the inbox.
+  - name: iCloud Mail
+    match: [icloud.com, me.com, mac.com]
+    host: imap.mail.me.com:993
+    steps:
+      - Sign in at account.apple.com, open Sign-In and Security, then App-Specific Passwords.
+      - Make one called resumebot and paste it as the password.
+      - The username is the full iCloud address.
+  - name: Fastmail
+    match: [fastmail.com, fastmail.fm]
+    host: imap.fastmail.com:993
+    strip_spaces: true   # the app password is shown in groups of four; the server wants it without spaces
+    steps:
+      - In Fastmail, open Settings, then Privacy and Security, then Integrations, then New app password.
+      - Choose Mail (IMAP) access, make it, and paste it as the password.
+  - name: Yahoo Mail
+    match: [yahoo.com, ymail.com]
+    host: imap.mail.yahoo.com:993
+    strip_spaces: true   # the app password is shown in groups of four; the server wants it without spaces
+    steps:
+      - In Yahoo's account security page, choose Generate app password and name it resumebot.
+      - Paste it as the password.
+  - name: Outlook
+    match: [outlook.com, hotmail.com, live.com, msn.com]
+    host: outlook.office365.com:993
+    steps:
+      - Turn on two-step verification for the Microsoft account, then open its security page and choose App passwords.
+      - Make one called resumebot and paste it as the password.
+      - Many Microsoft accounts no longer allow a password for mail; if the login is refused, this inbox can't be read.
+  - name: Another provider
+    match: []
+    host: ""
+    steps:
+      - Look in your mail provider's help for "IMAP settings" for the server address, and for "app password".
+      - Use the server address with :993 as the address, your mail address as the username, and the app password.

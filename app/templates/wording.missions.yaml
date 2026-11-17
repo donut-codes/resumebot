@@ -1,0 +1,40 @@
+# What each mission is for (shown on its row in Missions), and the refusal for the mission that starts on the
+# owner's computer. Filled by app/backend/app/jobsearch/missions/kinds/*.py. Placeholder: stuck_minutes.
+runs_elsewhere: >-
+  This one starts on your computer: the scheduled Claude session there calls in, and the run shows here. Pause it here
+  to stop it; set the time on your computer.
+purpose_read_boards: >-
+  Read every known employer's own job board into the posting index, then filter the new postings in code: your gates stop
+  the ones that fail them, and a classifier trained on your own roles ranks the rest, the likeliest first. It only changes
+  the order: every posting that passes your gates becomes a role. It also moves a role to Gone Quiet when its posting
+  has gone or an application has heard nothing back. No Claude.
+purpose_read_mail: >-
+  Read your mailbox, read-only, for the mail a job search produces: an application's confirmation moves its role to
+  Applied, a rejection to Rejected, an interview request to Active Discussion (with the time), and an offer is told to
+  you at once. A recruiter's posting link becomes a role. Code settles the mail whose words it knows; a small session
+  reads only the start of the rest, never your login. It sends, replies to and changes nothing in your mailbox. It
+  starts once a mailbox is connected under Agent Settings.
+purpose_research_employers: >-
+  Research the employers, a batch a night: those with a role in play first, then the one with the most open roles, then
+  the never researched. A small session reads public pages for each: its website, careers page, industry, size, ownership,
+  headquarters and offices, each with where it came from, and its job board. It says whether the employer is the same
+  as another record: the app merges two only when it is sure (the same website and alike names, a website you or the researcher
+  confirmed for both, or the same job board and alike names), and asks you about the rest and about every split. The gates
+  and scores of the employer's roles then run again on the new facts.
+purpose_read_browser: >-
+  Read the job sites a server can't (a sign-in, a bot block) in your own Chrome, from your computer: a scheduled Claude
+  session there runs your search phrases and opens the recommended jobs, then hands the postings it sees to the app. A
+  Pathfinder run maps each site's recipe once, and a reading run follows it nightly. It never applies, fills
+  a form or messages anyone.
+purpose_scout_boards: >-
+  Have a small session find the job boards of employers the app has none for, so the app reads them itself from then
+  on. It judges no posting: one that passes your gates becomes a role at once. The Pathfinder maps how to read new
+  sites.
+purpose_analyse_finds: >-
+  Research the roles on deck, the ones you moved by hand first and then the best ranked: the employer, the pay and the
+  full posting. Each then goes up to Ready to Launch when there is room, stays on deck, or is gated out on the facts.
+purpose_open_apply_tabs: >-
+  Every morning, do what the Launch in Browser button does: check the mail and the postings, refill the batch, and open
+  it as tabs in the app's Chrome, ready for you to apply. It opens nothing when no role is ready.
+purpose_sweep_stuck: >-
+  Close a search or a packet nobody finished in {{stuck_minutes}} minutes as failed, so the next one can start.

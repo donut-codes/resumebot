@@ -193,7 +193,10 @@ def guard_port(url: str) -> None:
 
 
 class Server(ThreadingHTTPServer):
-    allow_reuse_address = False  # on Windows a reusable address lets a second server share a port that is in use
+    # On Windows a reusable address lets a second server share a port that is in use. Off Windows a port whose listener
+    # has just closed stays reserved for a while, and a plain bind of it fails though nothing holds it (as stack.py's
+    # `port_is_free` says), so there the address is reusable: a port something still listens on is still refused.
+    allow_reuse_address = not WINDOWS
 
 
 class Stub:
@@ -452,6 +455,10 @@ class World:
         self.bootstrap, self.recorded = self.root / "boot", self.root / "recorded"
         for folder in (self.home, self.local, self.roaming, self.claude_dir, self.tmp, self.recorded):
             folder.mkdir(parents=True, exist_ok=True)
+        if sys.platform == "darwin":
+            # On a Mac the shortcut step is the app's own and writes into the home's Desktop folder, which every real
+            # account has; on Windows the step is PowerShell, which the rehearsal stands in for.
+            (self.home / "Desktop").mkdir(exist_ok=True)
         self.page = free_ports()
         self.stub = Stub(self.data)
         self.foreign: Foreign | None = None

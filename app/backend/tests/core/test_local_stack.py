@@ -1282,6 +1282,7 @@ def test_the_page_builds_only_on_a_node_its_tools_support(stack, version, expect
 
 
 def test_an_old_node_is_a_stop_with_the_winget_line_before_any_install(stack, monkeypatch):
+    monkeypatch.setattr(stack, "WINDOWS", True)
     monkeypatch.setattr(stack, "find_program", lambda name: f"C:/n/{name}")
     monkeypatch.setattr(stack, "quiet_run", lambda command, **kw: SimpleNamespace(returncode=0, stdout="v18.20.4\n"))
     monkeypatch.setattr(stack, "run_step", lambda *a, **k: pytest.fail("a step ran on an old Node"))

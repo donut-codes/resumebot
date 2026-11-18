@@ -52,7 +52,7 @@ function Field({ n, value, onChange }: { n: MissionNumber; value: string | boole
       <span className="mission-number-input">
         {n.kind === "time" ? (
           <input id={id} className="fi-input" type="time" value={text} onChange={(e) => onChange(e.target.value)} />
-        ) : n.kind === "zone" ? (
+        ) : n.kind === "zone" || n.kind === "words" ? (
           <input id={id} className="fi-input" type="text" value={text} onChange={(e) => onChange(e.target.value)} />
         ) : (
           <input

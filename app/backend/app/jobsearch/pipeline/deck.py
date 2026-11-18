@@ -85,6 +85,7 @@ from sqlalchemy.orm import defer
 
 from app import db
 from app.jobsearch import as_read, off_turn, stages
+from app.jobsearch.employers import core as employers
 from app.jobsearch.fetch import host_stops
 from app.jobsearch.fit import freshness, scoring
 from app.jobsearch.gating import check as gating
@@ -110,6 +111,7 @@ from app.jobsearch.profile.schema import (
     STALE_DAYS,
     STALE_PENALTY,
     Settings,
+    employer_places_of,
 )
 from app.jobsearch.research import analysis, line, staleness
 from app.jobsearch.research import rank as ranker
@@ -138,6 +140,9 @@ class QueueRules(NamedTuple):
     golden_hours: int = GOLDEN_HOURS
     golden_bonus: int = GOLDEN_BONUS
     research_start_multiple: int = RESEARCH_START_MULTIPLE
+    #: The most roles of an employer that hold a place on the deck and in Ready to Launch together, by employer key
+    #: (`Settings.employer_places`); an employer with no pair has no such limit.
+    employer_places: tuple[tuple[str, int], ...] = ()
 
 
 #: The numbers as they are until the owner sets any.
@@ -146,8 +151,9 @@ DEFAULT_RULES = QueueRules()
 
 def queue_rules_of(settings: Settings) -> QueueRules:
     """The queue's numbers out of the owner's Settings."""
+    places = {employers.key_of(name): n for name, n in employer_places_of(settings.employer_places)}
     return QueueRules(settings.stale_days, settings.stale_penalty, settings.golden_hours, settings.golden_bonus,
-                      settings.research_start_multiple)
+                      settings.research_start_multiple, tuple(sorted((k, n) for k, n in places.items() if k)))
 
 
 async def queue_rules(session: AsyncSession, owner: str) -> QueueRules:
@@ -714,6 +720,47 @@ def _may_look_up(role: Opportunity) -> bool:
     return role.analysis_state is None and not is_read_first(role)
 
 
+def _over_places(snap: _Snapshot, contenders: list[Opportunity], seated: list[Opportunity], read_ids: set[uuid.UUID],
+                 pts: Callable[[Opportunity], int], scored: Callable[[Opportunity], bool]) -> dict[uuid.UUID, str]:
+    """The contenders that compete for no place because their employer is at its own limit
+    (`Settings.employer_places`, the owner, 2026-11-17), each with the words its history line says. An employer the
+    owner named has at most that many roles on the deck and in Ready to Launch together: the roles fixed there
+    (`seated`: starred, opened, placed by hand) count first, and the best read roles by number take what is left. An
+    unread role is read only while it could take one of those places (one is open, or its estimate beats the weakest
+    read role that holds one), the limit's number of them at a time, so the analyst goes on to other employers. A
+    role a session is reading is left to it. No role is closed: the rest wait in First Impression."""
+    limits = dict(snap.qrules.employer_places)
+    if not limits:
+        return {}
+    held: dict[str, int] = {}
+    for r in seated:
+        key = employers.key_of(r.company)
+        held[key] = held.get(key, 0) + 1
+    groups: dict[str, list[Opportunity]] = {}
+    for r in contenders:
+        key = employers.key_of(r.company)
+        if key in limits:
+            groups.setdefault(key, []).append(r)
+    out: dict[uuid.UUID, str] = {}
+    for key, group in groups.items():
+        limit = limits[key]
+        room = max(limit - held.get(key, 0), 0)
+        read = order([r for r in group if r.id in read_ids and scored(r)], snap.rank_of, snap.today, snap.now,
+                     snap.posted, snap.span, read_ids, snap.qrules)
+        keep = {r.id for r in read[:room]}
+        floor = min((pts(r) for r in read[:room]), default=None) if len(read) >= room else None
+        reading = [r for r in group if r.id not in read_ids and _in_progress(r)]
+        keep |= {r.id for r in reading}
+        if room:
+            waiting = order([r for r in group if r.id not in read_ids and not _in_progress(r) and r.id in snap.rank_of
+                             and (floor is None or pts(r) > floor)],
+                            snap.rank_of, snap.today, snap.now, snap.posted, snap.span, rules=snap.qrules)
+            keep |= {r.id for r in waiting[:max(limit - len(reading), 0)]}
+        words = f"your limit of {limit} at {group[0].company} is held by better roles there"
+        out.update({r.id: words for r in group if r.id not in keep})
+    return out
+
+
 def _decide(snap: _Snapshot, places: dict[uuid.UUID, placement.Standing] | None = None) -> _Plan:
     """The queue worked out from what `_snapshot` read, and nothing asked of the database: the order, the read pool,
     the Ready and deck cuts, the reading line and the marks, as the moves to make. See `rebalance` for the rules.
@@ -752,6 +799,9 @@ def _decide(snap: _Snapshot, places: dict[uuid.UUID, placement.Standing] | None 
     # (`off_deck`: its employer was applied to within the gap, a Must waits for a fact, its work location cannot be
     # decided) competes for none, whatever its score, and is kept, not stopped; that outranks a weak hold.
     contenders = [r for r in free if places[r.id].competes]
+    # An employer the owner gave a limit of its own: the roles there past it compete for no place and are not read.
+    over = _over_places(snap, contenders, [*fixed_ready, *fixed_deck], read_ids, pts, scored)
+    contenders = [r for r in contenders if r.id not in over]
 
     # The read roles, best first: the best that are current take Ready (a Ready role that is beaten gives way), the next
     # N are on deck. A read role with no score and no rank (`scored`) is not a role to seat.
@@ -831,7 +881,7 @@ def _decide(snap: _Snapshot, places: dict[uuid.UUID, placement.Standing] | None 
             sentence = (f"{r.title} at {r.company} is on deck: its number of {pts(r)} is among the next "
                         f"{deck_size} read roles.")
         else:
-            why = places[r.id].off_deck or (
+            why = places[r.id].off_deck or over.get(r.id) or (
                 "it has no Second Impression that graded its posting"
                 if r.status == stages.READY_TO_LAUNCH and r.id not in graded_ids
                 else "better read roles hold the places above it")

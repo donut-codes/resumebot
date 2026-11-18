@@ -1666,3 +1666,83 @@ async def test_the_places_postings_name_are_written_a_batch_to_a_transaction_bef
     async with db.session_factory()() as session:
         places = {r.slug: r.location for r in await session.scalars(select(Opportunity))}
     assert places == {"a": "Anytown, ST", "b": "Anytown, ST", "c": "Anytown, ST"}
+
+
+# --- an employer's own limit (`Settings.employer_places`, the owner, 2026-11-17) ------------------------------------
+
+
+def _at(firm: str, slug: str, status: str = stages.FIRST_IMPRESSION, **more) -> Opportunity:
+    return _role(slug, status, company=firm, **more)
+
+
+async def _limited_world(places: str | None, *roles: Opportunity, ranks: dict[str, int] | None = None) -> None:
+    await _world(None, *roles, ranks=ranks, second_impression_size=3, ready_to_launch_size=2,
+                 research_start_multiple=0, employer_places=places)
+    async with db.session_factory()() as session:
+        await _balance(session)
+        await session.commit()
+
+
+def _globex_and_others() -> list[Opportunity]:
+    return [*[_at("Globex", f"g{n}", **counted(), **_fit(95 - n)) for n in range(5)],
+            *[_role(f"o{n}", stages.FIRST_IMPRESSION, **counted(), **_fit(60 - n)) for n in range(4)]]
+
+
+async def test_an_employer_with_a_limit_holds_that_many_places_and_other_employers_take_the_rest(js):
+    await _limited_world("Globex: 2", *_globex_and_others())
+    held = await _statuses()
+    assert {s for s, st in held.items() if st == stages.READY_TO_LAUNCH} == {"g0", "g1"}, "its best two by number"
+    assert {s for s, st in held.items() if st == stages.SECOND_IMPRESSION} == {"o0", "o1", "o2"}
+    assert {held[s] for s in ("g2", "g3", "g4")} == {stages.FIRST_IMPRESSION}, "kept, and waiting, not closed"
+
+
+async def test_with_no_limit_an_employers_roles_take_every_place_their_numbers_win(js):
+    await _limited_world(None, *_globex_and_others())
+    held = await _statuses()
+    assert {s for s, st in held.items() if st in (stages.READY_TO_LAUNCH, stages.SECOND_IMPRESSION)} == {
+        "g0", "g1", "g2", "g3", "g4"}
+
+
+async def test_a_limited_employers_name_is_matched_as_employers_are_and_a_role_sent_back_says_why(js):
+    await _limited_world("GLOBEX: 1", _at("Globex", "best", **counted(), **_fit(90)),
+                         _at("Globex (Retail)", "next", stages.READY_TO_LAUNCH, **counted(), **_fit(80)))
+    assert await _statuses() == {"best": stages.READY_TO_LAUNCH, "next": stages.FIRST_IMPRESSION}
+    async with db.session_factory()() as session:
+        role_id = await session.scalar(select(Opportunity.id).where(Opportunity.slug == "next"))
+        said = list(await session.scalars(select(TrailEvent.sentence).where(TrailEvent.link_id == role_id)))
+    assert any("your limit of 1 at Globex" in s for s in said), said
+
+
+async def test_unread_roles_at_a_limited_employer_are_read_only_while_they_could_take_one_of_its_places(js):
+    await _limited_world(
+        "Globex: 2", _at("Globex", "g-top", **counted(), **_fit(90)), _at("Globex", "g-low", **counted(), **_fit(70)),
+        _at("Globex", "u99"), _at("Globex", "u98"), _at("Globex", "u97"), _at("Globex", "u60"),
+        _role("other", stages.FIRST_IMPRESSION), ranks={"u99": 99, "u98": 98, "u97": 97, "u60": 60, "other": 40})
+    assert await _marked() == {"u99", "u98", "other"}, (
+        "two at a time (the limit), none whose estimate is under the weakest role holding a place, and the analyst "
+        "goes on to the other employer")
+
+
+async def test_a_role_the_owner_placed_counts_toward_its_employers_limit(js):
+    roles = [_at("Globex", "mine", **counted(), **_fit(50)), *_globex_and_others()]
+    await _world(None, *roles, second_impression_size=3, ready_to_launch_size=2, research_start_multiple=0,
+                 employer_places="Globex: 2")
+    async with db.session_factory()() as session:
+        mine = await session.scalar(select(Opportunity).where(Opportunity.slug == "mine"))
+        await board.move(session, OWNER, mine.id, stages.SECOND_IMPRESSION)
+        await session.commit()
+    async with db.session_factory()() as session:
+        await _balance(session)
+        await session.commit()
+    held = await _statuses()
+    assert held["mine"] == stages.SECOND_IMPRESSION and held["g0"] == stages.READY_TO_LAUNCH
+    assert {held[s] for s in ("g1", "g2", "g3", "g4")} == {stages.FIRST_IMPRESSION}
+
+
+def test_an_employers_limit_is_written_as_a_name_and_a_number_and_says_what_is_wrong_otherwise():
+    assert Settings(employer_places=" Globex: 4;\nInitech Labs:2 ").employer_places == "Globex: 4, Initech Labs: 2"
+    assert Settings(employer_places="  ").employer_places is None
+    assert pipeline.queue_rules_of(Settings(employer_places="GLOBEX (Retail): 4")).employer_places == (("globex", 4),)
+    for wrong in ("Globex 4", "Globex: four", "Globex: 0", ": 3", "Globex: 2, globex: 3"):
+        with pytest.raises(ValueError):
+            Settings(employer_places=wrong)

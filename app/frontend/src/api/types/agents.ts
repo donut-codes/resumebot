@@ -521,7 +521,7 @@ export interface MissionNumber {
   label: string;
   /** One plain line saying what it does. */
   help: string;
-  kind: "whole" | "fraction" | "flag" | "time" | "zone";
+  kind: "whole" | "fraction" | "flag" | "time" | "zone" | "words";
   low: number | null;
   high: number | null;
   /** Shown after the value ("%"). */

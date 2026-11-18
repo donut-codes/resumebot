@@ -35,8 +35,9 @@ from app.jobsearch.profile.schema import Settings
 #: `missions/record.py`'s.
 PEAK = "peak_hours"
 
-#: What an input is: a whole number, a number from 0 to 1, a yes or no, a time of day (HH:MM) or a time zone name.
-KINDS = ("whole", "fraction", "flag", "time", "zone")
+#: What an input is: a whole number, a number from 0 to 1, a yes or no, a time of day (HH:MM), a time zone name or
+#: a line of words (which `profile.Settings` checks when it is saved).
+KINDS = ("whole", "fraction", "flag", "time", "zone", "words")
 _CLOCK = re.compile(r"([01]?\d|2[0-3]):([0-5]\d)")
 
 
@@ -128,6 +129,11 @@ NUMBERS: dict[str, tuple[Number, ...]] = {
                "Launch in Browser and the 6:30 tabs skip a role at an employer you applied to within this many days, "
                "and open the next role instead. The skipped role stays in Ready to Launch. Blank: off.",
                "whole", 1, 3650, " days", optional=True),
+        Number("employer_places", "Most roles from one employer",
+               "For the employers you name, the most roles that hold a place in Second Impression and Ready to Launch "
+               "together, written like \"Globex: 4, Initech: 2\". The best roles there keep the places, the rest wait "
+               "in First Impression, and the analyst reads the next best roles at other employers. An employer you "
+               "don't name has no limit. Blank: no employer has one.", "words", optional=True),
     ),
     PEAK: (
         Number("avoid_peak", "Avoid Claude's peak hours",
@@ -204,6 +210,8 @@ def _one(n: Number, raw):
             raise NumbersError(f"{n.label}: {_limits(n)}")
         return number
     text = str(raw).strip()
+    if n.kind == "words":
+        return text
     if n.kind == "time":
         m = _CLOCK.fullmatch(text)
         if not m:

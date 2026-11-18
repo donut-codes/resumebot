@@ -182,6 +182,34 @@ RETIRED_SETTINGS = frozenset({"apply_batch", "packets_per_run", "ready_stale_day
                               "readers_per_night", "ready_minimum"})
 
 
+#: The most places one line of `Settings.employer_places` may give an employer.
+EMPLOYER_PLACES_HIGH = 500
+
+
+def employer_places_of(text: str | None) -> list[tuple[str, int]]:
+    """`Settings.employer_places` as (employer name, places) pairs, in the order written: "Globex: 4, Initech: 2", one
+    pair a line or separated by commas or semicolons. Raises ValueError, in words for the owner, on a part that is not
+    a name and a whole number of places, and on a name given twice."""
+    pairs: list[tuple[str, int]] = []
+    seen: set[str] = set()
+    for part in re.split(r"[,;\n]+", text or ""):
+        part = part.strip()
+        if not part:
+            continue
+        name, sep, number = part.rpartition(":")
+        name, number = name.strip(), number.strip()
+        if not sep or not name or not number.isdigit():
+            raise ValueError(f"{part!r}: write an employer's name, a colon and a number, like \"Globex: 4\"")
+        if not 1 <= int(number) <= EMPLOYER_PLACES_HIGH:
+            raise ValueError(f"{name}: 1 to {EMPLOYER_PLACES_HIGH} places (to take no role from an employer, name it "
+                             "in Hard pass)")
+        if name.lower() in seen:
+            raise ValueError(f"{name} is listed twice")
+        seen.add(name.lower())
+        pairs.append((name, int(number)))
+    return pairs
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")
     #: The classifier (docs/PRD.md 29.6, 31.1) ranks the postings that pass the gates, the likeliest first, and stops
@@ -291,6 +319,12 @@ class Settings(BaseModel):
             raise ValueError(f"not a job system: {', '.join(unknown)}")
         return sorted(set(v))
 
+    @field_validator("employer_places")
+    @classmethod
+    def _places(cls, v: str | None) -> str | None:
+        pairs = employer_places_of(v)
+        return ", ".join(f"{name}: {places}" for name, places in pairs) or None
+
     @field_validator("peak_zone")
     @classmethod
     def _zone(cls, v: str) -> str:
@@ -327,6 +361,11 @@ class Settings(BaseModel):
     #: Go, its refill and the 6:30 tabs skip a role at an employer the owner applied to (status Applied, by the day it
     #: became Applied) within this many days (`go_checks.employer_gap`). None, 0 or less: off.
     days_between_employer_applications: int | None = None
+    #: The most roles of one employer that hold a place in Second Impression and Ready to Launch together, for the
+    #: employers named: "Globex: 4, Initech: 2" (`employer_places_of`). The best roles there by number keep the places
+    #: and the rest wait in First Impression, kept and shown (`deck._over_places`). An employer not named has no such
+    #: limit. None or blank: no employer has one.
+    employer_places: str | None = None
     email_lookback_days: int | None = None
     #: An Applied role with no word for this many days moves to Gone Quiet, "No word came back" (`quiet.py`). None, 0 or
     #: less: never. Not bounded here, so an older stored version still loads (the bounds are the Missions screen's,

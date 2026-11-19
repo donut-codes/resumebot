@@ -1739,6 +1739,16 @@ async def test_a_role_the_owner_placed_counts_toward_its_employers_limit(js):
     assert {held[s] for s in ("g1", "g2", "g3", "g4")} == {stages.FIRST_IMPRESSION}
 
 
+async def test_a_role_launch_skipped_counts_toward_its_employers_limit(js):
+    skipped = [_at("Globex", f"s{n}", stages.READY_TO_LAUNCH, go_skip="Launch stopped before this one's turn.",
+                   **counted(), **_fit(99 - n)) for n in range(2)]
+    await _limited_world("Globex: 2", *skipped, *_globex_and_others())
+    held = await _statuses()
+    assert {held[s] for s in ("s0", "s1")} == {stages.READY_TO_LAUNCH}, "skipped roles stay where the owner sees them"
+    assert {held[s] for s in ("g0", "g1", "g2", "g3", "g4")} == {stages.FIRST_IMPRESSION}, (
+        "the two skipped roles are the employer's two: no other role there takes a place")
+
+
 def test_an_employers_limit_is_written_as_a_name_and_a_number_and_says_what_is_wrong_otherwise():
     assert Settings(employer_places=" Globex: 4;\nInitech Labs:2 ").employer_places == "Globex: 4, Initech Labs: 2"
     assert Settings(employer_places="  ").employer_places is None

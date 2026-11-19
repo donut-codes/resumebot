@@ -800,7 +800,10 @@ def _decide(snap: _Snapshot, places: dict[uuid.UUID, placement.Standing] | None 
     # decided) competes for none, whatever its score, and is kept, not stopped; that outranks a weak hold.
     contenders = [r for r in free if places[r.id].competes]
     # An employer the owner gave a limit of its own: the roles there past it compete for no place and are not read.
-    over = _over_places(snap, contenders, [*fixed_ready, *fixed_deck], read_ids, pts, scored)
+    # A role Launch skipped holds no Ready place, but it is still in Ready to Launch for the owner to see, so it counts
+    # toward its employer's limit (the owner, 2026-11-19: six roles at an employer limited to four).
+    skipped = [r for r in roles if places[r.id].held is placement.Hold.SKIPPED]
+    over = _over_places(snap, contenders, [*fixed_ready, *fixed_deck, *skipped], read_ids, pts, scored)
     contenders = [r for r in contenders if r.id not in over]
 
     # The read roles, best first: the best that are current take Ready (a Ready role that is beaten gives way), the next
